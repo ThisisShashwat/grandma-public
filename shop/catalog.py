@@ -14,10 +14,13 @@ from program import payout
 
 from .models import ShopItem
 
-SHELVES = (       # (key, title, Grandma's line). A grant sits on the first, a by-hand item on the second.
-    ("grants", "Grants", "Money on a Hack Club Bank card, so you buy the real thing yourself. Receipts, dear."),
-    ("odd", "The odd shelf", "Grandma does these by hand. Do not ask how, and do not ask why."),
-)
+BLURBS = {        # Grandma's line under each shelf, keyed by ShopItem.Category. The shelves follow the order of that list.
+    "hardware": "Tied to one real hardware project. Grandma checks every part, dear.",
+    "software": "The grown-up programs, paid for.",
+    "credits": "Pay-as-you-go things for your project. Receipts, please.",
+    "fun": "Things you want, not things you need. Grandma allows some.",
+    "joke": "Grandma does these by hand. Do not ask how, and do not ask why.",
+}
 
 
 @dataclass(frozen=True)
@@ -35,6 +38,7 @@ class Product:
     tagline: str
     description: str
     art: str
+    category: str
     kind: str                       # the label: "Card grant" or "By hand"
     manual: bool
     stackable: bool
@@ -70,7 +74,7 @@ def _product(item):
     low, high = payout.hours_range(item.effective_cookies)
     return Product(
         slug=item.slug, name=item.name, tagline=item.tagline, description=item.description, art=item.art,
-        kind=item.get_kind_display(), manual=not grant, stackable=item.stackable,
+        category=item.category, kind=item.get_kind_display(), manual=not grant, stackable=item.stackable,
         max_per_user=item.max_per_user if item.stackable else 1, stock_left=item.stock, available=item.stock != 0,
         cookies=item.effective_cookies, value_usd=item.usd_value if grant else None, hours_low=low, hours_high=high,
         upgrades=tuple(_upgrade(up) for up in item.live_upgrades),
@@ -78,7 +82,7 @@ def _product(item):
 
 
 def _shelves(products):
-    shelves = ((key, title, blurb, tuple(p for p in products if p.manual == (key == "odd"))) for key, title, blurb in SHELVES)
+    shelves = ((key, title, BLURBS.get(key, ""), tuple(p for p in products if p.category == key)) for key, title in ShopItem.Category.choices)
     return tuple(Shelf(*shelf) for shelf in shelves if shelf[3])
 
 

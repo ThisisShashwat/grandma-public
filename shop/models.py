@@ -56,6 +56,13 @@ class ShopItem(models.Model):
         GRANT = "grant", "Card grant"
         MANUAL = "manual", "By hand"
 
+    class Category(models.TextChoices):         # the shelves of the page, in this order; the owner edits the list later
+        HARDWARE = "hardware", "Hardware"
+        SOFTWARE = "software", "Software"
+        CREDITS = "credits", "Credits"
+        FUN = "fun", "Fun"
+        JOKE = "joke", "Jokes"
+
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=80)
     tagline = models.CharField(max_length=120, blank=True)
@@ -64,6 +71,7 @@ class ShopItem(models.Model):
                            help_text="A file inside static/assets, for example grandma-cookie-jar.png.")
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.GRANT,
                             help_text="Everything is a card grant unless it cannot be: those staff hand over themselves.")
+    category = models.CharField(max_length=10, choices=Category.choices, help_text="Which shelf of the page it sits on.")
     rate_class = models.ForeignKey(RateClass, on_delete=models.PROTECT, related_name="items")
     usd_value = models.DecimalField("dollar value", max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))],
                                     help_text="A grant's value on the card. Shown to visitors for grants. For a by-hand item it is just our cost.")
