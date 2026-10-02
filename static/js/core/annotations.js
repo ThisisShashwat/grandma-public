@@ -9,6 +9,13 @@ import { reduce, hasGsap, hasScroll } from "./env.js";
    changed: resize, fonts, images, and a FAQ item opening (closed items have no layout). */
 const marks = [];
 
+/* A mark draws once it is 85% of the way up the screen. One near the very end of a page (the footer's) never gets that far,
+   so its start is capped at the last scroll position instead of staying unreachable and never drawing. */
+const drawAt = (node) => () => Math.min(
+  node.getBoundingClientRect().top + scrollY - innerHeight * 0.85,
+  ScrollTrigger.maxScroll(window) - 1,
+);
+
 const redraw = (m, animate) => {
   if (!m.node.getClientRects().length) return;          // hidden, for example inside a closed FAQ item
   m.mark.hide();
@@ -37,7 +44,7 @@ const setup = () => {
     if (details) {
       details.addEventListener("toggle", () => { if (details.open) requestAnimationFrame(() => redraw(m, true)); });
     } else if (hasGsap && hasScroll) {
-      ScrollTrigger.create({ trigger: node, start: "top 85%", once: true, onEnter: () => redraw(m, true) });
+      ScrollTrigger.create({ trigger: node, start: drawAt(node), once: true, onEnter: () => redraw(m, true) });
     } else {
       redraw(m, true);
     }
