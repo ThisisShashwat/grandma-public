@@ -2,12 +2,12 @@
 
 {% block styles %}
 {% for name in ["hero", "how", "fridge", "pay", "faq", "cta", "hackclub"] %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/sections/' ~ name ~ '.css') }}">
+<link rel="stylesheet" href="{{ static('css/sections/' ~ name ~ '.css') }}">
 {% endfor %}
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="{{ url_for('static', filename='js/pages/home.js') }}"></script>
+<script type="module" src="{{ static('js/pages/home.js') }}"></script>
 {% endblock %}
 
 {% block main %}

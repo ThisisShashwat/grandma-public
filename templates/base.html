@@ -9,13 +9,13 @@
   <meta property="og:description" content="{{ site.og_description }}">
   <meta property="og:image" content="{{ site.og_image }}">
   <meta name="theme-color" content="{{ site.theme_color }}">
-  <link rel="icon" href="{{ url_for('static', filename='assets/favicon.png') }}">
+  <link rel="icon" href="{{ static('assets/favicon.png') }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Gochi+Hand&display=swap">
   {% for name in ["tokens", "base", "art", "buttons", "layout", "notes", "countdown", "header", "footer", "dev"] %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/core/' ~ name ~ '.css') }}">
+  <link rel="stylesheet" href="{{ static('css/core/' ~ name ~ '.css') }}">
   {% endfor %}
   {% block styles %}{% endblock %}
   <noscript><style>.ph::before { display: none; }</style></noscript>
@@ -34,7 +34,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.js"
           integrity="sha384-bopE5cbMjKUprmGnIRk2UdvCnHImrRLCtNW2uR6oDYqO+o3XWJeuIrWWxDzeDgNW" crossorigin="anonymous"></script>
   <script id="site-data" type="application/json">{{ site_data|tojson }}</script>
-  <script type="module" src="{{ url_for('static', filename='js/core/site.js') }}"></script>
+  <script type="module" src="{{ static('js/core/site.js') }}"></script>
   {% block scripts %}{% endblock %}
 </head>
 
