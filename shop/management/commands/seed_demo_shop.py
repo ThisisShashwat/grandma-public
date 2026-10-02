@@ -39,11 +39,11 @@ def seed_grants():
     put("demo-domain", "build", "11", "A domain name for a year.",
         name="Domain credit", category=CREDITS, tagline="Your very own address. Mind the typos.", art="grandma-finger.png", sort_order=4)
     put("demo-software-licence", "build", "40", "One software licence, bought by you with the grant.",
-        name="Software licence grant", category=SOFTWARE, tagline="The grown-up programs, paid for.", art="grandma-book.png", sort_order=5)
+        name="Software licence grant", category=SOFTWARE, tagline="Not the pirate kind. Grandma asked.", art="grandma-book.png", sort_order=5)
     put("demo-hardware-grant", "build", "100",
         "Tied to ONE specific shipped design project, not generic funding. Hardware lets you ship the same project twice, "
         "design first and then build, and staff review it by hand.",
-        name="Hardware grant", category=HARDWARE, tagline="For one real hardware project. Grandma will check.", art="grandma-note-pull.png",
+        name="Hardware grant", category=HARDWARE, tagline="Design it first, then build it. Grandma watches.", art="grandma-note-pull.png",
         stackable=True, max_per_user=5, sort_order=6)
 
     ipad = put("demo-ipad", "build", "329", "A basic iPad, as a card grant.",
