@@ -1,0 +1,381 @@
+/* Help Grandma Out: homepage styles
+   Change the tokens first. Everything else reads from them.
+   Layout rule: art lives in percent-positioned "stages" (scales with the page),
+   all text is normal flowing HTML (stays readable on phones). */
+
+:root {
+  --canvas: #fff;
+  --ink: #000;
+  --lilac: #c8a2d8;   /* cardigan */
+  --cream: #f3e2a9;   /* skin */
+  --sky: #aad4ee;     /* glasses glint */
+  --pink: #f4a3b4;    /* cheeks */
+  --ribbon: #2f4fc4;  /* blue ribbon */
+  --paper: #fff3a6;   /* sticky-note yellow */
+  --red: #e8222a;     /* vein and big X */
+
+  --display: "Gochi Hand", "Comic Sans MS", "Chalkboard SE", cursive;
+  --body: "Comic Neue", "Comic Sans MS", "Chalkboard SE", sans-serif;
+
+  --line: 4px;
+  /* uneven corners that look drawn by hand */
+  --wobble-a: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --wobble-b: 15px 255px 15px 225px / 225px 15px 255px 15px;
+  --wrap: 1100px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+  line-height: 1.45;
+  /* drop a drawn cursor at assets/cursor-spoon.png; falls back to the normal one until then */
+  cursor: url("assets/cursor-spoon.png") 4 4, auto;
+}
+
+a, button, summary, label, input[type="checkbox"] { cursor: url("assets/cursor-spoon.png") 4 4, pointer; }
+
+img { max-width: 100%; }
+
+h1, h2, h3 {
+  font-family: var(--display);
+  font-weight: 400;
+  line-height: 1.05;
+  margin: 0 0 0.4em;
+}
+h1 { font-size: clamp(3.2rem, 10vw, 7rem); rotate: -2deg; }
+h2 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); }
+h3 { font-size: 1.7rem; }
+p { margin: 0 0 1em; }
+
+:focus-visible { outline: 4px dashed var(--ribbon); outline-offset: 4px; }
+
+.wrap { width: min(100% - 2rem, var(--wrap)); margin-inline: auto; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: -999px; top: 0; }
+.skip:focus { left: 1rem; top: 1rem; z-index: 100; background: var(--canvas); padding: 0.5rem 1rem; border: 3px solid var(--ink); }
+.todo { background: #ff0; outline: 2px dashed var(--red); padding: 0 0.25em; }
+
+/* ---------- art: placeholders and stages ---------- */
+
+.fig { position: relative; margin: 0; aspect-ratio: var(--r, 1); }
+.fig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+/* small drawings scaled up? add class "px" to the figure for crunchy pixels (do not use on downscaled art) */
+.fig.px img { image-rendering: pixelated; }
+
+/* placeholder box, removed by main.js once the real image loads */
+.ph::before {
+  content: attr(data-file);
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  padding: 0.4rem;
+  text-align: center; word-break: break-all;
+  border: 3px dashed var(--ink);
+  background: rgba(255, 255, 255, 0.75);
+  font: 700 0.8rem/1.2 var(--body);
+}
+.chip.ph::before { font-size: 0.5rem; border-width: 2px; padding: 0; }
+
+.stage { position: relative; width: 100%; aspect-ratio: var(--ar, 1); }
+.fig.abs {
+  position: absolute;
+  left: calc(var(--x, 0) * 1%);
+  top: calc(var(--y, 0) * 1%);
+  width: calc(var(--w, 30) * 1%);
+  rotate: calc(var(--rot, 0) * 1deg);   /* separate from GSAP's transform, so they never fight */
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  line-height: 1.1;
+  padding: 0.45em 1.1em;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  border-radius: var(--wobble-a);
+  text-decoration: none;
+  text-align: center;
+}
+.btn:hover { background: var(--pink); }
+.btn:active { translate: 3px 3px; }
+.btn--plain { background: var(--canvas); border-radius: var(--wobble-b); }
+.btn--big { font-size: clamp(2rem, 6vw, 3.2rem); }
+
+/* ---------- scenes ---------- */
+
+.scene { border-top: var(--line) solid var(--ink); padding-block: clamp(2.5rem, 6vw, 5rem); }
+.scene--lilac { background: var(--lilac); }
+.scene--cream { background: var(--cream); }
+.scene--sky { background: var(--sky); }
+.scene--blush { background: #ffd9e1; }
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+}
+
+/* top strip */
+.strip { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 0.75rem; }
+.brand { display: flex; align-items: center; gap: 0.75rem; font-family: var(--display); font-size: 1.7rem; color: var(--ink); text-decoration: none; }
+.chip { width: 3.5rem; }
+.strip nav { display: flex; align-items: center; gap: 1.25rem; }
+.strip nav a:not(.btn) { color: var(--ink); font-size: 1.15rem; }
+.strip .btn { font-size: 1.3rem; }
+
+/* hero */
+.hero { border-top: 0; }
+.lede { font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.25; margin-bottom: 0.75em; }
+.hero .stage { max-width: 520px; margin-inline: auto; }
+.countdown {
+  display: inline-block;
+  margin: 0.5rem 0 1.25rem;
+  padding: 0.2em 0.7em;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  border-radius: var(--wobble-b);
+}
+.actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+
+/* how it works */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1.75rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.step { background: var(--canvas); border: var(--line) solid var(--ink); padding: 1rem 1.25rem 1.25rem; }
+.step:nth-child(1) { rotate: -1deg; }
+.step:nth-child(2) { rotate: 0.8deg; }
+.step:nth-child(3) { rotate: -0.5deg; }
+.step .stage { margin-bottom: 0.75rem; }
+.num {
+  display: inline-grid; place-items: center;
+  width: 2.6rem; height: 2.6rem; margin-right: 0.4rem;
+  font-family: var(--display); font-size: 1.8rem;
+  background: var(--sky); border: var(--line) solid var(--ink); border-radius: 50%;
+  vertical-align: middle;
+}
+.step h3 { display: flex; align-items: center; }
+
+/* the fridge */
+.fridge-layout { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; margin-top: 1.5rem; }
+.fridge-side { flex: 0 1 240px; margin-inline: auto; }
+.fridge-side .stage { max-width: 240px; }
+.fridge-main { flex: 1 1 420px; min-width: 0; }
+.fridge {
+  position: relative;
+  display: flex; flex-wrap: wrap; gap: 1.5rem 1.25rem; justify-content: center; align-content: flex-start;
+  min-height: 27rem;
+  padding: 2.5rem 1.25rem 1.5rem;
+  /* replace with a drawn fridge: put assets/fridge.png in place, the grey stays as a fallback */
+  background: url("assets/fridge.png") center / 100% 100% no-repeat, #d9d9d9;
+  border: var(--line) solid var(--ink);
+}
+.fridge::after { /* fridge handle, delete if your drawn fridge has one */
+  content: ""; position: absolute; right: 10px; top: 14%; width: 14px; height: 30%;
+  background: #bdbdbd; border: 3px solid var(--ink);
+}
+.note {
+  position: relative;
+  width: min(15rem, 42%);
+  min-width: 10rem;
+  min-height: 8.5rem;
+  padding: 1.25rem 0.9rem 0.8rem;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  rotate: calc(var(--rot, 0) * 1deg);
+  cursor: grab;
+  user-select: none;
+}
+.note:nth-child(3n + 2) { background: #ffd1dc; }
+.note:nth-child(3n) { background: #cfe8ff; }
+.note::before { /* round magnet */
+  content: ""; position: absolute; top: -0.6rem; left: 50%;
+  width: 1.1rem; height: 1.1rem; margin-left: -0.55rem;
+  background: var(--red); border: 3px solid var(--ink); border-radius: 50%;
+}
+.note:nth-child(even)::before { background: var(--ribbon); }
+.note b { display: block; margin-bottom: 0.25rem; font-family: var(--display); font-size: 1.4rem; font-weight: 400; }
+.note .tier { display: block; margin-top: 0.6rem; font-size: 0.9rem; font-style: italic; }
+.fridge-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.25rem; }
+.ask-status { margin: 0; flex: 1 1 14rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 1rem 0 0; padding: 0; list-style: none; font-size: 0.95rem; }
+
+/* pay */
+.sub { font-size: 1.2rem; margin-bottom: 1.75rem; }
+.pay { align-items: start; }
+.pay-face { max-width: 360px; margin-inline: auto; }
+.calc { display: grid; gap: 1.5rem; }
+
+/* Grandma's speech bubble holds the total */
+.bubble {
+  position: relative; margin: 0 0 0.25rem; padding: 0.6rem 1.25rem 0.7rem;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem;
+  background: var(--canvas); border: var(--line) solid var(--ink); border-radius: var(--wobble-a);
+}
+.bubble::before, .bubble::after { /* tail pointing at Grandma */
+  content: ""; position: absolute; left: -22px; top: 40%; width: 0; height: 0;
+  border: 14px solid transparent; border-right: 22px solid var(--ink); border-left: 0;
+}
+.bubble::after { left: -15px; border-right-color: var(--canvas); }
+@media (max-width: 800px) {   /* stacked layout: the tail points up at Grandma */
+  .bubble::before, .bubble::after { left: 2.5rem; top: -22px; border: 14px solid transparent; border-bottom: 22px solid var(--ink); border-top: 0; }
+  .bubble::after { top: -15px; border-bottom-color: var(--canvas); }
+}
+.bubble .say { flex: 1 0 100%; font-size: 1.1rem; font-style: italic; }
+.bubble strong { font-family: var(--display); font-size: clamp(3rem, 8vw, 4.5rem); font-weight: 400; line-height: 1; }
+.bubble .unit { font-family: var(--display); font-size: 1.8rem; }
+
+/* demands: three sticky notes that cycle mild, medium, spicy on tap */
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem; }
+.slot {
+  position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.2rem;
+  min-height: 6.5rem; padding: 1rem 0.6rem 0.6rem; font: inherit; line-height: 1.1; text-align: center; color: var(--ink);
+  background: var(--canvas); border: 3px dashed var(--ink);
+}
+.slot b { font-family: var(--display); font-size: 1.5rem; font-weight: 400; }
+.slot span { font-size: 0.9rem; font-style: italic; }
+.slot:nth-child(1) { rotate: -1.5deg; } .slot:nth-child(2) { rotate: 1deg; } .slot:nth-child(3) { rotate: -0.5deg; }
+.slot:hover { background: var(--pink); }
+.slot[data-tier] { border-style: solid; }
+.slot[data-tier]::before { content: ""; position: absolute; top: -0.6rem; left: 50%; width: 1.1rem; height: 1.1rem; margin-left: -0.55rem; background: var(--red); border: 3px solid var(--ink); border-radius: 50%; }
+.slot[data-tier="1"] { background: #cfe8ff; }
+.slot[data-tier="2"] { background: var(--paper); }
+.slot[data-tier="3"] { background: #ffd1dc; }
+
+/* hours slider */
+.hours-label { display: block; font-family: var(--display); font-size: 1.5rem; margin-bottom: 0.4rem; }
+.hours-label b { font-weight: 400; font-size: 2.2rem; }
+.range { position: relative; padding-bottom: 1.4rem; }
+.range input { width: 100%; margin: 0; accent-color: var(--ribbon); }
+.tick { position: absolute; top: 1.5rem; left: calc((20 - 1) / 59 * 100%); translate: -50% 0; font-size: 0.85rem; }
+.tick::before { content: ""; position: absolute; top: -0.8rem; left: 50%; height: 0.6rem; border-left: 3px solid var(--ink); }
+
+/* bonus stickers: toggle on, or light up on their own */
+.stickers { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+.sticker {
+  display: flex; flex-direction: column; align-items: center; padding: 0.35rem 0.9rem; font: inherit; font-family: var(--display); font-size: 1.25rem; line-height: 1.1;
+  color: var(--ink); background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b); opacity: 0.6;
+}
+.sticker span { font-family: var(--body); font-size: 0.8rem; font-style: italic; }
+.sticker:nth-child(1) { rotate: 1.5deg; } .sticker:nth-child(2) { rotate: -1.5deg; } .sticker:nth-child(3) { rotate: 1deg; }
+.sticker:hover:not(.is-auto) { background: var(--pink); opacity: 1; }
+.sticker[aria-pressed="true"] { opacity: 1; background: var(--paper); box-shadow: 4px 4px 0 var(--ink); }
+[data-pay="ribbon"][aria-pressed="true"] { background: var(--ribbon); color: #fff; }
+.sticker.is-auto { cursor: default; }
+.fine { margin-top: 1.5rem; font-size: 0.95rem; }
+
+/* what is hack club */
+.hc { margin-top: 1.5rem; align-items: start; }
+.hc .stage { max-width: 440px; margin-inline: auto; }
+.shout {
+  position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: 62%; margin: 0; rotate: calc(var(--rot) * 1deg);
+  padding: 0.5rem 0.8rem; font-family: var(--display); font-size: 1.35rem; line-height: 1.1; background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-a);
+}
+.clip { margin: 0; padding: 1.25rem 1.5rem; background: var(--paper); border: var(--line) solid var(--ink); rotate: 0.6deg; font-size: 1.1rem; }
+.clip p:last-child { margin-bottom: 0; }
+.strike { display: inline-block; }
+.fix { display: inline-block; margin-left: 0.3em; rotate: -4deg; font-family: var(--display); font-size: 1.5rem; line-height: 1; color: var(--red); }
+.real { margin-top: 2.5rem; rotate: -1deg; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 1.5rem 1.25rem; margin: 0 0 1.25rem; padding: 0.5rem 0 0; list-style: none; }
+.sticky { position: relative; display: flex; flex-direction: column; align-items: center; padding: 1.1rem 0.5rem 0.8rem; text-align: center; font-style: italic; background: var(--paper); border: 3px solid var(--ink); }
+.sticky b { font-family: var(--display); font-size: 2.2rem; font-weight: 400; font-style: normal; line-height: 1; }
+.sticky::before { content: ""; position: absolute; top: -0.6rem; left: 50%; width: 1.1rem; height: 1.1rem; margin-left: -0.55rem; background: var(--red); border: 3px solid var(--ink); border-radius: 50%; }
+.sticky:nth-child(1) { rotate: -2deg; } .sticky:nth-child(2) { rotate: 1.5deg; background: #ffd1dc; } .sticky:nth-child(3) { rotate: -1deg; background: #cfe8ff; } .sticky:nth-child(4) { rotate: 2deg; }
+.sticky:nth-child(even)::before { background: var(--ribbon); }
+.truth { max-width: 40rem; }
+
+/* FAQ */
+.faq { max-width: 52rem; }
+details { margin-block: 1rem; background: var(--canvas); border: var(--line) solid var(--ink); }
+details:nth-of-type(odd) { rotate: -0.3deg; }
+details:nth-of-type(even) { rotate: 0.3deg; }
+summary { list-style: none; padding: 0.7rem 1rem; font-family: var(--display); font-size: 1.6rem; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; display: inline-block; width: 1.4em; }
+details[open] summary::before { content: "-"; }
+.answer { padding: 0 1rem 1rem 2.4rem; }
+.answer p:last-child { margin-bottom: 0; }
+
+/* final call */
+.cta { text-align: center; }
+.cta .stage { max-width: 440px; margin: 0 auto 1.5rem; }
+.cta .countdown { margin-bottom: 1.5rem; }
+
+/* footer */
+.foot { border-top: var(--line) solid var(--ink); padding-block: 2rem; font-size: 1rem; }
+.foot a { color: var(--ink); margin-right: 1.25rem;}
+.foot p { margin-bottom: 0.5rem; }
+
+/* dev mode: open the page with ?dev */
+.dev .fig.abs { outline: 2px dashed var(--red); cursor: move; }
+.dev-out { position: fixed; left: 0.5rem; bottom: 0.5rem; z-index: 99; max-width: min(92vw, 30rem); margin: 0; padding: 0.6rem 0.8rem; background: #000; color: #fff; font: 14px/1.3 monospace; white-space: pre-wrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+
+/* ---------- round 3: more art, dashed marker, notes ---------- */
+
+/* accents are the muted-yellow Rough Notation scribble (data-annotate="highlight" data-color="#fff3a6").
+   The bright yellow dashed box is reserved for real TODOs (.todo). */
+
+/* hero: a sticky note drawn in CSS, positioned like the art */
+.stage-note {
+  position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: calc(var(--w) * 1%); margin: 0;
+  padding: 1.1rem 0.7rem 0.8rem; rotate: calc(var(--rot) * 1deg);
+  font-family: var(--display); font-size: clamp(1.1rem, 2.6vw, 1.6rem); line-height: 1.05; text-align: center;
+  background: var(--paper); border: 3px solid var(--ink);
+}
+.stage-note::before { content: ""; position: absolute; top: -0.6rem; left: 50%; width: 1.1rem; height: 1.1rem; margin-left: -0.55rem; background: var(--red); border: 3px solid var(--ink); border-radius: 50%; }
+
+/* small Grandmas that sit beside text */
+.aside-fig { aspect-ratio: auto; width: clamp(5.5rem, 14vw, 8.5rem); margin: 0; flex: none; }
+.aside-fig img { position: static; height: auto; }
+.answer .aside-fig { float: right; width: clamp(4.5rem, 12vw, 6.5rem); margin: 0 0 0.25rem 1rem; }
+.answer { display: flow-root; }
+.faq-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.faq-head h2 { margin-bottom: 0; }
+.faq-head .aside-fig { width: clamp(5rem, 14vw, 8rem); rotate: 3deg; }
+
+.complaints { display: flex; align-items: center; gap: 1.25rem; margin-top: 1.5rem; }
+.complaints .aside-fig { width: clamp(8rem, 22vw, 13rem); }
+.complaints p { margin: 0; }
+.ribbon-note { display: flex; align-items: center; gap: 1.25rem; margin-top: 1.5rem; }
+.ribbon-note .aside-fig { width: clamp(6rem, 16vw, 9.5rem); }
+.ribbon-note .fine { margin: 0; }
+.truth-row { display: flex; align-items: center; gap: 1.25rem; }
+.truth-row .aside-fig { width: clamp(6.5rem, 16vw, 10rem); }
+.truth-row .truth { margin: 0; }
+.actions .shush { width: clamp(6rem, 14vw, 9rem); margin-left: auto; }
+.ask-fig { transform-origin: 50% 100%; }
+
+/* footer Grandmas */
+.foot .wrap { position: relative; }
+.foot-fig { position: absolute; right: 0; bottom: 0; width: clamp(5rem, 13vw, 8rem); aspect-ratio: auto; margin: 0; }
+.foot-fig img { position: static; height: auto; }
+.foot-fig--wave { right: clamp(6rem, 16vw, 10rem); width: clamp(4.5rem, 11vw, 7rem); }
+@media (max-width: 600px) { .foot-fig { position: static; display: inline-block; margin-top: 0.75rem; } }
+
+/* art that bleeds past the edge of a section must never create a sideways scrollbar on phones */
+.scene, .hero, .hc { overflow-x: clip; }

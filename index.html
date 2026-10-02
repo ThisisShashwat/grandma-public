@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help Grandma Out</title>
+  <meta name="description" content="[TODO: one sentence about the program]">
+  <meta property="og:title" content="Help Grandma Out">
+  <meta property="og:description" content="[TODO: same sentence]">
+  <meta property="og:image" content="[TODO: absolute URL of a 1200 by 630 image]">
+  <meta name="theme-color" content="#c8a2d8">
+  <link rel="icon" href="assets/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Gochi+Hand&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <noscript><style>.ph::before { display: none; }</style></noscript>
+
+  <!-- Libraries: exact versions plus integrity hashes, so a hacked CDN cannot swap the file.
+       If one refuses to load, check the console for an "integrity" error. Bumping a version means
+       regenerating its hash (openssl dgst -sha384 -binary FILE | openssl base64 -A).
+       main.js still works without any of them, it just loses the effects. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"
+          integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"
+          integrity="sha384-wl5TeDVvOWt30Pbf8aSo2ZrzsOjddu3avOBvHe+p+OhJt9gP6w9YXmDkN5DK2/dF" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/Draggable.min.js"
+          integrity="sha384-k9SCZn5JmxO3oyPDFbaTMy2eSu3WzGB2Qfg+htfhZCEomNh7o48hKFV38IEKsYr0" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/rough-notation@0.5.1/lib/rough-notation.iife.js"
+          integrity="sha384-IW2mAEaBUcGJfuKi7uhlzpZGhnDDnjI9NLtADxl9xKV6VJPzuuIqhIKyLwiAuRmu" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.js"
+          integrity="sha384-bopE5cbMjKUprmGnIRk2UdvCnHImrRLCtNW2uR6oDYqO+o3XWJeuIrWWxDzeDgNW" crossorigin="anonymous"></script>
+  <script defer src="pay.js"></script>
+  <script defer src="main.js"></script>
+</head>
+
+<!--
+  ART CHECKLIST (all go in assets/, see assets/README.txt for sizes)
+  still missing: favicon.png, cursor-spoon.png (32px), fridge.png (optional)
+  hero:        grandma-spoon, cookie
+  how it works: grandma-clipboard, grandma-phone, grandma-cookie-jar
+  fridge:      grandma-note-pull, grandma-magnifier, mood-3-eyeroll, grandma-shocked, grandma-nose-up, grandma-complaints
+  pay:         mood-0-asleep ... mood-9-overjoyed (one face per approval level), grandma-ribbon
+  faq:         grandma-finger + the small aside Grandmas (wave, smiley, writing, sad-x, magnifier, finger-wag, mood-6, mood-7)
+  hack club:   grandma-phone, grandma-book, grandma-shush
+  final call:  grandma-hug     footer: grandma-smiley, grandma-wave
+  Search this file for TODO before launch. Open the page with ?dev to drag and resize art in place.
+-->
+
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="wrap strip">
+    <a class="brand" href="#top">
+      <span class="fig chip ph" data-file="logo-mark.png"><img src="assets/logo-mark.png" alt="" width="56" height="56"></span>
+      Help Grandma Out
+    </a>
+    <nav aria-label="Main">
+      <a href="#faq">FAQ</a>
+      <a data-link="slack" href="#">Slack</a>
+      <a class="btn" data-link="signup" data-confetti href="#">Sign up</a>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- 1. Hero. Pre-launch version: swap the spoon image for grandma-peek.png -->
+    <section class="scene hero" id="top">
+      <div class="wrap split">
+        <div>
+          <h1>Help Grandma Out</h1>
+          <p class="lede">You pick what to build. <span data-annotate="underline" data-color="#2f4fc4">Grandma decides how.</span></p>
+          <p>Every project gets a few of Grandma's demands, like <span data-annotate="highlight" data-color="#fff3a6">no libraries</span>, <span data-annotate="highlight" data-color="#fff3a6">one button</span> or <span data-annotate="highlight" data-color="#fff3a6">battery only</span>. The more annoying the demand, the happier she is.</p>
+          <p class="countdown" data-cd>Grandma calls soon</p>
+          <div class="actions">
+            <a class="btn btn--big" data-link="signup" data-confetti href="#">Sign up</a>
+            <a class="btn btn--plain" data-link="slack" href="#">Join the Slack</a>
+          </div>
+          <p class="fine"><span class="todo">[TODO: eligibility line from HQ]</span></p>
+        </div>
+
+        <div class="stage" style="--ar: 5/6">
+          <figure class="fig abs ph js-wiggle" data-file="grandma-spoon.png" style="--x: 6; --y: 4; --w: 72; --r: 4/5">
+            <img src="assets/grandma-spoon.png" alt="Grandma pointing a wooden spoon straight at you, one eyebrow raised" width="800" height="1000">
+          </figure>
+          <figure class="fig abs ph" data-file="cookie.png" style="--x: 68; --y: 60; --w: 24; --rot: 12">
+            <img src="assets/cookie.png" alt="A cookie with a bite taken out of it" width="300" height="300">
+          </figure>
+          <p class="stage-note" style="--x: 2; --y: 70; --w: 30; --rot: -8">No libraries, dear!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. How it works -->
+    <section class="scene scene--lilac" id="how">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li class="step">
+            <div class="stage" style="--ar: 4/3">
+              <figure class="fig abs ph" data-file="grandma-clipboard.png" style="--x: 10; --y: -6.5; --w: 80">
+                <img src="assets/grandma-clipboard.png" alt="Grandma holding a clipboard, waiting" loading="lazy">
+              </figure>
+            </div>
+            <h3><span class="num">1</span>Tell her what you're building</h3>
+            <p>Pick a category: web, software, games, electronics or CAD. The project is always your idea.</p>
+          </li>
+          <li class="step">
+            <div class="stage" style="--ar: 4/3">
+              <figure class="fig abs ph" data-file="grandma-phone.png" style="--x: 10; --y: -6.5; --w: 90">
+                <img src="assets/grandma-phone.png" alt="Grandma on an old corded phone, mid-sentence" loading="lazy">
+              </figure>
+            </div>
+            <h3><span class="num">2</span>She phones with a demand</h3>
+            <p>Grandma pulls a note out of the cookie jar. It says how you have to build, like no libraries or one button. Don't like it? Ask again. The first three asks are free.</p>
+          </li>
+          <li class="step">
+            <div class="stage" style="--ar: 4/3">
+              <figure class="fig abs ph" data-file="grandma-cookie-jar.png" style="--x: 10; --y: -6.5; --w: 85">
+                <img src="assets/grandma-cookie-jar.png" alt="Grandma hugging a jar full of cookies" loading="lazy">
+              </figure>
+            </div>
+            <h3><span class="num">3</span>Build for 10 to 15 days, then ship</h3>
+            <p>Log your hours with Hackatime and ship the project. You earn <span data-annotate="circle" data-color="#e8222a">cookies</span> for your hours, and more when Grandma is impressed. </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. The fridge: a demo of the draw. The real draw happens on the server. -->
+    <section class="scene" id="demands">
+      <div class="wrap">
+        <h2>Grandma's Demands</h2>
+        <p>These are real examples from her fridge. Hit the button to see what else she has, and drag the notes around if you like.</p>
+
+        <div class="fridge-layout">
+          <div class="fridge-side">
+            <div class="stage" style="--ar: 1/1">
+              <figure class="fig abs ph ask-fig" id="gPull" data-file="grandma-note-pull.png" style="--x: -29; --y: 17.1; --w: 139">
+                <img src="assets/grandma-note-pull.png" alt="Grandma holding up a note she pulled from the jar" loading="lazy">
+              </figure>
+              <figure class="fig abs ph ask-fig" data-file="grandma-magnifier.png" style="--x: 0; --y: 8; --w: 100; --r: 8/7" hidden>
+                <img src="assets/grandma-magnifier.png" alt="Grandma squinting through a magnifying glass" loading="lazy">
+              </figure>
+              <figure class="fig abs ph ask-fig" data-file="mood-3-eyeroll.png" style="--x: 0; --y: 10; --w: 100; --r: 4/3" hidden>
+                <img src="assets/mood-3-eyeroll.png" alt="Grandma rolling her eyes and tossing a crumpled note" loading="lazy">
+              </figure>
+              <figure class="fig abs ph ask-fig" data-file="grandma-shocked.png" style="--x: 0; --y: 8; --w: 100; --r: 4/3" hidden>
+                <img src="assets/grandma-shocked.png" alt="Grandma shocked, a cookie falling out of her hand" loading="lazy">
+              </figure>
+              <figure class="fig abs ph ask-fig" id="gNose" data-file="grandma-nose-up.png" style="--x: 0; --y: 0; --w: 100" hidden>
+                <img src="assets/grandma-nose-up.png" alt="Grandma with her nose in the air and arms crossed" loading="lazy">
+              </figure>
+            </div>
+          </div>
+
+          <div class="fridge-main">
+            <div class="fridge" id="fridge" aria-live="polite">
+              <noscript>Some of the fun needs JavaScript. The short version: Grandma has 28 demands, and you get one.</noscript>
+            </div>
+            <div class="fridge-bar">
+              <button class="btn" type="button" id="ask">Ask again</button>
+              <p class="ask-status" id="askStatus">You get 3 free asks.</p>
+            </div>
+            <ul class="legend">
+              <li><span data-annotate="highlight" data-color="#fff3a6">Just a thought, dear (mild)</span></li>
+              <li><span data-annotate="highlight" data-color="#fff3a6">I'm just saying (medium)</span></li>
+              <li><span data-annotate="highlight" data-color="#fff3a6">Back in my day (spicy)</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="complaints">
+          <figure class="fig aside-fig"><img src="assets/grandma-complaints.png" alt="Grandma buried under a mountain of complaint notes" loading="lazy"></figure>
+          <p>Got a complaint of your own? Demands come from the community too. <a data-link="board" href="#">Send Grandma a complaint</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. How Grandma pays. The numbers come from CONFIG in main.js. -->
+    <section class="scene scene--sky" id="pay">
+      <div class="wrap">
+        <h2>How Grandma pays</h2>
+        <p class="sub">Pick her demands, say how long you built, and watch her face.</p>
+
+        <!-- Everything inside data-pay-root is wired up by pay.js (see the comment at the top of that file). -->
+        <div class="split pay" data-pay-root>
+          <div class="pay-face stage" style="--ar: 1/1">
+            <figure class="fig abs ph" data-face="furious" data-file="mood-1-furious.png" style="--x: 0; --y: 0; --w: 100">
+              <img src="assets/mood-1-furious.png" alt="Grandma scowling with her arms crossed in a big X" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="asleep" data-file="mood-0-asleep.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-0-asleep.png" alt="Grandma fast asleep with a snot bubble" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="sideeye" data-file="mood-2-sideeye.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-2-sideeye.png" alt="Grandma giving you the side-eye" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="eyeroll" data-file="mood-3-eyeroll.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-3-eyeroll.png" alt="Grandma rolling her eyes and tossing a crumpled note" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="smug" data-file="mood-4-smug.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-4-smug.png" alt="Grandma looking smug, sipping tea" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="pleased" data-file="mood-5-pleased.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-5-pleased.png" alt="Grandma pleased, thumb under her chin" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="thumbsup" data-file="mood-6-thumbsup.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-6-thumbsup.png" alt="Grandma giving a lazy thumbs up" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="approved" data-file="mood-7-approved.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-7-approved.png" alt="Grandma stamping a green check, approved" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="confetti" data-file="mood-8-confetti.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-8-confetti.png" alt="Grandma cheering in a shower of confetti" loading="lazy">
+            </figure>
+            <figure class="fig abs ph" data-face="overjoyed" data-file="mood-9-overjoyed.png" style="--x: 0; --y: 0; --w: 100" hidden>
+              <img src="assets/mood-9-overjoyed.png" alt="Grandma crying happy tears" loading="lazy">
+            </figure>
+          </div>
+
+          <form class="calc" onsubmit="return false">
+            <p class="bubble" aria-live="polite"><span class="say" data-pay="say">Pick a demand, dear. I'm waiting.</span><strong data-pay="total">0</strong><span class="unit">cookies</span></p>
+
+            <div class="slots">
+              <button type="button" class="slot" data-pay="slot"><b>Add a demand</b><span>tap me</span></button>
+              <button type="button" class="slot" data-pay="slot" hidden><b>Another one?</b><span>optional</span></button>
+              <button type="button" class="slot" data-pay="slot" hidden><b>One more?</b><span>if you dare</span></button>
+            </div>
+
+            <div class="hours">
+              <div class="hours-label"><b data-pay="hours-out">12</b> hours of building</div>
+              <div class="range"><input data-pay="hours" aria-label="Hours of building" type="range" min="1" max="60" value="12"><i class="tick" aria-hidden="true">huge</i></div>
+            </div>
+
+            <div class="stickers">
+              <button type="button" class="sticker is-auto" data-pay="huge" aria-pressed="false" tabindex="-1">Huge project<span>20 hours or more</span></button>
+              <button type="button" class="sticker" data-pay="quality" aria-pressed="false">Grandma loved it<span>cool project</span></button>
+              <button type="button" class="sticker" data-pay="ribbon" aria-pressed="false">Blue Ribbon<span>very rare</span></button>
+            </div>
+          </form>
+        </div>
+
+        <div class="ribbon-note">
+          <figure class="fig aside-fig"><img src="assets/grandma-ribbon.png" alt="Grandma proudly wearing a blue ribbon" loading="lazy"></figure>
+          <p class="fine">Example numbers only. Final cookie amounts are set at launch. Projects that really impress her earn a <span data-annotate="highlight" data-color="#fff3a6">Blue Ribbon</span>, with a bonus and a spot on her wall. <span class="todo">[TODO: confirm ribbon perks]</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. FAQ -->
+    <section class="scene" id="faq">
+      <div class="wrap faq">
+        <div class="faq-head">
+          <h2>Questions Grandma gets asked</h2>
+          <figure class="fig aside-fig"><img src="assets/grandma-finger.png" alt="Grandma raising one finger, about to make a point" loading="lazy"></figure>
+        </div>
+
+        <details name="faq">
+          <summary>Who can join?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/grandma-wave.png" alt="Grandma waving hello" loading="lazy"></figure><p>Help out grandma is for highschoolers! You need to be 13-18 years old <span data-annotate="highlight" data-color="#fff3a6">(under 19)</span> to participate.</p></div>
+        </details>
+        <details name="faq">
+          <summary>Does it cost anything?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/grandma-smiley.png" alt="Grandma holding up a drawing of a smiley face" loading="lazy"></figure><p><span data-annotate="highlight" data-color="#fff3a6">100% free*</span> - all the prizes are donated to us or paid for by us!<br>
+*customs might occur outside of the US or you might simply get a HCB grant</p></div>
+        </details>
+        <details name="faq">
+          <summary>Can I pick my own project?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/grandma-writing.png" alt="Grandma scribbling on a piece of paper" loading="lazy"></figure><p><span data-annotate="highlight" data-color="#fff3a6">Always.</span> Grandma only decides how you build it, never what.</p></div>
+        </details>
+        <details name="faq">
+          <summary>What if I get a demand I can't do?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/grandma-sad-x.png" alt="Grandma worried, holding a paper with a red X" loading="lazy"></figure><p>Ask again. <span data-annotate="highlight" data-color="#fff3a6">The first three asks are free</span>, and after that each ask costs a few cookies.</p></div>
+        </details>
+        <details name="faq">
+          <summary>Can I use AI?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/grandma-magnifier.png" alt="Grandma watching you through a magnifying glass" loading="lazy"></figure><p>Use of AI must strictly be <span data-annotate="highlight" data-color="#fff3a6">under 30%</span> of total time.</p></div>
+        </details>
+        <details name="faq">
+          <summary>Can I make changes to my old projects and ship it with additional hours?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/grandma-finger-wag.png" alt="Grandma wagging her finger" loading="lazy"></figure><p><span data-annotate="highlight" data-color="#fff3a6">No,</span> the project must be created AFTER you have asked grandma.</p></div>
+        </details>
+        <details name="faq">
+          <summary>What kinds of projects count?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/mood-6-thumbsup.png" alt="Grandma giving a lazy thumbs up" loading="lazy"></figure><p>All kinds of technical projects, as long as they're <span data-annotate="highlight" data-color="#fff3a6">open-source</span>.</p></div>
+        </details>
+        <details name="faq">
+          <summary>Is this legit?</summary>
+          <div class="answer"><figure class="fig aside-fig"><img src="assets/mood-7-approved.png" alt="Grandma stamping a green check, approved" loading="lazy"></figure><p><span data-annotate="highlight" data-color="#fff3a6">Yup.</span> It's run with <a href="https://hackclub.com/" target="_blank" rel="noopener">Hack Club</a>, a nonprofit that has been running programs like this for years. Past rounds include <a href="https://hackclub.com/arcade/" target="_blank" rel="noopener">Arcade</a>, <a href="https://highseas.hackclub.com/" target="_blank" rel="noopener">High Seas</a>, <a href="https://summer.hackclub.com/" target="_blank" rel="noopener">Summer of Making</a> and <a href="https://flavortown.hackclub.com/" target="_blank" rel="noopener">Flavortown</a>. Teens build projects, and real prizes get sent out.</p></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- 6. Final call -->
+    <section class="scene scene--lilac cta">
+      <div class="wrap">
+        <div class="stage" style="--ar: 3/2">
+          <figure class="fig abs ph" data-file="grandma-hug.png" style="--x: -12.8; --y: -20; --w: 125; --r: 3/2">
+            <img src="assets/grandma-hug.png" alt="Grandma with her arms wide open for a hug" loading="lazy">
+          </figure>
+        </div>
+        <h2>Grandma is waiting.</h2>
+        <p class="countdown" data-cd>Grandma calls soon</p>
+        <p><a class="btn btn--big" data-link="signup" data-confetti="big" href="#">Sign up</a></p>
+      </div>
+    </section>
+
+    <!-- 7. What is Hack Club: Grandma phones the authorities -->
+    <section class="scene scene--blush" id="hackclub">
+      <div class="wrap">
+        <h2>What is Hack Club?</h2>
+
+        <div class="split hc">
+          <div class="stage" style="--ar: 10/7">
+            <figure class="fig abs ph js-phone" data-file="grandma-phone.png" style="--x: 0; --y: 14; --w: 88; --r: 10/7">
+              <img src="assets/grandma-phone.png" alt="Grandma on the corded phone, shocked" loading="lazy">
+            </figure>
+            <p class="shout" style="--x: 40; --y: -2; --rot: 3">Hello?! There are TEENAGERS out there building things!</p>
+          </div>
+
+          <blockquote class="clip">
+            <p>Hack Club is an <span class="strike" data-annotate="crossed-off" data-color="#e8222a">extremist group</span><span class="fix">nonprofit</span>, founded by dropouts, which claims it can educate teenagers more effectively than schools despite having no textbooks, teachers or classes.</p>
+            <p>Their agenda involves turning teens into hackers, simply by getting them to build technical projects. They seek to <span data-annotate="underline" data-color="#2f4fc4">indoctrinate</span> children through social media, word of mouth, posters and semi-autonomous cells operating inside schools, sometimes openly.</p>
+            <p>These <span class="strike" data-annotate="crossed-off" data-color="#e8222a">dangerous radicals</span><span class="fix">cool teens</span> must be stopped.</p>
+          </blockquote>
+        </div>
+
+        <h3 class="real">The boring truth</h3>
+        <ul class="facts">
+          <li class="sticky"><b>501(c)(3)</b>nonprofit</li>
+          <li class="sticky"><b>100,000+</b>teen makers</li>
+          <li class="sticky"><b>119</b>countries</li>
+          <li class="sticky"><b>0</b>experience needed</li>
+        </ul>
+        <div class="truth-row">
+          <figure class="fig aside-fig"><img src="assets/grandma-book.png" alt="Grandma reading a big book, doing her homework" loading="lazy"></figure>
+          <p class="truth">Artists, engineers, hardware people and game devs all learn by shipping real projects, getting stuck and figuring it out together.</p>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn--plain" href="https://hackclub.com/philosophy/" target="_blank" rel="noopener">Philosophy</a>
+          <a class="btn btn--plain" href="https://hackclub.com/philanthropy/" target="_blank" rel="noopener">Donors</a>
+          <a class="btn btn--plain" href="https://hackclub.com/" target="_blank" rel="noopener">Other programs</a>
+          <figure class="fig aside-fig shush"><img src="assets/grandma-shush.png" alt="Grandma winking, a finger to her lips, holding a love letter" loading="lazy"></figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p>Program run by <span data-annotate="highlight" data-color="#fff3a6">Shashwat</span>.</p>
+      <p>All art and code is made by me.</p>
+      <figure class="fig foot-fig"><img src="assets/grandma-smiley.png" alt="Grandma proudly holding up a drawing of a smiley face" loading="lazy"></figure>
+      <figure class="fig foot-fig foot-fig--wave"><img src="assets/grandma-wave.png" alt="Grandma waving goodbye" loading="lazy"></figure>
+
+      <p>
+        <a data-link="philosophy" href="https://hackclub.com/philosophy">Philosophy</a>
+        <a data-link="team" href="https://hackclub.com/team">Our Team</a>
+        <a data-link="jobs" href="https://hackclub.com/jobs">Jobs</a>
+        <a data-link="press" href="https://hackclub.com/press">Press</a>
+      </p>
+      <p>
+        <a data-link="donate" href="https://hackclub.com/philanthropy">Donate</a>
+        <a data-link="events" href="https://events.hackclub.com/">Events</a>
+        <a data-link="jams" href="https://jams.hackclub.com/">Jams</a>
+        <a data-link="toolbox" href="https://toolbox.hackclub.com/">Toolbox</a>
+      </p>
+      <p>
+        <a data-link="conduct" href="https://hackclub.com/conduct/">Code of Conduct</a>
+        <a data-link="terms" href="https://hackclub.com/privacy-and-terms#hack-club-standard-terms-and-conditions">Terms &amp; Conditions</a>
+        <a data-link="privacy" href="https://hackclub.com/privacy-and-terms#hack-club-privacy-notice">Privacy Notice</a>
+        <a data-link="bounty" href="https://forms.hackclub.com/bounty">Fulfillment Bounty</a>
+      </p>
+      <p><span data-annotate="highlight" data-color="#fff3a6">built by teens for teens :)</span></p>
+    </div>
+  </footer>
+</body>
+</html>
+
+
+
