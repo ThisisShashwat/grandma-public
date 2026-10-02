@@ -1,6 +1,5 @@
 """Django settings. Everything that differs between a laptop and a server comes from the environment or a gitignored
 `.env` file (copy `.env.example`). With DEBUG off the security settings switch on by themselves."""
-import hmac
 from pathlib import Path
 
 import environ
@@ -95,8 +94,3 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", defa
 SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
 if env.bool("BEHIND_PROXY", default=False):     # set when a reverse proxy terminates HTTPS and sets X-Forwarded-Proto
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# The shop (docs/shop.md, docs/security.md). Prices are stored when an item is saved, so changing either of these
-# moves no price until you run "Recompute prices" in the admin.
-SHOP_DEFAULT_REGION = env("SHOP_DEFAULT_REGION", default="US")      # used when ?region= is missing or not an active Region code
-SHOP_PRICE_SECRET = env("SHOP_PRICE_SECRET", default=hmac.new(SECRET_KEY.encode(), b"shop.price.jitter", "sha256").hexdigest())
