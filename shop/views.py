@@ -6,4 +6,4 @@ from . import catalog
 
 @require_safe
 def shop(request):
-    return render(request, "pages/shop.html", {"shop": catalog.build(request.GET.get("region"))})
+    return render(request, "pages/shop.html", {"shop": catalog.build()})
