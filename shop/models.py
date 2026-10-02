@@ -1,24 +1,23 @@
-"""The Pantry's data. Every dollar figure in here is private: it never reaches a template, JSON or log (docs/security.md).
-Pages read shop/catalog.py, which hands out plain dataclasses, never these models.
+"""The Pantry's data, edited in the Django admin (shop/admin.py).
 
-Layers: pricing.py (pure maths) <- models.py <- catalog.py <- views.py. Edited in the Django admin (shop/admin.py)."""
+Every item is a Hack Club Bank card grant, except the few "by hand" ones (a letter from HQ, a loot box) that staff fulfil.
+Dollar values of grants are public; the rate class (markup) is not. Pages never see these models: shop/catalog.py hands
+out plain dataclasses of public fields (docs/security.md).
+
+Layers: pricing.py (pure maths) <- models.py <- catalog.py <- views.py.
+"""
 import re
 from decimal import Decimal
 
-from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F, Q
 
 from program import payout
 
 from . import pricing
-
-MIN_USD = [MinValueValidator(Decimal("0.01"))]
-MIN_COOKIES = [MinValueValidator(1)]
-
 
 ART_NAME = re.compile(r"[A-Za-z0-9_-]+\.(png|jpg|webp|gif)")
 
@@ -31,34 +30,13 @@ def validate_art(name):
         raise ValidationError(f"There is no {name} in static/assets.")
 
 
-def cookie_price(usd, rate_class, slug, region_code):
-    """One unit's cookie price. The only place the pure maths meets Django settings."""
-    return pricing.cookie_price(
-        usd, payout.CONFIG["cookies_per_usd"], rate_class.markup,
-        settings.SHOP_PRICE_SECRET.encode(), slug, region_code,
-    )
-
-
-class Region(models.Model):
-    code = models.CharField(max_length=8, unique=True, validators=[RegexValidator(r"\A[A-Z]+\Z", "Capital letters only, like US or XX.")])
-    name = models.CharField(max_length=60)
-    sort_order = models.PositiveSmallIntegerField(default=0)
-    active = models.BooleanField(default=True, help_text="Only active regions can be picked with ?region=CODE.")
-
-    class Meta:
-        ordering = ["sort_order", "code"]
-
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-
-
 class RateClass(models.Model):
     """How dear a family of items is. cookies per dollar = program.payout cookies_per_usd x markup."""
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=60)
     markup = models.DecimalField(
         max_digits=5, decimal_places=3, validators=[MinValueValidator(Decimal("0.001"))],
-        help_text="PRIVATE. Prices are stored when an item is saved: after changing this, run Recompute prices on the items.",
+        help_text="Prices are stored when an item is saved: after changing this, run Recompute prices on the items.",
     )
 
     class Meta:
@@ -73,47 +51,10 @@ class RateClass(models.Model):
         return payout.CONFIG["cookies_per_usd"] * self.markup
 
 
-class Priced(models.Model):
-    """A dollar value with a stored cookie price: the item itself, or its price in one region."""
-    usd_value = models.DecimalField("dollar value (private)", max_digits=8, decimal_places=2, validators=MIN_USD,
-                                    help_text="PRIVATE. What one unit costs us. Never shown to visitors.")
-    cookies = models.PositiveIntegerField(editable=False)
-    cookies_override = models.PositiveIntegerField(null=True, blank=True, validators=MIN_COOKIES,
-                                                   help_text="Optional. Forces this exact price instead of the computed one.")
-
-    class Meta:
-        abstract = True
-        constraints = [
-            models.CheckConstraint(condition=Q(cookies__gt=0), name="%(class)s_cookies_positive"),
-            models.CheckConstraint(condition=Q(usd_value__gt=0), name="%(class)s_usd_positive"),
-            models.CheckConstraint(condition=Q(cookies_override__isnull=True) | Q(cookies_override__gte=1),
-                                   name="%(class)s_override_positive"),
-        ]
-
-    @property
-    def effective_cookies(self):
-        return self.cookies_override or self.cookies
-
-    def cookies_per_dollar(self):
-        return Decimal(self.effective_cookies) / Decimal(self.usd_value)
-
-    def save(self, *args, **kwargs):
-        self.cookies = self.compute_cookies()           # from usd and rate, never from the override; stored so it never moves by itself
-        super().save(*args, **kwargs)
-
-
-class ShopItem(Priced):
+class ShopItem(models.Model):
     class Kind(models.TextChoices):
         GRANT = "grant", "Card grant"
-        SHIPPED = "shipped", "Shipped"
-        DIGITAL = "digital", "Digital"
-
-    class Category(models.TextChoices):
-        HARDWARE = "hardware", "Hardware"
-        SOFTWARE = "software", "Software"
-        CREDITS = "credits", "Credits"
-        FUN = "fun", "Fun"
-        SWAG = "swag", "Swag"
+        MANUAL = "manual", "By hand"
 
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=80)
@@ -121,23 +62,31 @@ class ShopItem(Priced):
     description = models.TextField(blank=True)
     art = models.CharField(max_length=80, default="cookie.png", validators=[validate_art],
                            help_text="A file inside static/assets, for example grandma-cookie-jar.png.")
-    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.GRANT)
-    category = models.CharField(max_length=10, choices=Category.choices)
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.GRANT,
+                            help_text="Everything is a card grant unless it cannot be: those staff hand over themselves.")
     rate_class = models.ForeignKey(RateClass, on_delete=models.PROTECT, related_name="items")
+    usd_value = models.DecimalField("dollar value", max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))],
+                                    help_text="A grant's value on the card. Shown to visitors for grants. For a by-hand item it is just our cost.")
+    cookies = models.PositiveIntegerField(editable=False)
+    cookies_override = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)],
+                                                   help_text="Optional. Forces this exact price instead of the computed one.")
     stackable = models.BooleanField(default=False, help_text="Can be bought more than once and the copies add up.")
-    max_per_user = models.PositiveIntegerField(null=True, blank=True, validators=MIN_COOKIES,
+    max_per_user = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)],
                                                help_text="Empty = no limit. A non-stackable item is always one per person.")
     stock = models.PositiveIntegerField(null=True, blank=True, help_text="Empty = unlimited. 0 = sold out.")
     base_item = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="upgrades", limit_choices_to={"base_item__isnull": True},
-        help_text="Set this to make the item an UPGRADE of that base grant. Upgrades are only sold together with their base.",
+        help_text="Set this to make the item an UPGRADE of that base grant: it tops up the same card and is never sold alone.",
     )
     active = models.BooleanField(default=True)
     sort_order = models.PositiveSmallIntegerField(default=0)
 
-    class Meta(Priced.Meta):
+    class Meta:
         ordering = ["sort_order", "name"]
-        constraints = Priced.Meta.constraints + [
+        constraints = [
+            models.CheckConstraint(condition=Q(cookies__gt=0), name="shopitem_cookies_positive"),
+            models.CheckConstraint(condition=Q(usd_value__gt=0), name="shopitem_usd_positive"),
+            models.CheckConstraint(condition=Q(cookies_override__isnull=True) | Q(cookies_override__gte=1), name="shopitem_override_positive"),
             models.CheckConstraint(condition=Q(max_per_user__isnull=True) | Q(max_per_user__gte=1), name="item_max_per_user_positive"),
             models.CheckConstraint(condition=Q(stackable=True) | Q(max_per_user__isnull=True) | Q(max_per_user=1),
                                    name="item_one_per_user_when_not_stackable"),
@@ -147,13 +96,19 @@ class ShopItem(Priced):
     def __str__(self):
         return self.name
 
+    @property
+    def effective_cookies(self):
+        return self.cookies_override or self.cookies
+
+    def cookies_per_dollar(self):
+        return Decimal(self.effective_cookies) / Decimal(self.usd_value)
+
     def compute_cookies(self):
-        return cookie_price(self.usd_value, self.rate_class, self.slug, pricing.ITEM_PRICE)
+        return pricing.cookie_price(self.usd_value, payout.CONFIG["cookies_per_usd"], self.rate_class.markup)
 
     def save(self, *args, **kwargs):
+        self.cookies = self.compute_cookies()           # from dollars and rate, never from the override; stored so it never moves by itself
         super().save(*args, **kwargs)
-        for row in self.regional_prices.select_related("region"):
-            row.save()                                  # a regional price depends on this item's slug and rate class
 
     def upgrade_problem(self):
         """Which upgrade rule this item breaks, as a sentence, or "". A base item is checked through its upgrades."""
@@ -166,6 +121,8 @@ class ShopItem(Priced):
             return "The base item cannot itself be an upgrade."
         if self.pk and self.upgrades.exists():
             return "This item has upgrades of its own, so it cannot be an upgrade."
+        if self.kind != self.Kind.GRANT or base.kind != self.Kind.GRANT:
+            return "An upgrade and its base must both be card grants: the upgrade tops up the base's card."
         if not self.stackable:
             return f"{self.name} must be stackable: an upgrade can be bought several times."
         if not (self.usd_value and self.rate_class_id):
@@ -181,22 +138,3 @@ class ShopItem(Priced):
             raise ValidationError({"max_per_user": "A non-stackable item is one per person: leave this empty or use 1."})
         if problem := self.upgrade_problem():
             raise ValidationError({"base_item": problem})
-
-
-class RegionalPrice(Priced):
-    """An item's price in one region. No row for a region means the item's own price, available there."""
-    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name="regional_prices")
-    region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name="prices")
-    enabled = models.BooleanField(default=True, help_text="Off = the item is hidden in this region.")
-
-    class Meta(Priced.Meta):
-        ordering = ["region__sort_order"]
-        constraints = Priced.Meta.constraints + [
-            models.UniqueConstraint(fields=["item", "region"], name="one_price_per_item_and_region"),
-        ]
-
-    def __str__(self):
-        return f"{self.item} in {self.region.code}"
-
-    def compute_cookies(self):
-        return cookie_price(self.usd_value, self.item.rate_class, self.item.slug, self.region.code)
