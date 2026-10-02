@@ -1,0 +1,75 @@
+/* The Pantry (the shop page). The home page's language: 4px ink borders, tilts of at most 2 degrees, sticky notes.
+   The red magnets on .price-tag and .guest-note live in core/notes.css. */
+
+/* header band */
+.pantry-head h1 { font-size: clamp(3rem, 9vw, 5.5rem); }
+.pantry-head .lede { max-width: 28rem; font-size: clamp(1.3rem, 2.8vw, 1.8rem); line-height: 1.25; }
+/* the jar art has a white background, so it sits on a white card like the "How it works" steps */
+.pantry-jar { width: min(100%, 18rem); justify-self: center; padding: 0.75rem; background: var(--canvas); border: var(--line) solid var(--ink); rotate: 1.5deg; }
+.guest-note {
+  position: relative; display: inline-block; max-width: 22rem; margin: 1.5rem 0 0; padding: 1.2rem 1.25rem 0.8rem;
+  background: var(--paper); border: 3px solid var(--ink); rotate: -1.5deg;
+  font-family: var(--display); font-size: 1.4rem; line-height: 1.1;
+}
+.guest-note b { display: block; font-weight: 400; font-size: 1.9rem; }
+
+/* region chips */
+.regions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem 0.9rem; margin-bottom: 2.75rem; }
+.regions b { margin-right: 0.3rem; font-family: var(--display); font-weight: 400; font-size: 1.7rem; }
+.region {
+  padding: 0.1em 0.8em; font-family: var(--display); font-size: 1.35rem; line-height: 1.25; color: var(--ink);
+  background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b); text-decoration: none;
+}
+.region:nth-of-type(odd) { rotate: -1deg; }
+.region:nth-of-type(even) { rotate: 0.8deg; }
+.region:hover { background: var(--pink); }
+.region[aria-current] { background: var(--paper); box-shadow: 0 0 0 3px var(--canvas), 0 0 0 6px var(--ink); }
+
+/* shelves of cards */
+.shelf + .shelf { margin-top: 3.5rem; }
+.shelf-label {
+  display: inline-block; margin: 0 0 1.5rem; padding: 0.05em 0.6em; font-size: clamp(2rem, 5vw, 3rem);
+  background: var(--paper); border: var(--line) solid var(--ink); rotate: -1.5deg;
+}
+.shelf:nth-of-type(3n+2) .shelf-label { background: var(--note-pink); rotate: 1deg; }
+.shelf:nth-of-type(3n+3) .shelf-label { background: var(--note-blue); rotate: -0.6deg; }
+
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 2.25rem 1.75rem; margin: 0; padding: 0; list-style: none; }
+.items > li { display: flex; }
+.item { flex: 1; display: flex; flex-direction: column; gap: 0.55rem; padding: 1rem 1.15rem 1.25rem; background: var(--canvas); border: var(--line) solid var(--ink); }
+.items > li:nth-child(4n+1) .item { rotate: -1deg; }
+.items > li:nth-child(4n+2) .item { rotate: 0.8deg; }
+.items > li:nth-child(4n+3) .item { rotate: -0.5deg; }
+.items > li:nth-child(4n+4) .item { rotate: 1.2deg; }
+
+.item-art { width: min(100%, 10rem); margin: 0 auto 0.25rem; }
+.item h3 { margin: 0; font-size: 1.8rem; }
+.tagline { margin: 0; font-size: 1.05rem; }
+.badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.2rem 0; padding: 0; list-style: none; }
+.badge { padding: 0.05em 0.6em; font-size: 0.9rem; font-weight: 700; line-height: 1.5; background: var(--canvas); border: 2px solid var(--ink); border-radius: var(--wobble-b); }
+.badge--kind { background: var(--note-blue); }
+.badge--stock { background: var(--note-pink); }
+.badge--out { background: var(--red); color: var(--canvas); }
+.item details { font-size: 1rem; }
+.item summary { font-family: var(--display); font-size: 1.25rem; }
+.item details p { margin: 0.4rem 0 0; white-space: pre-line; }
+.upgrades { margin: 0.2rem 0 0; padding: 0.7rem 0 0; list-style: none; border-top: 3px solid var(--ink); font-size: 1rem; }
+.upgrades li + li { margin-top: 0.4rem; }
+
+/* the price: a sticky note pinned to the bottom of the card */
+.item-foot { margin-top: auto; padding-top: 1rem; }
+.price-tag {
+  position: relative; display: inline-block; margin: 0; padding: 1.1rem 1.1rem 0.55rem; background: var(--paper); border: 3px solid var(--ink); rotate: -2deg;
+  font-family: var(--display); font-size: 1.3rem; line-height: 1; text-align: center;
+}
+.price-tag b { display: block; font-weight: 400; font-size: 2.6rem; line-height: 1; }
+.items > li:nth-child(3n+2) .price-tag { background: var(--note-pink); rotate: 1.5deg; }
+.items > li:nth-child(3n+3) .price-tag { background: var(--note-blue); rotate: -1deg; }
+
+/* nothing on the shelves */
+.empty {
+  display: flex; align-items: center; gap: 1.5rem; max-width: 36rem; margin: 1rem auto; padding: 1.25rem 1.5rem; background: var(--canvas);
+  border: var(--line) solid var(--ink); rotate: -1deg; font-family: var(--display); font-size: 1.8rem; line-height: 1.1;
+}
+.empty p { margin: 0; }
+.empty-fig { width: clamp(6rem, 22vw, 9rem); }

@@ -1,0 +1,18 @@
+{% import "macros/shop.html" as shopui %}
+<section class="scene pantry-shelves" id="shelves">
+  <div class="wrap">
+    {% include "sections/shop_regions.html" %}
+    {% for shelf in shop.shelves %}
+    <section class="shelf" aria-labelledby="shelf-{{ shelf.key }}">
+      <h2 class="shelf-label" id="shelf-{{ shelf.key }}">{{ shelf.label }}</h2>
+      <ul class="items">
+        {% for p in shelf.products %}
+        <li>{{ shopui.card(p) }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% else %}
+    {% include "sections/shop_empty.html" %}
+    {% endfor %}
+  </div>
+</section>

@@ -1,0 +1,9 @@
+{# Region chips: plain links, so they work without JavaScript. The region is checked on the server (shop/catalog.py). #}
+{% if shop.regions %}
+<nav class="regions" aria-label="Region">
+  <b>Where do you live?</b>
+  {% for r in shop.regions %}
+  <a class="region" href="{{ url('shop') }}?region={{ r.code }}"{% if r.current %} aria-current="true"{% endif %}>{{ r.name }}</a>
+  {% endfor %}
+</nav>
+{% endif %}

@@ -1,0 +1,46 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# One thing on a shelf. `p` is a shop.catalog.Product, which holds public fields only, so no dollar can show up here. #}
+
+{% macro badge(text, kind="") -%}
+<li class="badge{% if kind %} badge--{{ kind }}{% endif %}">{{ text }}</li>
+{%- endmacro %}
+
+{% macro card(p) %}
+<article class="item">
+  {{ art.fig(p.art, "", "item-art") }}
+  <h3>{{ p.name }}</h3>
+  {% if p.tagline %}
+  <p class="tagline">{{ p.tagline }}</p>
+  {% endif %}
+  <ul class="badges">
+    {{ badge(p.kind, "kind") }}
+    {% if p.max_per_user == 1 %}
+    {{ badge("one per person") }}
+    {% else %}
+    <li class="badge">{{ ui.mark("stackable") }}{% if p.max_per_user %}, up to {{ p.max_per_user }}{% endif %}</li>
+    {% endif %}
+    {% if not p.available %}
+    {{ badge("sold out", "out") }}
+    {% elif p.stock_left is not none %}
+    {{ badge(p.stock_left ~ " left", "stock") }}
+    {% endif %}
+  </ul>
+  {% if p.description %}
+  <details>
+    <summary>The details</summary>
+    <p>{{ p.description }}</p>
+  </details>
+  {% endif %}
+  {% if p.upgrades %}
+  <ul class="upgrades">
+    {% for up in p.upgrades %}
+    <li>+ {{ ui.mark("upgrade", "underline") }}: {{ up.name }}, {{ "{:,}".format(up.cookies) }} cookies{% if up.max_per_user %}, up to {{ up.max_per_user }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <div class="item-foot">
+    <p class="price-tag"><b>{{ "{:,}".format(p.cookies) }}</b> cookies</p>
+  </div>
+</article>
+{% endmacro %}

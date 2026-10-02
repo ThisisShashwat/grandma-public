@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}The Pantry{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/shop.css') }}">
+{% endblock %}
+
+{% block main %}
+{% include "sections/shop_head.html" %}
+{% include "sections/shop_shelves.html" %}
+{% endblock %}
