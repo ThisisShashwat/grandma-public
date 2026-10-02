@@ -6,3 +6,5 @@ venv/
 .env
 instance/
 tests/visual/out/
+db.sqlite3
+staticfiles/
