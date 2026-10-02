@@ -1,0 +1,11 @@
+.hero { border-top: 0; }
+.lede { font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.25; margin-bottom: 0.75em; }
+.hero .stage { max-width: 520px; margin-inline: auto; }
+
+/* a sticky note drawn in CSS, positioned like the art (its magnet is in core/notes.css) */
+.stage-note {
+  position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: calc(var(--w) * 1%); margin: 0;
+  padding: 1.1rem 0.7rem 0.8rem; rotate: calc(var(--rot) * 1deg);
+  font-family: var(--display); font-size: clamp(1.1rem, 2.6vw, 1.6rem); line-height: 1.05; text-align: center;
+  background: var(--paper); border: 3px solid var(--ink);
+}

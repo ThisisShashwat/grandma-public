@@ -1,0 +1,31 @@
+{% import "macros/art.html" as art %}
+{# Grandma's payout calculator. Everything inside data-pay-root is wired up by static/js/modules/pay/widget.js,
+   which lists the hooks (data-pay, data-face). To reuse it on another page: include this file, load the pay CSS, call mount(). #}
+<div class="split pay" data-pay-root>
+  <div class="pay-face stage" style="--ar: 1/1">
+    {% for f in faces %}
+    {{ art.placed(f.file, f.alt, "--x: 0; --y: 0; --w: 100", face=f.name, hidden=not loop.first) }}
+    {% endfor %}
+  </div>
+
+  <form class="calc" onsubmit="return false">
+    <p class="bubble" aria-live="polite"><span class="say" data-pay="say">{{ faces[0].say }}</span><strong data-pay="total">0</strong><span class="unit">cookies</span></p>
+
+    <div class="slots">
+      <button type="button" class="slot" data-pay="slot"><b>Add a demand</b><span>tap me</span></button>
+      <button type="button" class="slot" data-pay="slot" hidden><b>Another one?</b><span>optional</span></button>
+      <button type="button" class="slot" data-pay="slot" hidden><b>One more?</b><span>if you dare</span></button>
+    </div>
+
+    <div class="hours">
+      <div class="hours-label"><b data-pay="hours-out">12</b> hours of building</div>
+      <div class="range"><input data-pay="hours" aria-label="Hours of building" type="range" min="1" max="60" value="12"><i class="tick" aria-hidden="true">huge</i></div>
+    </div>
+
+    <div class="stickers">
+      <button type="button" class="sticker is-auto" data-pay="huge" aria-pressed="false" tabindex="-1">Huge project<span>20 hours or more</span></button>
+      <button type="button" class="sticker" data-pay="quality" aria-pressed="false">Grandma loved it<span>cool project</span></button>
+      <button type="button" class="sticker" data-pay="ribbon" aria-pressed="false">Blue Ribbon<span>very rare</span></button>
+    </div>
+  </form>
+</div>

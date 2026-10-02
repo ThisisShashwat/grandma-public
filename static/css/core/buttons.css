@@ -1,0 +1,17 @@
+.btn {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  line-height: 1.1;
+  padding: 0.45em 1.1em;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  border-radius: var(--wobble-a);
+  text-decoration: none;
+  text-align: center;
+}
+.btn:hover { background: var(--pink); }
+.btn:active { translate: 3px 3px; }
+.btn--plain { background: var(--canvas); border-radius: var(--wobble-b); }
+.btn--big { font-size: clamp(2rem, 6vw, 3.2rem); }

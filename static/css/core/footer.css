@@ -1,0 +1,10 @@
+.foot { border-top: var(--line) solid var(--ink); padding-block: 2rem; font-size: 1rem; }
+.foot a { color: var(--ink); margin-right: 1.25rem;}
+.foot p { margin-bottom: 0.5rem; }
+
+/* footer Grandmas */
+.foot .wrap { position: relative; }
+.foot-fig { position: absolute; right: 0; bottom: 0; width: clamp(5rem, 13vw, 8rem); aspect-ratio: auto; margin: 0; }
+.foot-fig img { position: static; height: auto; }
+.foot-fig--wave { right: clamp(6rem, 16vw, 10rem); width: clamp(4.5rem, 11vw, 7rem); }
+@media (max-width: 600px) { .foot-fig { position: static; display: inline-block; margin-top: 0.75rem; } }

@@ -1,0 +1,41 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# The fridge: a demo of the draw (static/js/features/fridge.js). The real draw has to happen on the server. #}
+<section class="scene" id="demands">
+  <div class="wrap">
+    <h2>Grandma's Demands</h2>
+    <p>These are real examples from her fridge. Hit the button to see what else she has, and drag the notes around if you like.</p>
+
+    <div class="fridge-layout">
+      <div class="fridge-side">
+        <div class="stage" style="--ar: 1/1">
+          {{ art.placed("grandma-note-pull.png", "Grandma holding up a note she pulled from the jar", "--x: -29; --y: 17.1; --w: 139", cls="ask-fig", id="gPull") }}
+          {{ art.placed("grandma-magnifier.png", "Grandma squinting through a magnifying glass", "--x: 0; --y: 8; --w: 100; --r: 8/7", cls="ask-fig", hidden=true) }}
+          {{ art.placed("mood-3-eyeroll.png", "Grandma rolling her eyes and tossing a crumpled note", "--x: 0; --y: 10; --w: 100; --r: 4/3", cls="ask-fig", hidden=true) }}
+          {{ art.placed("grandma-shocked.png", "Grandma shocked, a cookie falling out of her hand", "--x: 0; --y: 8; --w: 100; --r: 4/3", cls="ask-fig", hidden=true) }}
+          {{ art.placed("grandma-nose-up.png", "Grandma with her nose in the air and arms crossed", "--x: 0; --y: 0; --w: 100", cls="ask-fig", id="gNose", hidden=true) }}
+        </div>
+      </div>
+
+      <div class="fridge-main">
+        <div class="fridge" id="fridge" aria-live="polite">
+          <noscript>Some of the fun needs JavaScript. The short version: Grandma has {{ pool|length }} demands, and you get one.</noscript>
+        </div>
+        <div class="fridge-bar">
+          <button class="btn" type="button" id="ask">Ask again</button>
+          <p class="ask-status" id="askStatus">You get {{ free_asks }} free asks.</p>
+        </div>
+        <ul class="legend">
+          {% for t in tiers %}
+          <li>{{ ui.mark(tiers[t] ~ " (" ~ levels[t] ~ ")") }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="complaints">
+      {{ art.fig("grandma-complaints.png", "Grandma buried under a mountain of complaint notes") }}
+      <p>Got a complaint of your own? Demands come from the community too. <a data-link="board" {{ link_attrs("board") }}>Send Grandma a complaint</a>.</p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,44 @@
+.fridge-layout { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; margin-top: 1.5rem; }
+.fridge-side { flex: 0 1 240px; margin-inline: auto; }
+.fridge-side .stage { max-width: 240px; }
+.ask-fig { transform-origin: 50% 100%; }
+.fridge-main { flex: 1 1 420px; min-width: 0; }
+.fridge {
+  position: relative;
+  display: flex; flex-wrap: wrap; gap: 1.5rem 1.25rem; justify-content: center; align-content: flex-start;
+  min-height: 27rem;
+  padding: 2.5rem 1.25rem 1.5rem;
+  /* replace with a drawn fridge: put static/assets/fridge.png in place, the grey stays as a fallback */
+  background: url("../../assets/fridge.png") center / 100% 100% no-repeat, #d9d9d9;
+  border: var(--line) solid var(--ink);
+}
+.fridge::after { /* fridge handle, delete if your drawn fridge has one */
+  content: ""; position: absolute; right: 10px; top: 14%; width: 14px; height: 30%;
+  background: #bdbdbd; border: 3px solid var(--ink);
+}
+.note {
+  position: relative;
+  width: min(15rem, 42%);
+  min-width: 10rem;
+  min-height: 8.5rem;
+  padding: 1.25rem 0.9rem 0.8rem;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  rotate: calc(var(--rot, 0) * 1deg);
+  cursor: grab;
+  user-select: none;
+}
+.note:nth-child(3n + 2) { background: var(--note-pink); }
+.note:nth-child(3n) { background: var(--note-blue); }
+.note:nth-child(even)::before { background: var(--ribbon); }
+.note b { display: block; margin-bottom: 0.25rem; font-family: var(--display); font-size: 1.4rem; font-weight: 400; }
+.note .tier { display: block; margin-top: 0.6rem; font-size: 0.9rem; font-style: italic; }
+.fridge-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.25rem; }
+.ask-status { margin: 0; flex: 1 1 14rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 1rem 0 0; padding: 0; list-style: none; font-size: 0.95rem; }
+
+.complaints { display: flex; align-items: center; gap: 1.25rem; margin-top: 1.5rem; }
+.complaints .aside-fig { width: clamp(8rem, 22vw, 13rem); }
+.complaints p { margin: 0; }

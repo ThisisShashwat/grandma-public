@@ -1,0 +1,6 @@
+/* The round magnet that pins every sticky note: fridge notes, filled demand slots, fact stickies, the hero note. */
+.note::before, .slot[data-tier]::before, .sticky::before, .stage-note::before {
+  content: ""; position: absolute; top: -0.6rem; left: 50%;
+  width: 1.1rem; height: 1.1rem; margin-left: -0.55rem;
+  background: var(--red); border: 3px solid var(--ink); border-radius: 50%;
+}

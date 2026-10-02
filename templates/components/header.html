@@ -1,0 +1,12 @@
+{% import "macros/art.html" as art %}
+<header class="wrap strip">
+  <a class="brand" href="{{ url_for('home.index') }}#top">
+    <span class="fig chip ph" data-file="logo-mark.png">{{ art.img("logo-mark.png", "", (56, 56), lazy=false) }}</span>
+    {{ site.name }}
+  </a>
+  <nav aria-label="Main">
+    <a href="{{ url_for('home.index') }}#faq">FAQ</a>
+    <a data-link="slack" {{ link_attrs("slack") }}>Slack</a>
+    <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
+  </nav>
+</header>

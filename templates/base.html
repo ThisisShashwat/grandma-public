@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.name }}{% endblock %}</title>
+  <meta name="description" content="{{ site.description }}">
+  <meta property="og:title" content="{{ site.name }}">
+  <meta property="og:description" content="{{ site.og_description }}">
+  <meta property="og:image" content="{{ site.og_image }}">
+  <meta name="theme-color" content="{{ site.theme_color }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/favicon.png') }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Gochi+Hand&display=swap">
+  {% for name in ["tokens", "base", "art", "buttons", "layout", "notes", "countdown", "header", "footer", "dev"] %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/core/' ~ name ~ '.css') }}">
+  {% endfor %}
+  {% block styles %}{% endblock %}
+  <noscript><style>.ph::before { display: none; }</style></noscript>
+
+  {# Libraries: exact versions plus integrity hashes, so a hacked CDN cannot swap the file.
+     If one refuses to load, check the console for an "integrity" error. Bumping a version means regenerating its hash
+     (openssl dgst -sha384 -binary FILE | openssl base64 -A). The page still works without any of them, it just loses the effects. #}
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"
+          integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"
+          integrity="sha384-wl5TeDVvOWt30Pbf8aSo2ZrzsOjddu3avOBvHe+p+OhJt9gP6w9YXmDkN5DK2/dF" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/Draggable.min.js"
+          integrity="sha384-k9SCZn5JmxO3oyPDFbaTMy2eSu3WzGB2Qfg+htfhZCEomNh7o48hKFV38IEKsYr0" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/rough-notation@0.5.1/lib/rough-notation.iife.js"
+          integrity="sha384-IW2mAEaBUcGJfuKi7uhlzpZGhnDDnjI9NLtADxl9xKV6VJPzuuIqhIKyLwiAuRmu" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.js"
+          integrity="sha384-bopE5cbMjKUprmGnIRk2UdvCnHImrRLCtNW2uR6oDYqO+o3XWJeuIrWWxDzeDgNW" crossorigin="anonymous"></script>
+  <script id="site-data" type="application/json">{{ site_data|tojson }}</script>
+  <script type="module" src="{{ url_for('static', filename='js/core/site.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</head>
+
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  {% include "components/header.html" %}
+
+  <main id="main">
+    {% block main %}{% endblock %}
+  </main>
+
+  {% include "components/footer.html" %}
+</body>
+</html>

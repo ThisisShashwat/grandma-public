@@ -1,0 +1,65 @@
+/* The payout calculator (templates/components/calculator.html) and the Blue Ribbon note. */
+.sub { font-size: 1.2rem; margin-bottom: 1.75rem; }
+.pay { align-items: start; }
+.pay-face { max-width: 360px; margin-inline: auto; }
+.calc { display: grid; gap: 1.5rem; }
+
+/* Grandma's speech bubble holds the total */
+.bubble {
+  position: relative; margin: 0 0 0.25rem; padding: 0.6rem 1.25rem 0.7rem;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem;
+  background: var(--canvas); border: var(--line) solid var(--ink); border-radius: var(--wobble-a);
+}
+.bubble::before, .bubble::after { /* tail pointing at Grandma */
+  content: ""; position: absolute; left: -22px; top: 40%; width: 0; height: 0;
+  border: 14px solid transparent; border-right: 22px solid var(--ink); border-left: 0;
+}
+.bubble::after { left: -15px; border-right-color: var(--canvas); }
+@media (max-width: 800px) {   /* stacked layout: the tail points up at Grandma */
+  .bubble::before, .bubble::after { left: 2.5rem; top: -22px; border: 14px solid transparent; border-bottom: 22px solid var(--ink); border-top: 0; }
+  .bubble::after { top: -15px; border-bottom-color: var(--canvas); }
+}
+.bubble .say { flex: 1 0 100%; font-size: 1.1rem; font-style: italic; }
+.bubble strong { font-family: var(--display); font-size: clamp(3rem, 8vw, 4.5rem); font-weight: 400; line-height: 1; }
+.bubble .unit { font-family: var(--display); font-size: 1.8rem; }
+
+/* demands: three sticky notes that cycle mild, medium, spicy on tap */
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem; }
+.slot {
+  position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.2rem;
+  min-height: 6.5rem; padding: 1rem 0.6rem 0.6rem; font: inherit; line-height: 1.1; text-align: center; color: var(--ink);
+  background: var(--canvas); border: 3px dashed var(--ink);
+}
+.slot b { font-family: var(--display); font-size: 1.5rem; font-weight: 400; }
+.slot span { font-size: 0.9rem; font-style: italic; }
+.slot:nth-child(1) { rotate: -1.5deg; } .slot:nth-child(2) { rotate: 1deg; } .slot:nth-child(3) { rotate: -0.5deg; }
+.slot:hover { background: var(--pink); }
+.slot[data-tier] { border-style: solid; }
+.slot[data-tier="1"] { background: var(--note-blue); }
+.slot[data-tier="2"] { background: var(--paper); }
+.slot[data-tier="3"] { background: var(--note-pink); }
+
+/* hours slider */
+.hours-label { display: block; font-family: var(--display); font-size: 1.5rem; margin-bottom: 0.4rem; }
+.hours-label b { font-weight: 400; font-size: 2.2rem; }
+.range { position: relative; padding-bottom: 1.4rem; }
+.range input { width: 100%; margin: 0; accent-color: var(--ribbon); }
+.tick { position: absolute; top: 1.5rem; left: calc((20 - 1) / 59 * 100%); translate: -50% 0; font-size: 0.85rem; }
+.tick::before { content: ""; position: absolute; top: -0.8rem; left: 50%; height: 0.6rem; border-left: 3px solid var(--ink); }
+
+/* bonus stickers: toggle on, or light up on their own */
+.stickers { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+.sticker {
+  display: flex; flex-direction: column; align-items: center; padding: 0.35rem 0.9rem; font: inherit; font-family: var(--display); font-size: 1.25rem; line-height: 1.1;
+  color: var(--ink); background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b); opacity: 0.6;
+}
+.sticker span { font-family: var(--body); font-size: 0.8rem; font-style: italic; }
+.sticker:nth-child(1) { rotate: 1.5deg; } .sticker:nth-child(2) { rotate: -1.5deg; } .sticker:nth-child(3) { rotate: 1deg; }
+.sticker:hover:not(.is-auto) { background: var(--pink); opacity: 1; }
+.sticker[aria-pressed="true"] { opacity: 1; background: var(--paper); box-shadow: 4px 4px 0 var(--ink); }
+[data-pay="ribbon"][aria-pressed="true"] { background: var(--ribbon); color: #fff; }
+.sticker.is-auto { cursor: default; }
+
+.ribbon-note { display: flex; align-items: center; gap: 1.25rem; margin-top: 1.5rem; }
+.ribbon-note .aside-fig { width: clamp(6rem, 16vw, 9.5rem); }
+.ribbon-note .fine { margin: 0; }

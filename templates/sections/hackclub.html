@@ -1,0 +1,40 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# "What is Hack Club?": Grandma phones the authorities. The joke clipping is the owner's choice, with Grandma's corrections. #}
+<section class="scene scene--blush" id="hackclub">
+  <div class="wrap">
+    <h2>What is Hack Club?</h2>
+
+    <div class="split hc">
+      <div class="stage" style="--ar: 10/7">
+        {{ art.placed("grandma-phone.png", "Grandma on the corded phone, shocked", "--x: 0; --y: 14; --w: 88; --r: 10/7", cls="js-phone") }}
+        <p class="shout" style="--x: 40; --y: -2; --rot: 3">Hello?! There are TEENAGERS out there building things!</p>
+      </div>
+
+      <blockquote class="clip">
+        <p>Hack Club is an {{ ui.mark("extremist group", "crossed-off", "strike") }}<span class="fix">nonprofit</span>, founded by dropouts, which claims it can educate teenagers more effectively than schools despite having no textbooks, teachers or classes.</p>
+        <p>Their agenda involves turning teens into hackers, simply by getting them to build technical projects. They seek to {{ ui.mark("indoctrinate", "underline") }} children through social media, word of mouth, posters and semi-autonomous cells operating inside schools, sometimes openly.</p>
+        <p>These {{ ui.mark("dangerous radicals", "crossed-off", "strike") }}<span class="fix">cool teens</span> must be stopped.</p>
+      </blockquote>
+    </div>
+
+    <h3 class="real">The boring truth</h3>
+    <ul class="facts">
+      <li class="sticky"><b>501(c)(3)</b>nonprofit</li>
+      <li class="sticky"><b>100,000+</b>teen makers</li>
+      <li class="sticky"><b>119</b>countries</li>
+      <li class="sticky"><b>0</b>experience needed</li>
+    </ul>
+    <div class="truth-row">
+      {{ art.fig("grandma-book.png", "Grandma reading a big book, doing her homework") }}
+      <p class="truth">Artists, engineers, hardware people and game devs all learn by shipping real projects, getting stuck and figuring it out together.</p>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn--plain" href="https://hackclub.com/philosophy/" target="_blank" rel="noopener">Philosophy</a>
+      <a class="btn btn--plain" href="https://hackclub.com/philanthropy/" target="_blank" rel="noopener">Donors</a>
+      <a class="btn btn--plain" href="https://hackclub.com/" target="_blank" rel="noopener">Other programs</a>
+      {{ art.fig("grandma-shush.png", "Grandma winking, a finger to her lips, holding a love letter", "aside-fig shush") }}
+    </div>
+  </div>
+</section>

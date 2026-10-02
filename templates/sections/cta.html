@@ -1,0 +1,11 @@
+{% import "macros/art.html" as art %}
+<section class="scene scene--lilac cta">
+  <div class="wrap">
+    <div class="stage" style="--ar: 3/2">
+      {{ art.placed("grandma-hug.png", "Grandma with her arms wide open for a hug", "--x: -12.8; --y: -20; --w: 125; --r: 3/2") }}
+    </div>
+    <h2>Grandma is waiting.</h2>
+    <p class="countdown" data-cd>Grandma calls soon</p>
+    <p><a class="btn btn--big" data-link="signup" data-confetti="big" {{ link_attrs("signup") }}>Sign up</a></p>
+  </div>
+</section>

@@ -1,0 +1,23 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# the three steps; each is a clipboard-style card with a Grandma on top #}
+{% macro step(n, title, file, alt, pos) %}
+<li class="step">
+  <div class="stage" style="--ar: 4/3">
+    {{ art.placed(file, alt, pos) }}
+  </div>
+  <h3><span class="num">{{ n }}</span>{{ title }}</h3>
+  <p>{{ caller() }}</p>
+</li>
+{% endmacro %}
+
+<section class="scene scene--lilac" id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <ol class="steps">
+      {% call step(1, "Tell her what you're building", "grandma-clipboard.png", "Grandma holding a clipboard, waiting", "--x: 10; --y: -6.5; --w: 80") %}Pick a category: web, software, games, electronics or CAD. The project is always your idea.{% endcall %}
+      {% call step(2, "She phones with a demand", "grandma-phone.png", "Grandma on an old corded phone, mid-sentence", "--x: 10; --y: -6.5; --w: 90") %}Grandma pulls a note out of the cookie jar. It says how you have to build, like no libraries or one button. Don't like it? Ask again. The first three asks are free.{% endcall %}
+      {% call step(3, "Build for 10 to 15 days, then ship", "grandma-cookie-jar.png", "Grandma hugging a jar full of cookies", "--x: 10; --y: -6.5; --w: 85") %}Log your hours with Hackatime and ship the project. You earn {{ ui.mark("cookies", "circle") }} for your hours, and more when Grandma is impressed. {% endcall %}
+    </ol>
+  </div>
+</section>

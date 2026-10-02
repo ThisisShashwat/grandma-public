@@ -1,0 +1,18 @@
+{# Art helpers. Every picture lives in static/assets.
+   `pos` is the style text of a placed figure, the same "--x: 6; --y: 4; --w: 72" that dev mode (?dev) prints. #}
+
+{% macro img(file, alt, size=none, lazy=true) -%}
+<img src="{{ url_for('static', filename='assets/' ~ file) }}" alt="{{ alt }}"{% if size %} width="{{ size[0] }}" height="{{ size[1] }}"{% endif %}{% if lazy %} loading="lazy"{% endif %}>
+{%- endmacro %}
+
+{# a figure placed on a .stage; `face` marks one of Grandma's ten pay faces #}
+{% macro placed(file, alt, pos, cls="", size=none, lazy=true, hidden=false, id=none, face=none) -%}
+<figure class="fig abs ph{% if cls %} {{ cls }}{% endif %}"{% if id %} id="{{ id }}"{% endif %}{% if face %} data-face="{{ face }}"{% endif %} data-file="{{ file }}" style="{{ pos }}"{% if hidden %} hidden{% endif %}>
+  {{ img(file, alt, size, lazy) }}
+</figure>
+{%- endmacro %}
+
+{# a small Grandma that sits beside text #}
+{% macro fig(file, alt, cls="aside-fig") -%}
+<figure class="fig {{ cls }}">{{ img(file, alt) }}</figure>
+{%- endmacro %}

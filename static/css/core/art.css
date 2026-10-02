@@ -1,0 +1,31 @@
+/* Art. Pictures live in percent-positioned "stages" so art scales with the page; text stays normal flowing HTML. */
+
+.fig { position: relative; margin: 0; aspect-ratio: var(--r, 1); }
+.fig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+/* small drawings scaled up? add class "px" to the figure for crunchy pixels (do not use on downscaled art) */
+.fig.px img { image-rendering: pixelated; }
+
+/* placeholder box, removed by core/art.js once the real image loads */
+.ph::before {
+  content: attr(data-file);
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  padding: 0.4rem;
+  text-align: center; word-break: break-all;
+  border: 3px dashed var(--ink);
+  background: rgba(255, 255, 255, 0.75);
+  font: 700 0.8rem/1.2 var(--body);
+}
+
+.stage { position: relative; width: 100%; aspect-ratio: var(--ar, 1); }
+.fig.abs {
+  position: absolute;
+  left: calc(var(--x, 0) * 1%);
+  top: calc(var(--y, 0) * 1%);
+  width: calc(var(--w, 30) * 1%);
+  rotate: calc(var(--rot, 0) * 1deg);   /* separate from GSAP's transform, so they never fight */
+}
+
+/* small Grandmas that sit beside text */
+.aside-fig { aspect-ratio: auto; width: clamp(5.5rem, 14vw, 8.5rem); margin: 0; flex: none; }
+.aside-fig img { position: static; height: auto; }

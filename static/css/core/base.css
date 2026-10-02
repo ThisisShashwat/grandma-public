@@ -1,0 +1,47 @@
+/* Reset, typography and small utilities shared by every page. */
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+  line-height: 1.45;
+  /* drop a drawn cursor at static/assets/cursor-spoon.png; falls back to the normal one until then */
+  cursor: url("../../assets/cursor-spoon.png") 4 4, auto;
+}
+
+a, button, summary, label, input[type="checkbox"] { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
+
+img { max-width: 100%; }
+
+h1, h2, h3 {
+  font-family: var(--display);
+  font-weight: 400;
+  line-height: 1.05;
+  margin: 0 0 0.4em;
+}
+h1 { font-size: clamp(3.2rem, 10vw, 7rem); rotate: -2deg; }
+h2 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); }
+h3 { font-size: 1.7rem; }
+p { margin: 0 0 1em; }
+
+:focus-visible { outline: 4px dashed var(--ribbon); outline-offset: 4px; }
+
+.wrap { width: min(100% - 2rem, var(--wrap)); margin-inline: auto; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: -999px; top: 0; }
+.skip:focus { left: 1rem; top: 1rem; z-index: 100; background: var(--canvas); padding: 0.5rem 1rem; border: 3px solid var(--ink); }
+.fine { margin-top: 1.5rem; font-size: 0.95rem; }
+
+/* a real to-do: bright yellow with a dashed red outline. Accents use the muted scribble, never this. */
+.todo { background: #ff0; outline: 2px dashed var(--red); padding: 0 0.25em; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

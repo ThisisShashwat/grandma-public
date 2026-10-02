@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{% for name in ["hero", "how", "fridge", "pay", "faq", "cta", "hackclub"] %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sections/' ~ name ~ '.css') }}">
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/pages/home.js') }}"></script>
+{% endblock %}
+
+{% block main %}
+{% include "sections/hero.html" %}
+{% include "sections/how.html" %}
+{% include "sections/demands.html" %}
+{% include "sections/pay.html" %}
+{% include "sections/faq.html" %}
+{% include "sections/cta.html" %}
+{% include "sections/hackclub.html" %}
+{% endblock %}

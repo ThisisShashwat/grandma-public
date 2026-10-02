@@ -1,0 +1,15 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+<section class="scene scene--sky" id="pay">
+  <div class="wrap">
+    <h2>How Grandma pays</h2>
+    <p class="sub">Pick her demands, say how long you built, and watch her face.</p>
+
+    {% include "components/calculator.html" %}
+
+    <div class="ribbon-note">
+      {{ art.fig("grandma-ribbon.png", "Grandma proudly wearing a blue ribbon") }}
+      <p class="fine">Example numbers only. Final cookie amounts are set at launch. Projects that really impress her earn a {{ ui.mark("Blue Ribbon") }}, with a bonus and a spot on her wall. <span class="todo">[TODO: confirm ribbon perks]</span></p>
+    </div>
+  </div>
+</section>

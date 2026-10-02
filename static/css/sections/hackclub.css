@@ -1,0 +1,21 @@
+.hc { margin-top: 1.5rem; align-items: start; overflow-x: clip; }
+.hc .stage { max-width: 440px; margin-inline: auto; }
+.shout {
+  position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: 62%; margin: 0; rotate: calc(var(--rot) * 1deg);
+  padding: 0.5rem 0.8rem; font-family: var(--display); font-size: 1.35rem; line-height: 1.1; background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-a);
+}
+.clip { margin: 0; padding: 1.25rem 1.5rem; background: var(--paper); border: var(--line) solid var(--ink); rotate: 0.6deg; font-size: 1.1rem; }
+.clip p:last-child { margin-bottom: 0; }
+.strike { display: inline-block; }
+.fix { display: inline-block; margin-left: 0.3em; rotate: -4deg; font-family: var(--display); font-size: 1.5rem; line-height: 1; color: var(--red); }
+.real { margin-top: 2.5rem; rotate: -1deg; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 1.5rem 1.25rem; margin: 0 0 1.25rem; padding: 0.5rem 0 0; list-style: none; }
+.sticky { position: relative; display: flex; flex-direction: column; align-items: center; padding: 1.1rem 0.5rem 0.8rem; text-align: center; font-style: italic; background: var(--paper); border: 3px solid var(--ink); }
+.sticky b { font-family: var(--display); font-size: 2.2rem; font-weight: 400; font-style: normal; line-height: 1; }
+.sticky:nth-child(1) { rotate: -2deg; } .sticky:nth-child(2) { rotate: 1.5deg; background: var(--note-pink); } .sticky:nth-child(3) { rotate: -1deg; background: var(--note-blue); } .sticky:nth-child(4) { rotate: 2deg; }
+.sticky:nth-child(even)::before { background: var(--ribbon); }
+.truth { max-width: 40rem; }
+.truth-row { display: flex; align-items: center; gap: 1.25rem; }
+.truth-row .aside-fig { width: clamp(6.5rem, 16vw, 10rem); }
+.truth-row .truth { margin: 0; }
+.actions .shush { width: clamp(6rem, 14vw, 9rem); margin-left: auto; }

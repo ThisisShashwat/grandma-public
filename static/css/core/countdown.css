@@ -1,0 +1,10 @@
+.countdown {
+  display: inline-block;
+  margin: 0.5rem 0 1.25rem;
+  padding: 0.2em 0.7em;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  border-radius: var(--wobble-b);
+}

@@ -1,0 +1,21 @@
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1.75rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.step { background: var(--canvas); border: var(--line) solid var(--ink); padding: 1rem 1.25rem 1.25rem; }
+.step:nth-child(1) { rotate: -1deg; }
+.step:nth-child(2) { rotate: 0.8deg; }
+.step:nth-child(3) { rotate: -0.5deg; }
+.step .stage { margin-bottom: 0.75rem; }
+.num {
+  display: inline-grid; place-items: center;
+  width: 2.6rem; height: 2.6rem; margin-right: 0.4rem;
+  font-family: var(--display); font-size: 1.8rem;
+  background: var(--sky); border: var(--line) solid var(--ink); border-radius: 50%;
+  vertical-align: middle;
+}
+.step h3 { display: flex; align-items: center; }

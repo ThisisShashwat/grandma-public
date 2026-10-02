@@ -1,0 +1,15 @@
+.faq { max-width: 52rem; }
+.faq-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.faq-head h2 { margin-bottom: 0; }
+.faq-head .aside-fig { width: clamp(5rem, 14vw, 8rem); rotate: 3deg; }
+
+details { margin-block: 1rem; background: var(--canvas); border: var(--line) solid var(--ink); }
+details:nth-of-type(odd) { rotate: -0.3deg; }
+details:nth-of-type(even) { rotate: 0.3deg; }
+summary { list-style: none; padding: 0.7rem 1rem; font-family: var(--display); font-size: 1.6rem; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; display: inline-block; width: 1.4em; }
+details[open] summary::before { content: "-"; }
+.answer { padding: 0 1rem 1rem 2.4rem; display: flow-root; }
+.answer p:last-child { margin-bottom: 0; }
+.answer .aside-fig { float: right; width: clamp(4.5rem, 12vw, 6.5rem); margin: 0 0 0.25rem 1rem; }

@@ -1,0 +1,21 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# Each answer carries exactly one highlight. Wording is the owner's: do not "fix" it without asking. #}
+<section class="scene" id="faq">
+  <div class="wrap faq">
+    <div class="faq-head">
+      <h2>Questions Grandma gets asked</h2>
+      {{ art.fig("grandma-finger.png", "Grandma raising one finger, about to make a point") }}
+    </div>
+
+    {% call ui.faq("Who can join?", "grandma-wave.png", "Grandma waving hello") %}Help out grandma is for highschoolers! You need to be 13-18 years old {{ ui.mark("(under 19)") }} to participate.{% endcall %}
+    {% call ui.faq("Does it cost anything?", "grandma-smiley.png", "Grandma holding up a drawing of a smiley face") %}{{ ui.mark("100% free*") }} - all the prizes are donated to us or paid for by us!<br>
+*customs might occur outside of the US or you might simply get a HCB grant{% endcall %}
+    {% call ui.faq("Can I pick my own project?", "grandma-writing.png", "Grandma scribbling on a piece of paper") %}{{ ui.mark("Always.") }} Grandma only decides how you build it, never what.{% endcall %}
+    {% call ui.faq("What if I get a demand I can't do?", "grandma-sad-x.png", "Grandma worried, holding a paper with a red X") %}Ask again. {{ ui.mark("The first three asks are free") }}, and after that each ask costs a few cookies.{% endcall %}
+    {% call ui.faq("Can I use AI?", "grandma-magnifier.png", "Grandma watching you through a magnifying glass") %}Use of AI must strictly be {{ ui.mark("under 30%") }} of total time.{% endcall %}
+    {% call ui.faq("Can I make changes to my old projects and ship it with additional hours?", "grandma-finger-wag.png", "Grandma wagging her finger") %}{{ ui.mark("No,") }} the project must be created AFTER you have asked grandma.{% endcall %}
+    {% call ui.faq("What kinds of projects count?", "mood-6-thumbsup.png", "Grandma giving a lazy thumbs up") %}All kinds of technical projects, as long as they're {{ ui.mark("open-source") }}.{% endcall %}
+    {% call ui.faq("Is this legit?", "mood-7-approved.png", "Grandma stamping a green check, approved") %}{{ ui.mark("Yup.") }} It's run with <a href="https://hackclub.com/" target="_blank" rel="noopener">Hack Club</a>, a nonprofit that has been running programs like this for years. Past rounds include <a href="https://hackclub.com/arcade/" target="_blank" rel="noopener">Arcade</a>, <a href="https://highseas.hackclub.com/" target="_blank" rel="noopener">High Seas</a>, <a href="https://summer.hackclub.com/" target="_blank" rel="noopener">Summer of Making</a> and <a href="https://flavortown.hackclub.com/" target="_blank" rel="noopener">Flavortown</a>. Teens build projects, and real prizes get sent out.{% endcall %}
+  </div>
+</section>

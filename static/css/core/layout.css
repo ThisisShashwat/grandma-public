@@ -1,0 +1,17 @@
+/* Scenes are stacked full-width sections with a 4px top border. */
+.scene { border-top: var(--line) solid var(--ink); padding-block: clamp(2.5rem, 6vw, 5rem); }
+.scene--lilac { background: var(--lilac); }
+.scene--cream { background: var(--cream); }   /* unused: it blends into Grandma's skin */
+.scene--sky { background: var(--sky); }
+.scene--blush { background: var(--blush); }
+/* art that bleeds past the edge of a section must never create a sideways scrollbar on phones */
+.scene { overflow-x: clip; }
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
