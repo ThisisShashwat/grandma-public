@@ -2,27 +2,24 @@
 
     python manage.py seed_demo_shop
 
-Idempotent (run it twice, get the same shop) and refuses to run unless DEBUG is on. Every dollar figure and name here is
-made up. The real items are entered by the owner in the admin; the migrations create only regions and rate classes.
+Idempotent (run it twice, get the same shop) and refuses to run unless DEBUG is on. Every number and name here is made
+up, and every description starts with "Demo data." The real items are entered by the owner in the admin; the migrations
+create only the rate classes.
 """
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from shop.models import RateClass, Region, RegionalPrice, ShopItem
+from shop.models import RateClass, ShopItem
 
-HARDWARE, SOFTWARE, CREDITS, FUN, SWAG = (ShopItem.Category.HARDWARE, ShopItem.Category.SOFTWARE, ShopItem.Category.CREDITS,
-                                          ShopItem.Category.FUN, ShopItem.Category.SWAG)
-GRANT, SHIPPED, DIGITAL = ShopItem.Kind.GRANT, ShopItem.Kind.SHIPPED, ShopItem.Kind.DIGITAL
-
-DEMO_NOTE = "DEMO DATA, not a real product."
+HAND = ShopItem.Kind.MANUAL
 
 
-def put(slug, rate, usd, **fields):
+def put(slug, rate, usd, description, **fields):
     """Create or update one item, checked by the same rules as the admin."""
     item = ShopItem.objects.filter(slug=slug).first() or ShopItem(slug=slug)
-    fields = {"description": DEMO_NOTE, "rate_class": RateClass.objects.get(slug=rate), "usd_value": Decimal(usd), **fields}
+    fields = {"description": f"Demo data. {description}", "rate_class": RateClass.objects.get(slug=rate), "usd_value": Decimal(usd), **fields}
     for key, value in fields.items():
         setattr(item, key, value)
     item.full_clean()
@@ -30,38 +27,54 @@ def put(slug, rate, usd, **fields):
     return item
 
 
-def put_region(item, code, usd, enabled=True):
-    RegionalPrice.objects.update_or_create(
-        item=item, region=Region.objects.get(code=code), defaults={"usd_value": Decimal(usd), "enabled": enabled})
+def seed_grants():
+    put("demo-ai-credits", "build", "5", "Credits for an AI coding assistant. Grandma still reads every line it writes.",
+        name="AI credits", tagline="Robots to type for you. I suppose, dear.", art="grandma-magnifier.png", stackable=True, max_per_user=20, sort_order=1)
+    put("demo-hosting-credits", "build", "10", "Credits for a server somewhere that is not Grandma's spare room.",
+        name="Hosting credits", tagline="A computer in somebody else's house. Quieter.", art="grandma-peek.png", stackable=True, max_per_user=10, sort_order=2)
+    put("demo-pcb-credits", "build", "15", "Credits for printed circuit boards and 3D prints.",
+        name="PCB and 3D print credits", tagline="For little green boards and plastic things. Do not eat.", art="grandma-writing.png",
+        stackable=True, max_per_user=10, sort_order=3)
+    put("demo-domain", "build", "11", "A domain name for a year.",
+        name="Domain credit", tagline="Your very own address. Mind the typos.", art="grandma-finger.png", sort_order=4)
+    put("demo-software-licence", "build", "40", "One software licence, bought by you with the grant.",
+        name="Software licence grant", tagline="The grown-up programs, paid for.", art="grandma-book.png", sort_order=5)
+    put("demo-hardware-grant", "build", "100",
+        "Tied to ONE specific shipped design project, not generic funding. Hardware lets you ship the same project twice, "
+        "design first and then build, and staff review it by hand.",
+        name="Hardware grant", tagline="For one real hardware project. Grandma will check.", art="grandma-note-pull.png",
+        stackable=True, max_per_user=5, sort_order=6)
+
+    ipad = put("demo-ipad", "build", "329", "A basic iPad, as a card grant.",
+               name="iPad", tagline="A tablet, dear. Swiping is not a hobby.", art="grandma-wave.png", sort_order=7)
+    put("demo-ipad-upgrade", "upgrade", "25",
+        "Tops up the same card as the iPad grant and is never sold alone. Add 20 of these and the iPad becomes a fancy Samsung tablet.",
+        name="iPad upgrade", base_item=ipad, stackable=True, max_per_user=20)
+
+    put("demo-game-console", "fun", "300", "A console, as a card grant. The fun rate class: dearer per dollar.",
+        name="Game console", tagline="Rest is important. Once.", art="grandma-shocked.png", sort_order=8)
 
 
-def seed():
-    put("demo-ai-credits", "build", "5", name="AI credits", tagline="Tokens for your coding assistant", art="grandma-magnifier.png",
-        kind=DIGITAL, category=CREDITS, stackable=True, max_per_user=20, sort_order=1)
-    put("demo-hardware-funding", "build", "25", name="Hardware funding", tagline="Chip in for parts, boards and tools",
-        art="grandma-clipboard.png", kind=GRANT, category=HARDWARE, stackable=True, max_per_user=8, sort_order=2)
-    put("demo-domain", "build", "11", name="Free domain", tagline="A name for your project, for a year",
-        art="grandma-writing.png", kind=GRANT, category=SOFTWARE, sort_order=3)
-
-    ipad = put("demo-ipad", "build", "300", name="iPad", tagline="A card grant for a tablet. Buy upgrades to aim higher",
-               art="grandma-phone.png", kind=GRANT, category=HARDWARE, sort_order=4)
-    for slug, usd, name, order in (("demo-ipad-small", "50", "Top-up, small", 1), ("demo-ipad-medium", "100", "Top-up, medium", 2),
-                                   ("demo-ipad-large", "250", "Top-up, large", 3)):
-        put(slug, "upgrade", usd, name=f"iPad {name.lower()}", kind=GRANT, category=HARDWARE, stackable=True, max_per_user=4,
-            base_item=ipad, sort_order=order)
-
-    pi = put("demo-raspberry-pi", "build", "90", name="Raspberry Pi kit", tagline="Board, case, cables. Shipped to you",
-             art="grandma-nose-up.png", kind=SHIPPED, category=HARDWARE, sort_order=5)
-    for code, usd, enabled in (("US", "90", True), ("EU", "105", True), ("UK", "100", True), ("IN", "125", True),
-                               ("CA", "110", True), ("AU", "90", False)):
-        put_region(pi, code, usd, enabled)
-
-    put("demo-game-console", "fun", "300", name="Game console", tagline="Pure fun, no apologies", art="grandma-shocked.png",
-        kind=GRANT, category=FUN, sort_order=6)
-    put("demo-mug", "fun", "8", name="Grandma mug", tagline="For tea. Or milk, for the cookies", art="grandma-smiley.png",
-        kind=SHIPPED, category=SWAG, stock=40, sort_order=7)
-    put("demo-stickers", "fun", "3", name="Sticker sheet", tagline="Sold out, dear. Come back later", art="cookie.png",
-        kind=SHIPPED, category=SWAG, stock=0, sort_order=8)
+def seed_by_hand():
+    put("demo-face", "fun", "2", "A photo, printed and posted by staff.",
+        name="Shashwat's face, printed", tagline="A nice face. Mostly.", art="grandma-smiley.png", kind=HAND, stock=30, sort_order=20)
+    put("demo-hq-letter", "fun", "1.5", "A surprise letter, handed over by staff.",
+        name="A letter from HQ", tagline="Could be a thank you. Could be a bill. Grandma is not allowed to say.", art="grandma-complaints.png",
+        kind=HAND, sort_order=21)
+    put("demo-loot-box", "fun", "10", "Whatever staff put in the box.",
+        name="Mystery loot box", tagline="Grandma packs it herself. Do not shake it.", art="grandma-cookie-jar.png",
+        kind=HAND, stackable=True, max_per_user=3, stock=25, sort_order=22)
+    put("demo-nothing", "fun", "0.01", "You get nothing. It sells very well.",
+        name="Nothing", tagline="Absolutely nothing. It is very popular.", art="mood-0-asleep.png",
+        kind=HAND, stackable=True, max_per_user=10, sort_order=23)
+    put("demo-strong-letter", "fun", "1", "A letter from Grandma.",
+        name="A strongly worded letter", tagline="From Grandma. About your posture.", art="grandma-finger-wag.png", kind=HAND, sort_order=24)
+    put("demo-recipe", "fun", "1", "A recipe card.",
+        name="Grandma's cookie recipe", tagline="One ingredient is missing. She will not say which.", art="cookie.png", kind=HAND, sort_order=25)
+    put("demo-phone-call", "fun", "3", "A phone call, booked by staff.",
+        name="A phone call from Grandma", tagline="Two minutes. She will ask if you are eating.", art="grandma-phone.png", kind=HAND, sort_order=26)
+    put("demo-sock", "fun", "2", "A sold out item, to see the sold out badge.",
+        name="One sock", tagline="The other one is gone. Sold out, dear.", art="grandma-sad-x.png", kind=HAND, stock=0, sort_order=27)
 
 
 class Command(BaseCommand):
@@ -70,5 +83,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if not settings.DEBUG:
             raise CommandError("seed_demo_shop is a development tool: it refuses to run with DEBUG off.")
-        seed()
+        seed_grants()
+        seed_by_hand()
         self.stdout.write(f"{ShopItem.objects.count()} demo items ready: open /shop/")
