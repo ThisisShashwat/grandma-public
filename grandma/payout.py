@@ -55,6 +55,11 @@ def cookies(tiers=(), hours=0, quality=False, ribbon=False):
     return usd_per_hour(x_for(tiers, hours, quality, ribbon)) * CONFIG["cookies_per_usd"] * hours
 
 
+def shown(cookie_amount):
+    """Cookies as the page shows them: rounded half up, exactly like the browser's Math.round (not Python's round)."""
+    return int(cookie_amount + 0.5)
+
+
 def face(tiers=(), hours=0, quality=False, ribbon=False, hours_max=None):
     """Which Grandma, 0 to 9 (index into content.faces.FACES). Furious only while no demand is picked."""
     c = CONFIG
