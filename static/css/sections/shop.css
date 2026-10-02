@@ -1,5 +1,5 @@
 /* The Pantry (the shop page). The home page's language: 4px ink borders, tilts of at most 2 degrees, sticky notes.
-   The red magnets on .price-tag and .guest-note live in core/notes.css. */
+   The red magnets on .price-tag, .guest-note and .howto-note live in core/notes.css. */
 
 /* header band */
 .pantry-head h1 { font-size: clamp(3rem, 9vw, 5.5rem); }
@@ -13,26 +13,23 @@
 }
 .guest-note b { display: block; font-weight: 400; font-size: 1.9rem; }
 
-/* region chips */
-.regions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem 0.9rem; margin-bottom: 2.75rem; }
-.regions b { margin-right: 0.3rem; font-family: var(--display); font-weight: 400; font-size: 1.7rem; }
-.region {
-  padding: 0.1em 0.8em; font-family: var(--display); font-size: 1.35rem; line-height: 1.25; color: var(--ink);
-  background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b); text-decoration: none;
-}
-.region:nth-of-type(odd) { rotate: -1deg; }
-.region:nth-of-type(even) { rotate: 0.8deg; }
-.region:hover { background: var(--pink); }
-.region[aria-current] { background: var(--paper); box-shadow: 0 0 0 3px var(--canvas), 0 0 0 6px var(--ink); }
+/* how a grant works: three sticky notes */
+.howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.75rem; margin: 0 0 3.5rem; padding: 0.6rem 0 0; list-style: none; }
+.howto-note { position: relative; padding: 1.2rem 1.1rem 0.9rem; background: var(--paper); border: 3px solid var(--ink); font-size: 1.05rem; line-height: 1.3; }
+.howto-note b { display: block; margin-bottom: 0.2rem; font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.05; }
+.howto-note:nth-child(1) { rotate: -1.5deg; }
+.howto-note:nth-child(2) { rotate: 1deg; background: var(--note-pink); }
+.howto-note:nth-child(3) { rotate: -0.8deg; background: var(--note-blue); }
 
 /* shelves of cards */
 .shelf + .shelf { margin-top: 3.5rem; }
 .shelf-label {
-  display: inline-block; margin: 0 0 1.5rem; padding: 0.05em 0.6em; font-size: clamp(2rem, 5vw, 3rem);
+  display: inline-block; margin: 0 0 0.6rem; padding: 0.05em 0.6em; font-size: clamp(2rem, 5vw, 3rem);
   background: var(--paper); border: var(--line) solid var(--ink); rotate: -1.5deg;
 }
 .shelf:nth-of-type(3n+2) .shelf-label { background: var(--note-pink); rotate: 1deg; }
 .shelf:nth-of-type(3n+3) .shelf-label { background: var(--note-blue); rotate: -0.6deg; }
+.shelf-blurb { max-width: 36rem; margin: 0 0 1.75rem; font-size: 1.15rem; }
 
 .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 2.25rem 1.75rem; margin: 0; padding: 0; list-style: none; }
 .items > li { display: flex; }
@@ -53,11 +50,13 @@
 .item details { font-size: 1rem; }
 .item summary { font-family: var(--display); font-size: 1.25rem; }
 .item details p { margin: 0.4rem 0 0; white-space: pre-line; }
-.upgrades { margin: 0.2rem 0 0; padding: 0.7rem 0 0; list-style: none; border-top: 3px solid var(--ink); font-size: 1rem; }
+.upgrades { margin: 0.2rem 0 0; padding: 0.7rem 0 0; border-top: 3px solid var(--ink); font-size: 1rem; }
+.up-head { margin: 0 0 0.4rem; font-weight: 700; }
+.upgrades ul { margin: 0; padding: 0; list-style: none; }
 .upgrades li + li { margin-top: 0.4rem; }
 
 /* the price: a sticky note pinned to the bottom of the card */
-.item-foot { margin-top: auto; padding-top: 1rem; }
+.item-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 0.7rem; margin-top: auto; padding-top: 1rem; }
 .price-tag {
   position: relative; display: inline-block; margin: 0; padding: 1.1rem 1.1rem 0.55rem; background: var(--paper); border: 3px solid var(--ink); rotate: -2deg;
   font-family: var(--display); font-size: 1.3rem; line-height: 1; text-align: center;
@@ -65,6 +64,8 @@
 .price-tag b { display: block; font-weight: 400; font-size: 2.6rem; line-height: 1; }
 .items > li:nth-child(3n+2) .price-tag { background: var(--note-pink); rotate: 1.5deg; }
 .items > li:nth-child(3n+3) .price-tag { background: var(--note-blue); rotate: -1deg; }
+.worth { margin: 0; font-size: 0.95rem; line-height: 1.25; }
+.worth b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; }
 
 /* nothing on the shelves */
 .empty {

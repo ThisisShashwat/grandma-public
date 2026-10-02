@@ -1,9 +1,6 @@
-{# Region chips: plain links, so they work without JavaScript. The region is checked on the server (shop/catalog.py). #}
-{% if shop.regions %}
-<nav class="regions" aria-label="Region">
-  <b>Where do you live?</b>
-  {% for r in shop.regions %}
-  <a class="region" href="{{ url('shop') }}?region={{ r.code }}"{% if r.current %} aria-current="true"{% endif %}>{{ r.name }}</a>
-  {% endfor %}
-</nav>
-{% endif %}
+{# How a grant works, in three sticky notes. Short on purpose: the upgrade idea is the only part that needs saying. #}
+<ol class="howto">
+  <li class="howto-note"><b>Pick a grant.</b>It lands on a Hack Club Bank card, so you buy the real thing yourself.</li>
+  <li class="howto-note"><b>Want it bigger?</b>Add upgrades to the grant you picked. They top up the same card.</li>
+  <li class="howto-note"><b>Show your work.</b>Grandma checks what is in the cart before she pays for it.</li>
+</ol>

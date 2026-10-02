@@ -1,6 +1,14 @@
 {% import "macros/art.html" as art %}
 {% import "macros/ui.html" as ui %}
-{# One thing on a shelf. `p` is a shop.catalog.Product, which holds public fields only, so no dollar can show up here. #}
+{# One thing on a shelf. `p` is a shop.catalog.Product: public fields only (a grant's dollar value is public on purpose). #}
+
+{% macro usd(v) -%}
+${{ ("{:,.0f}" if v == v.to_integral_value() else "{:,.2f}").format(v) }}
+{%- endmacro %}
+
+{% macro hours(low, high) -%}
+about {{ low if low == high else low ~ " to " ~ high }} {{ "hour" if high == 1 else "hours" }}
+{%- endmacro %}
 
 {% macro badge(text, kind="") -%}
 <li class="badge{% if kind %} badge--{{ kind }}{% endif %}">{{ text }}</li>
@@ -14,7 +22,9 @@
   <p class="tagline">{{ p.tagline }}</p>
   {% endif %}
   <ul class="badges">
+    {% if p.manual %}
     {{ badge(p.kind, "kind") }}
+    {% endif %}
     {% if p.max_per_user == 1 %}
     {{ badge("one per person") }}
     {% else %}
@@ -33,14 +43,21 @@
   </details>
   {% endif %}
   {% if p.upgrades %}
-  <ul class="upgrades">
-    {% for up in p.upgrades %}
-    <li>+ {{ ui.mark("upgrade", "underline") }}: {{ up.name }}, {{ "{:,}".format(up.cookies) }} cookies{% if up.max_per_user %}, up to {{ up.max_per_user }}{% endif %}</li>
-    {% endfor %}
-  </ul>
+  <div class="upgrades">
+    <p class="up-head">{{ ui.mark("Upgrades", "underline") }} top up the same grant</p>
+    <ul>
+      {% for up in p.upgrades %}
+      <li>+ {{ usd(up.value_usd) }} for {{ "{:,}".format(up.cookies) }} cookies{% if up.max_per_user %}, up to {{ up.max_per_user }} times{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
   {% endif %}
   <div class="item-foot">
     <p class="price-tag"><b>{{ "{:,}".format(p.cookies) }}</b> cookies</p>
+    <p class="worth">
+      {% if p.value_usd is not none %}<b>worth {{ usd(p.value_usd) }}</b>{% endif %}
+      {{ hours(p.hours_low, p.hours_high) }}
+    </p>
   </div>
 </article>
 {% endmacro %}
