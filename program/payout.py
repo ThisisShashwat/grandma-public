@@ -1,4 +1,4 @@
-"""Grandma's payout maths: pure functions, no Flask, so the shop, a dashboard or a backend can import it.
+"""Grandma's payout maths: pure functions, no Django, so the shop, a dashboard or a backend can import it.
 
 The formula comes from the "Modifiers ysws" canvas PDF and is FROZEN. Do not change a constant or the shape of it
 without the owner saying so (docs/payout.md has the reference table that tests/test_payout.py checks).
