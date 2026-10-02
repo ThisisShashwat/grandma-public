@@ -60,6 +60,14 @@ def shown(cookie_amount):
     return int(cookie_amount + 0.5)
 
 
+def hours_range(cookie_amount):
+    """About how many hours of work a cookie price is: (fewest, most), as whole hours, at least 1.
+    The fewest comes from the best pay rate (base x cap, a full stack), the most from the worst (base, no demand)."""
+    worst = CONFIG["base"] * CONFIG["cookies_per_usd"]
+    best = worst * CONFIG["cap"]
+    return max(1, shown(cookie_amount / best)), max(1, shown(cookie_amount / worst))
+
+
 def face(tiers=(), hours=0, quality=False, ribbon=False, hours_max=None):
     """Which Grandma, 0 to 9 (index into content.faces.FACES). Furious only while no demand is picked."""
     c = CONFIG
