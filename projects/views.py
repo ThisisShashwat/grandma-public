@@ -28,6 +28,8 @@ def grandma(request):
     store = conversation.Store(steps, cfg, RNG)
     if conversation.sent_away(request, store):
         return redirect("project")
+    request.session.pop("talk:project_edit", None)
+    request.session.pop("talk:project_demands", None)
     return flow.run(request, steps, store=store, finish=lambda request, answers: None, then=reverse("project"), title="Talk to Grandma")
 
 
@@ -38,7 +40,7 @@ def again(request):
     """Deal again. POST does it (free ones straight away; a paid one only after the confirmation page, which is this page's GET);
     a POST whose number is not the next re-deal's is a double click or an old page and changes nothing."""
     cfg = live()
-    project = services.dealing_project(request.user)
+    project = services.working_project(request.user)
     if project is None:
         return redirect("grandma")
     offer = rules.offer(project.redeals_used, cfg.REDEALS_FREE, cfg.REDEAL_COST)
@@ -70,6 +72,34 @@ def confirmation(request, offer):
 
 @onboarded
 @never_cache
+def project_edit(request):
+    """Edit the idea, name, category, or subcategory of a working project."""
+    project = services.working_project(request.user)
+    if project is None:
+        return redirect("project")
+    steps = conversation.edit_dialogue(project)
+    store = conversation.EditStore(steps, project)
+    then = reverse("grandma") if project.status == rules.DEALING else reverse("project")
+    return flow.run(request, steps, store=store, finish=lambda request, answers: None, then=then, title="Talk to Grandma")
+
+
+@onboarded
+@never_cache
+def project_demands(request):
+    """Edit the kept demands of a building project."""
+    working = services.working_project(request.user)
+    if working is not None and working.status == rules.DEALING:
+        return redirect("grandma")
+    if working is None or working.status != rules.BUILDING:
+        return redirect("project")
+    cfg = live()
+    steps = conversation.demands_dialogue(working, cfg)
+    store = conversation.DemandsStore(steps, working)
+    return flow.run(request, steps, store=store, finish=lambda request, answers: None, then=reverse("project"), title="Talk to Grandma")
+
+
+@onboarded
+@never_cache
 @require_safe
 def project(request):
     """The person's own project: the working project if they have one, else an empty state when other projects exist.
@@ -81,6 +111,8 @@ def project(request):
     if working is None and not others:
         return redirect("grandma")
     request.session.pop("talk:grandma", None)          # the send-off has been seen
+    request.session.pop("talk:project_edit", None)
+    request.session.pop("talk:project_demands", None)
     context = {"others": others}
     if working is not None:
         context.update({

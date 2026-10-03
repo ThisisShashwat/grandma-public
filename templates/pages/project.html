@@ -35,7 +35,11 @@
 
     {% if project.status == "building" %}
     <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
-    <p class="actions"><a class="btn btn--big" href="{{ url('submit') }}">Ship it</a></p>
+    <p class="actions">
+      <a class="btn btn--big" href="{{ url('submit') }}">Ship it</a>
+      <a class="btn btn--plain" href="{{ url('project_edit') }}">Change the idea, name or kind</a>
+      <a class="btn btn--plain" href="{{ url('project_demands') }}">Change my demands</a>
+    </p>
     {% elif project.status in ("in_review", "shipped") %}
     <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>
     {% endif %}

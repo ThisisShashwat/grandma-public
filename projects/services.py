@@ -84,8 +84,8 @@ def cards():
 
 
 def hand_demands(project):
-    """The demands dealt to this project, in the order dealt (a demand deleted since is skipped)."""
-    by_id = Demand.objects.in_bulk(project.hand)
+    """The demands dealt to this project that fit its current category, in the order dealt (a demand deleted since is skipped)."""
+    by_id = Demand.objects.filter(categories=project.category).distinct().in_bulk(project.hand)
     return [by_id[i] for i in project.hand if i in by_id]
 
 
@@ -170,7 +170,7 @@ def redeal(user, *, expect, free, cost, size, rng):
     `cost` cookies through the ledger, under a key made from the project and the re-deal number. Raises
     ledger.rules.InsufficientCookies (and changes nothing) when they cannot pay. Returns the project, None if there is no hand."""
     lock_person(user)
-    project = locked_project(user, rules.DEALING)
+    project = locked_project(user, *rules.WORKING_STATUSES)
     if project is None:
         return None
     next_one = rules.offer(project.redeals_used, free, cost)
@@ -178,9 +178,12 @@ def redeal(user, *, expect, free, cost, size, rng):
         return project
     if next_one.cost:
         ledger.debit(user, next_one.cost, reason=f"Grandma dealt again: {project.name}", key=f"redeal-{project.pk}-{next_one.number}")
+    if project.status == rules.BUILDING:
+        project.kept.all().delete()
+        project.status = rules.DEALING
     project.hand = draw.deal(cards(), size, rng, project.category_id)
     project.redeals_used = next_one.number
-    project.save(update_fields=["hand", "redeals_used"])
+    project.save(update_fields=["hand", "redeals_used", "status"])
     audit.record(
         "project.redeal",
         actor=user,
@@ -207,13 +210,15 @@ def keep(user, ids, now):
         if project.status == rules.BUILDING and kept == {d.id for d in kept_demands(project)}:
             return project
         raise ValidationError(ALREADY_STARTED)
-    demands = Demand.objects.in_bulk(kept)
+    demands = Demand.objects.filter(categories=project.category).distinct().in_bulk(kept)
     if not draw.keeps_fit(kept, project.hand) or len(demands) != len(kept):
         raise ValidationError(NOT_ON_THE_TABLE)
     kept_in_order = [i for i in project.hand if i in kept]
     for order, demand_id in enumerate(kept_in_order, start=1):
         ProjectDemand.objects.create(project=project, demand=demands[demand_id], order=order)
-    project.status, project.started_at = rules.BUILDING, now
+    if project.started_at is None:
+        project.started_at = now
+    project.status = rules.BUILDING
     project.save(update_fields=["status", "started_at"])
     audit.record(
         "project.keep",
@@ -222,4 +227,62 @@ def keep(user, ids, now):
         target=project,
         details={"kept": kept_in_order},
     )
+    return project
+
+
+@transaction.atomic
+def edit_project(user, idea, name, category_value, subcategory_value):
+    """Update a working project's details without touching the hand or redeals counter. If category changed,
+    remove kept demands that do not fit the new category. If building and no kept demands remain, revert status
+    to dealing. No audit entry is recorded."""
+    lock_person(user)
+    project = locked_project(user, *rules.WORKING_STATUSES)
+    if project is None:
+        raise ValidationError("You don't have a project to edit, dear.")
+    category, subcategory = resolve(category_value, subcategory_value)
+    category_changed = project.category_id != category.id
+    project.idea = idea
+    project.name = name
+    project.category = category
+    project.subcategory = subcategory
+    if category_changed:
+        remaining = list(project.kept.select_related("demand").order_by("order"))
+        for pd in remaining:
+            if not pd.demand.categories.filter(id=category.id).exists():
+                pd.delete()
+        still_kept = list(project.kept.all().order_by("order"))
+        for new_order, pd in enumerate(still_kept, start=1):
+            if pd.order != new_order:
+                pd.order = new_order
+                pd.save(update_fields=["order"])
+        if project.status == rules.BUILDING and not project.kept.exists():
+            project.status = rules.DEALING
+    project.full_clean()
+    project.save(update_fields=["idea", "name", "category", "subcategory", "status"])
+    return project
+
+
+@transaction.atomic
+def rekeep(user, ids, now):
+    """Confirm the new notes kept for a building project: one to three distinct ids from the persisted hand that
+    fit the project's current category. Replaces the ProjectDemand rows in the order dealt. Refuses anything else."""
+    lock_person(user)
+    project = locked_project(user, *rules.WORKING_STATUSES)
+    if project is None or project.status != rules.BUILDING:
+        raise ValidationError(NOT_DEALING)
+    try:
+        kept = {int(i) for i in ids}
+    except (TypeError, ValueError):
+        raise ValidationError(NOT_ON_THE_TABLE) from None
+    if not (draw.MIN_KEEP <= len(kept) <= draw.MAX_KEEP):
+        raise ValidationError(NOT_ON_THE_TABLE)
+    if not kept <= set(project.hand):
+        raise ValidationError(NOT_ON_THE_TABLE)
+    demands = Demand.objects.filter(categories=project.category).distinct().in_bulk(kept)
+    if len(demands) != len(kept):
+        raise ValidationError(NOT_ON_THE_TABLE)
+    project.kept.all().delete()
+    kept_in_order = [i for i in project.hand if i in kept]
+    for order, demand_id in enumerate(kept_in_order, start=1):
+        ProjectDemand.objects.create(project=project, demand=demands[demand_id], order=order)
     return project

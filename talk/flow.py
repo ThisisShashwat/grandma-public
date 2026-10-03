@@ -111,13 +111,14 @@ def show(request, step, position, answers, form, then, title, back=False):
         choices=choices_for(step, answers) if isinstance(step, AskChoice) else (),
         notes=step.notes() if isinstance(step, Deal) else (),
         again=step.again() if isinstance(step, Deal) and step.again else None,
-        can_back=back)
+        can_back=back,
+        edit_url=getattr(step, "edit_url", ""))
 
 
-def page(request, *, title, kind, lines, face, then, step=None, at=0, field=None, **extra):
+def page(request, *, title, kind, lines, face, then, step=None, at=0, field=None, edit_url="", **extra):
     """Draw one page of Grandma talking. `show` uses it for a step; a view that has its own kind of page (the re-deal
     confirmation) uses it directly, with whatever the template's branch for that kind needs in `extra`."""
     file, alt = portrait(face)
     context = {"title": title, "step": step, "kind": kind, "at": at, "then": then, "lines": lines, "portrait": {"file": file, "alt": alt},
-               "field": field, "suggestions": [], "choices": (), "notes": (), "again": None, "can_back": False}
+               "field": field, "suggestions": [], "choices": (), "notes": (), "again": None, "can_back": False, "edit_url": edit_url}
     return render(request, "pages/talk.html", context | extra)

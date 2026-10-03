@@ -59,6 +59,7 @@ class Deal(Step):
     max_keep: int = 3
     again: Callable[[], object] | None = None
     button: str = "Keep these"
+    edit_url: str = ""
 
 
 @dataclass(frozen=True, kw_only=True)

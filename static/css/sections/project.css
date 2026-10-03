@@ -57,7 +57,7 @@ label.dnote-body { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
 .project-body h2 { margin-top: 0; }
 .project-sub { margin: 0 0 1.75rem; font-size: 1.15rem; }
 .project-later { max-width: 40rem; margin: 2.5rem 0 0; font-size: 1.15rem; }
-.project-body .actions { margin-top: 2rem; }
+.project-body .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1rem; margin-top: 2rem; }
 
 /* My other projects section */
 .project-others-section { border-top: var(--line) solid var(--ink); padding-block: 2.5rem 3.5rem; }

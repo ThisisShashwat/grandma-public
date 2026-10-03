@@ -47,3 +47,26 @@ ENDING = End(face="approved", button="Show me my project", lines=(
 TOO_POOR = ("{cost}, dear, and you have {balance}. I don't do credit.",
             "Keep one of the notes I dealt you, or go and earn a few more cookies and come back.")
 ASK_AGAIN = ("Another deal? So my notes aren't good enough for you.", "That'll be {cost}, dear. You have {balance}.", "Sure about it?")
+
+# editing a project after the hand is dealt
+EDIT_IDEA = AskText(key="idea", face="writing", label="What you're going to make", max_length=200, button="That's the idea",
+                    attrs={"autocomplete": "off", "spellcheck": "true"}, lines=(
+                        "Changed your mind, {display_name}? That's allowed. Nobody has to build the first thing they said.",
+                        "So what are you making now?"))
+EDIT_NAME = AskText(key="name", face="clipboard", label="Project name", max_length=40, button="That's the name",
+                    attrs={"autocomplete": "off", "spellcheck": "false"}, lines=("And what are we calling it?",))
+EDIT_CATEGORY_LINES = (
+    "What sort of thing is it now?",
+    "The notes I dealt you stay the notes you get. Any that don't suit the new kind, I'll cross out.")
+EDIT_SAVED = End(face="approved", button="Carry on", lines=(
+    "There. I've crossed out the old and written in the new, {display_name}.",
+    "The notes I dealt you are the notes you get. I don't hand out new ones for free."))
+DEMANDS_DEAL = Deal(key="keep", face="note", notes=list, lines=(
+    "Swapping demands, {display_name}? Fine. Pick again from the hand I dealt you.",
+    "I won't deal you new ones unless you ask, and asking costs after the free ones."))
+DEMANDS_SAVED = End(face="smug", button="Back to my project", lines=(
+    "Done. Don't tell me you picked the easy ones because they suit what you built.",
+    "I will be checking."))
+NO_FITTING_NOTES = (
+    "None of the notes I dealt you suit that kind of project, dear.",
+    "Ask me to deal again, or go back and change the kind.")

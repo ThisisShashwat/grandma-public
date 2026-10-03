@@ -71,24 +71,29 @@
   </div>
 </div>
 
-{% if kind == "deal" and notes %}
+{% if kind == "deal" and (notes or again) %}
 <form class="hand-form" method="post" action="">
   {{ csrf_input }}
   <input type="hidden" name="at" value="{{ at }}">
+  {% if notes %}
   <ul class="hand" aria-label="Grandma's fridge">
     {% for n in notes %}
     {{ hand.note(n, pick=true, checked=(n.id|string in (field.value() or []))) }}
     {% endfor %}
   </ul>
-  {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
+  {% endif %}
+  {% if field and field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
   <p class="talk-actions">
-    <button class="btn">{{ step.button }}</button>
+    {% if notes %}<button class="btn">{{ step.button }}</button>{% endif %}
     {% if again %}
     {% if again.cost %}
     <a class="btn btn--plain" href="{{ again.url }}">Deal again ({{ again.cost }} cookies)</a>
     {% else %}
     <button class="btn btn--plain" formaction="{{ again.url }}" name="expect" value="{{ again.number }}" formnovalidate>Deal again ({{ again.free_left ~ " free left" if again.free_left else "free" }})</button>
     {% endif %}
+    {% endif %}
+    {% if edit_url or (step and step.edit_url) %}
+    <a class="btn btn--plain" href="{{ edit_url or step.edit_url }}">Change the idea, name or kind</a>
     {% endif %}
   </p>
 </form>

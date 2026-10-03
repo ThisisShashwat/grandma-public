@@ -14,8 +14,9 @@ from django.utils import timezone
 
 from accounts.services import profile_of
 from projects import notes, rules, script, services
+from projects.models import Demand
 from projects.validators import validate_idea, validate_project_name
-from talk.dialogue import Deal, State
+from talk.dialogue import Deal, End, State
 from talk.store import SessionStore
 
 
@@ -33,9 +34,16 @@ def again_for(project, cfg):
 def deal_step(user, cfg):
     """The notes on the table, taken from the person's dealing project (none: an apology instead, never a crash)."""
     project = services.dealing_project(user)
-    hand = notes.notes(services.hand_demands(project)) if project else []
-    return replace(script.DEAL, lines=script.DEAL.lines if hand else script.EMPTY_JAR, notes=lambda: hand,
-                   again=(lambda: again_for(project, cfg)) if hand else None)
+    fitting = services.hand_demands(project) if project else []
+    hand = notes.notes(fitting) if fitting else []
+    has_category_demands = Demand.objects.filter(categories=project.category, active=True).exists() if project else False
+    if not hand:
+        lines = script.NO_FITTING_NOTES if has_category_demands else script.EMPTY_JAR
+    else:
+        lines = script.DEAL.lines
+    return replace(script.DEAL, lines=lines, notes=lambda: hand,
+                   again=(lambda: again_for(project, cfg)) if (hand or has_category_demands) and project else None,
+                   edit_url=reverse("project_edit"))
 
 
 def dialogue(cfg, user):
@@ -50,6 +58,80 @@ def dialogue(cfg, user):
         deal_step(user, cfg),
         script.ENDING,
     ]
+
+
+def edit_dialogue(project):
+    """The 5-step conversation to edit a working project's idea, name, category, and subcategory."""
+    return [
+        replace(script.EDIT_IDEA, validators=(validate_idea,)),
+        replace(script.EDIT_NAME, validators=(validate_project_name,)),
+        replace(script.ASK_CATEGORY, lines=script.EDIT_CATEGORY_LINES, choices=lambda answers: services.category_choices()),
+        replace(script.ASK_SUBCATEGORY, choices=lambda answers: services.subcategory_choices(answers.get("category")),
+                when=lambda answers: bool(services.subcategory_choices(answers.get("category")))),
+        script.EDIT_SAVED,
+    ]
+
+
+def demands_dialogue(project, cfg):
+    """The 2-step conversation to change demands for a building project."""
+    return [
+        replace(script.DEMANDS_DEAL, notes=lambda: notes.notes(services.hand_demands(project)),
+                again=lambda: again_for(project, cfg)),
+        script.DEMANDS_SAVED,
+    ]
+
+
+class EditStore(SessionStore):
+    """Answers prefilled from project; save calls edit_project at the End step before session write."""
+
+    def __init__(self, steps, project):
+        super().__init__("project_edit")
+        self.project = project
+        self.end_at = next(i for i, step in enumerate(steps) if isinstance(step, End))
+
+    def load(self, request):
+        state = super().load(request)
+        person = {"display_name": profile_of(request.user).display_name}
+        cat_value = self.project.category.slug
+        sub_value = str(self.project.subcategory.pk) if self.project.subcategory else ""
+        initial = {"idea": self.project.idea, "name": self.project.name, "category": cat_value, "subcategory": sub_value}
+        answers = initial | state.answers | person
+        return State(state.position, answers)
+
+    def save(self, request, state):
+        if state.position >= self.end_at:
+            answers = state.answers
+            services.edit_project(
+                request.user,
+                idea=answers.get("idea", ""),
+                name=answers.get("name", ""),
+                category_value=answers.get("category", ""),
+                subcategory_value=answers.get("subcategory", ""),
+            )
+        super().save(request, state)
+
+
+class DemandsStore(SessionStore):
+    """Current kept demands prefilled; save calls rekeep when Deal step is answered before session write."""
+
+    def __init__(self, steps, project):
+        super().__init__("project_demands")
+        self.project = project
+        self.deal_at = next(i for i, step in enumerate(steps) if isinstance(step, Deal))
+        self.end_at = next(i for i, step in enumerate(steps) if isinstance(step, End))
+
+    def load(self, request):
+        state = super().load(request)
+        person = {"display_name": profile_of(request.user).display_name}
+        kept_ids = [str(d.id) for d in services.kept_demands(self.project)]
+        initial = {"keep": kept_ids}
+        answers = initial | state.answers | person
+        return State(state.position, answers)
+
+    def save(self, request, state):
+        if state.position > self.deal_at:
+            services.rekeep(request.user, state.answers.get("keep", []), timezone.now())
+        super().save(request, state)
 
 
 class Store(SessionStore):
