@@ -39,6 +39,11 @@ CONFIG = {
                       "subdomains: streamlit.app blocks myapp.streamlit.app.", "hosts"),
     "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes.", "megabytes"),
 
+    "ORDER_SCREENSHOT_MAX_MB": (5, "The biggest cart or part screenshot a person may upload with an order, in megabytes.", "megabytes"),
+    "ORDER_SCREENSHOT_MAX_SIDE": (6000, "The longest side of an order screenshot, in pixels. Anything bigger is refused.", "pixels"),
+    "ORDER_SCREENSHOT_MAX_MEGAPIXELS": (20, "The most pixels (width times height, in millions) an order screenshot may have. Checked before it is decoded.", "megapixels"),
+    "ORDER_MAX_PARTS": (10, "The most parts one hardware order may list (and so the most part screenshots). 1 to 20.", "parts"),
+
     "SLACK_WORKSPACE_URL": ("https://hackclub.slack.com", "The address of the Slack workspace. A public profile links to this address plus /team/ and the person's Slack ID. "
                                                          "Just the address, nothing after it.", "workspace"),
     "SHOW_REJECTED_PUBLICLY": (True, "Show rejected projects on the public profile and project pages (only after the person has heard the result). Off hides them."),
@@ -60,6 +65,7 @@ FIELDSETS = (
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Projects", ("PROJECT_MIN_DAYS", "PROJECT_MAX_DAYS")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
+    ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS", "ORDER_MAX_PARTS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
@@ -76,6 +82,9 @@ FIELDS = {
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
+    "pixels": ("django.forms.IntegerField", {"min_value": 500, "max_value": 10000}),
+    "megapixels": ("django.forms.IntegerField", {"min_value": 1, "max_value": 40}),
+    "parts": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
     "workspace": ("pages.fields.WorkspaceField",),
     "leaderboard_size": ("django.forms.IntegerField", {"min_value": 1, "max_value": 500}),
     "tutorial_depth": ("django.forms.ChoiceField", {"choices": DEPTHS}),

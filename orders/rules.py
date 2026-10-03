@@ -3,6 +3,7 @@ cover a list of parts, who may have how many, stock, who may buy a hardware gran
 link, a part or a price. No Django import and no database: the decisions are made here and orders/services.py only applies them.
 Every problem is a sentence in Grandma's voice, or "" when there is none. Why each rule exists: docs/orders.md."""
 import math
+import re
 from decimal import Decimal
 from typing import NamedTuple
 
@@ -18,6 +19,7 @@ GIVES_BACK = (REJECTED, REFUNDED, CANCELLED)        # moving an order here puts 
 TRANSITIONS = {PENDING: (APPROVED, REJECTED, CANCELLED), APPROVED: (FULFILLED, REJECTED), FULFILLED: (REFUNDED,)}
 
 MAX_PRICE = Decimal("99999.99")                     # what one part may cost, in dollars: a typo guard
+NONCE = re.compile(r"[0-9a-f]{32}")                 # what a page puts in its hidden field: a uuid4 in hex
 MAX_QUANTITY = 100                                  # no stackable item is bought more than this many at once, whatever its limit says
 
 
