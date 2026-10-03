@@ -35,7 +35,8 @@ def submit(request):
     if ship.problem:
         return not_now(request, ship.problem)
     cfg = live()
-    form = SubmitForm(request.POST, request.FILES, cfg=cfg) if request.method == "POST" else SubmitForm(cfg=cfg)
+    kind = project.category.kind
+    form = SubmitForm(request.POST, request.FILES, cfg=cfg, kind=kind) if request.method == "POST" else SubmitForm(cfg=cfg, kind=kind)
     if request.method == "POST" and form.is_valid():
         try:
             services.submit(request.user, **form.cleaned_data)

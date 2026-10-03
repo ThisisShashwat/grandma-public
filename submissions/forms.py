@@ -23,9 +23,11 @@ class SubmitForm(forms.Form):
     ai_declaration_text = forms.CharField(required=False, max_length=1000)
     declarations = forms.MultipleChoiceField(required=False, error_messages={"invalid_choice": NOT_ALL_TICKED})
 
-    def __init__(self, *args, cfg, **kwargs):
+    def __init__(self, *args, cfg, kind, **kwargs):
+        """`kind` is the project's category kind, "software" or "hardware": the boxes shown, and all of which must be ticked, are the
+        ones for everybody and the ones for that kind."""
         super().__init__(*args, **kwargs)
-        self.checks = submission.checks(cfg.SUBMISSION_CHECKS)
+        self.checks = submission.checks_for(cfg.SUBMISSION_CHECKS, kind)
         self.blocked_hosts = submission.hosts(cfg.BLOCKED_HOSTS)
         self.max_bytes = cfg.SCREENSHOT_MAX_MB * 1024 * 1024
         self.fields["declarations"].choices = [(check.key, check.text) for check in self.checks]
