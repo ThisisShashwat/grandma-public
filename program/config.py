@@ -8,18 +8,7 @@ SITE = {
     "theme_color": "#c8a2d8",
 }
 
-LAUNCH = "2026-10-05T12:00:00Z"   # TODO: real launch moment (ISO, with timezone)
-FREE_ASKS = 3
-
-# Empty string = placeholder "#". Fill these in and every page picks them up.
-LINKS = {
-    "signup": "",     # Fillout form or Submit link
-    "slack": "",
-    "repo": "",
-    "board": "",      # where complaints (new demands) get sent
-    "rules": "",      # fine print / HQ policies
-    "contact": "",    # e.g. "mailto:you@example.com"
-}
+# Launch time, free asks and the program links are admin-editable (Django admin, "Constance"): program/runtime.py.
 
 # Standard Hack Club footer links: (key, label, url), one row per line.
 FOOTER = [

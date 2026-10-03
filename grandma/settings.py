@@ -4,6 +4,8 @@ from pathlib import Path
 
 import environ
 
+from program import runtime
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
@@ -22,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "constance",
     "program",
     "pages",
     "shop",
@@ -76,6 +79,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# Settings staff edit in the admin ("Constance"), stored in the database. What they are and their defaults: program/runtime.py.
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_CONFIG = runtime.CONFIG
+CONSTANCE_CONFIG_FIELDSETS = runtime.FIELDSETS
+CONSTANCE_ADDITIONAL_FIELDS = dict(runtime.FIELDS)
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
