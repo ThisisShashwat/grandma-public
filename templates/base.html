@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="{{ static('css/core/' ~ name ~ '.css') }}">
   {% endfor %}
   {% block styles %}{% endblock %}
+  {% block head %}{% endblock %}
   <noscript><style>.ph::before { display: none; }</style></noscript>
 
   {# Libraries: exact versions plus integrity hashes, so a hacked CDN cannot swap the file.

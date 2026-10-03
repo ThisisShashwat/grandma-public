@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{# The public pages (showcase/views.py): a person, a project, the Blue Ribbon wall, the cookie board. Open to anyone, no login. Unless the
+   PUBLIC_PAGES_INDEXABLE setting is on they ask search engines to leave them alone (the people on them are 13 to 18). #}
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
+<link rel="stylesheet" href="{{ static('css/sections/public.css') }}">
+{% endblock %}
+
+{% block head %}
+{% if not indexable %}<meta name="robots" content="noindex, nofollow">{% endif %}
+{% endblock %}

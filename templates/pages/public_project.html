@@ -1,0 +1,54 @@
+{% extends "pages/public_base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/public.html" as pub %}
+
+{% block title %}{{ page.name }}{% endblock %}
+
+{# A project's public page (showcase/views.py project): what it is, who made it, the demands Grandma gave, and for each ship what they handed
+   in (a picture, the words, links out) and how it stands. Grandma's note is only on the page once the maker has collected the result. #}
+{% block main %}
+<section class="scene scene--sky pub-head">
+  <div class="wrap split">
+    <div>
+      <p class="pub-where">{{ pub.stamp(page.status, page.status_label) }}{% if page.ribbon and page.status != "ribbon" %} {{ pub.stamp("ribbon", "Blue Ribbon") }}{% endif %} <span>{{ page.where }}</span></p>
+      <h1>{{ page.name }}</h1>
+      <p class="pub-lede">{{ page.idea }}</p>
+      <p class="pub-by">Made by <a href="{{ page.maker_path }}">{{ page.maker }}</a></p>
+    </div>
+    <div class="pub-says">
+      {{ art.fig(page.says.face_file, page.says.face_alt, "aside-fig pub-face") }}
+      <p class="talk-bubble pub-bubble">{{ page.says.line }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene pub-body">
+  <div class="wrap pub-stack">
+    {% for s in page.ships %}
+    <article class="pub-ship" aria-labelledby="ship-{{ loop.index }}">
+      {% if s.ribbon %}{{ pub.ribbon() }}{% endif %}
+      <h2 id="ship-{{ loop.index }}">{{ s.label or "What they handed in" }} {{ pub.stamp(s.status, s.status_label) }}</h2>
+      {% if s.screenshot %}<img class="pub-ship-shot" src="{{ s.screenshot }}" alt="Screenshot of {{ page.name }}{% if s.label %}, {{ s.label|lower }}{% endif %}" loading="lazy">{% endif %}
+      <p class="pub-text">{{ s.description }}</p>
+      {% if s.links %}<p class="actions">{% for link in s.links %}{{ pub.out(link) }}{% endfor %}</p>{% endif %}
+      {% if s.note %}
+      <div class="pub-note">
+        <p class="pub-note-label">Grandma's note</p>
+        <blockquote>{{ s.note }}</blockquote>
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+
+    {% if page.demands %}
+    <section aria-labelledby="pub-demands">
+      <h2 id="pub-demands">{{ "Grandma's demand" if page.demands|length == 1 else "Grandma's demands" }}</h2>
+      <p class="project-sub">{{ "The one it was built around." if page.demands|length == 1 else "What it was built around." }}</p>
+      <ul class="hand">
+        {% for d in page.demands %}{{ pub.demand(d) }}{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,53 @@
+{# Pieces of the public pages (showcase/public.py): every one takes a plain record, never a model, and every value goes through the
+   template engine's escaping. Cookies only: no dollars, no hours, no rates. #}
+
+{% macro stamp(status, label) -%}<span class="pub-stamp" data-status="{{ status }}">{{ label }}</span>{%- endmacro %}
+
+{# the Blue Ribbon, drawn by hand: a blue rosette with two tails #}
+{% macro ribbon() -%}
+<svg class="pub-ribbon" viewBox="0 0 44 56" aria-hidden="true" focusable="false">
+  <path d="M11 30 L4 53 L15 46 L22 54 L25 32Z" fill="#2f4fc4" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M33 30 L40 53 L29 46 L22 54 L19 32Z" fill="#2f4fc4" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="22" cy="19" r="15" fill="#2f4fc4" stroke="#000" stroke-width="3"/>
+  <circle cx="22" cy="19" r="7" fill="#fff3a6" stroke="#000" stroke-width="3"/>
+</svg>
+{%- endmacro %}
+
+{# a link out of the site: a new tab, no opener, no referrer, and no endorsement for search engines #}
+{% macro out(link, cls="btn") -%}
+<a class="{{ cls }}" href="{{ link.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ link.label }}</a>
+{%- endmacro %}
+
+{# a project as a card: a clipping of its screenshot, its name, where it sits, how it stands. maker=true adds who made it (the wall) #}
+{% macro card(c, maker=false) -%}
+<li class="pub-card{% if c.ribbon %} pub-card--ribbon{% endif %}">
+  {% if c.ribbon %}{{ ribbon() }}{% endif %}
+  {% if c.screenshot %}<img class="pub-shot" src="{{ c.screenshot }}" alt="Screenshot of {{ c.name }}" loading="lazy">{% endif %}
+  <h3 class="pub-card-name"><a href="{{ c.path }}">{{ c.name }}</a></h3>
+  <p class="pub-card-where">{{ c.where }}{% if c.ship %}, {{ c.ship|lower }}{% endif %}</p>
+  <p class="pub-tags">{{ stamp(c.status, c.status_label) }}{% if c.ribbon and c.status != "ribbon" %} {{ stamp("ribbon", "Blue Ribbon") }}{% endif %}</p>
+  {% if maker %}<p class="pub-card-by">by <a href="{{ c.maker_path }}">{{ c.maker }}</a></p>{% endif %}
+</li>
+{%- endmacro %}
+
+{# one of the demands a project kept, as a sticky note on the fridge: its name, how grumpy, and the proper rule #}
+{% macro demand(d) -%}
+<li class="dnote">
+  <div class="dnote-body">
+    <b class="dnote-name">{{ d.name }}</b>
+    <span class="dnote-tier">{{ d.tier_label }} <em>({{ d.level }})</em></span>
+    <span class="dnote-rule">{{ d.rule }}</span>
+  </div>
+</li>
+{%- endmacro %}
+
+{# newer and older pages of a long list #}
+{% macro pager(paged, address) -%}
+{% if paged.pages > 1 %}
+<nav class="pub-pager" aria-label="Pages">
+  {% if paged.previous %}<a class="btn btn--plain" href="{{ address }}?page={{ paged.previous }}">Newer</a>{% endif %}
+  <span>Page {{ paged.number }} of {{ paged.pages }}</span>
+  {% if paged.next %}<a class="btn btn--plain" href="{{ address }}?page={{ paged.next }}">Older</a>{% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}

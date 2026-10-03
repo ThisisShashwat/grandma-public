@@ -1,0 +1,39 @@
+{% extends "pages/public_base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/public.html" as pub %}
+
+{% block title %}The cookie board{% endblock %}
+
+{# The most cookies earned, all time (showcase/views.py leaderboard). The number is what they earned, not what is left in their jar. #}
+{% block main %}
+<section class="scene scene--sky pub-head">
+  <div class="wrap split">
+    <div>
+      <h1>The cookie board</h1>
+      <p class="pub-lede">The most cookies ever earned. Spending them doesn't count against anyone.</p>
+    </div>
+    {{ art.fig("grandma-clipboard.png", "Grandma holding a clipboard, keeping score", "aside-fig pub-fig") }}
+  </div>
+</section>
+
+<section class="scene pub-body">
+  <div class="wrap">
+    {% if rows %}
+    <ol class="pub-board">
+      {% for r in rows %}
+      <li class="pub-row"{% if r.rank <= 3 %} data-rank="{{ r.rank }}"{% endif %}>
+        <b class="pub-rank">{{ r.rank }}</b>
+        <a class="pub-who" href="{{ r.path }}">{{ r.name }}</a>
+        <span class="pub-cookies"><b>{{ r.cookies }}</b> {{ "cookie" if r.cookies == 1 else "cookies" }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <div class="pub-nobody">
+      {{ art.fig("grandma-shocked.png", "Grandma shocked, a cookie falling out of her hand", "aside-fig pub-fig") }}
+      <p class="talk-bubble pub-bubble">Not one cookie earned yet, dear. Somebody has to go first.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

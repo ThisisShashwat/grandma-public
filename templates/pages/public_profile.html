@@ -1,0 +1,40 @@
+{% extends "pages/public_base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/public.html" as pub %}
+
+{% block title %}{{ page.name }}{% endblock %}
+
+{# A person's public page (showcase/views.py profile): the name they chose, their Slack ID and a link that opens them in Slack, and every
+   project they have handed in. Nothing else about them is on it, and nothing here is a model: `page` is plain public records. #}
+{% block main %}
+<section class="scene scene--sky pub-head">
+  <div class="wrap split">
+    <div>
+      <h1>{{ page.name }}</h1>
+      <p class="pub-count">
+        {% if page.projects %}Handed in {{ page.projects }} {{ "project" if page.projects == 1 else "projects" }}{% if page.ribbons %}, {{ page.ribbons }} with a Blue Ribbon{% endif %}.
+        {% else %}Nothing handed in yet.{% endif %}
+      </p>
+      <p class="pub-slack">
+        <span>Slack ID <b>{{ page.slack_id }}</b></span>
+        {% if page.slack_url %}<a class="btn btn--plain" href="{{ page.slack_url }}" target="_blank" rel="noopener noreferrer">Open in Slack</a>{% endif %}
+      </p>
+    </div>
+    {{ art.fig("grandma-wave.png", "Grandma waving hello", "aside-fig pub-fig") }}
+  </div>
+</section>
+
+<section class="scene pub-body">
+  <div class="wrap">
+    <h2>Projects</h2>
+    {% if page.cards %}
+    <ul class="pub-cards">
+      {% for c in page.cards %}{{ pub.card(c) }}{% endfor %}
+    </ul>
+    {{ pub.pager(page.paged, page.path) }}
+    {% else %}
+    <p class="pub-empty">{{ page.name }} hasn't handed anything in yet, dear. When they do, it goes up here for everyone to see.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "pages/public_base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/public.html" as pub %}
+
+{% block title %}The Blue Ribbon wall{% endblock %}
+
+{# Every project that earned a Blue Ribbon (showcase/views.py ribbons), newest first. A project is here once its maker has collected the ribbon from Grandma. #}
+{% block main %}
+<section class="scene scene--sky pub-head">
+  <div class="wrap split">
+    <div>
+      <h1>The Blue Ribbon wall</h1>
+      <p class="pub-lede">Every project that earned one. I am very hard to impress.</p>
+    </div>
+    {{ art.fig("grandma-ribbon.png", "Grandma proudly wearing a blue ribbon", "aside-fig pub-fig") }}
+  </div>
+</section>
+
+<section class="scene pub-body">
+  <div class="wrap">
+    {% if wall.cards %}
+    <ul class="pub-cards pub-cards--wall">
+      {% for c in wall.cards %}{{ pub.card(c, maker=true) }}{% endfor %}
+    </ul>
+    {{ pub.pager(wall.paged, url('ribbons')) }}
+    {% else %}
+    <div class="pub-nobody">
+      {{ art.fig("grandma-nose-up.png", "Grandma with her nose in the air and arms crossed", "aside-fig pub-fig") }}
+      <p class="talk-bubble pub-bubble">Nobody yet, dear. I'm picky.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
