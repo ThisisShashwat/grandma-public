@@ -16,6 +16,8 @@ POSES = {
     "ribbon": ("grandma-ribbon.png", "Grandma proudly wearing a blue ribbon"),
     "hug": ("grandma-hug.png", "Grandma with her arms wide open for a hug"),
     "shush": ("grandma-shush.png", "Grandma winking, a finger to her lips"),
+    "nose-up": ("grandma-nose-up.png", "Grandma with her nose in the air and arms crossed"),
+    "shocked": ("grandma-shocked.png", "Grandma shocked, a cookie falling out of her hand"),
 }
 
 _portraits = {f["name"]: (f["file"], f["alt"]) for f in FACES} | POSES

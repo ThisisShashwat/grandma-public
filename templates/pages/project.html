@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/notes.html" as hand %}
+
+{% block title %}{{ project.name }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
+{% endblock %}
+
+{# Someone's own project (projects/views.py project): what they said they would make, where it stands, how many days are left and
+   the demands they kept. Cookies and faces only: no dollars, no rates. #}
+{% block main %}
+<section class="scene scene--sky project-head">
+  <div class="wrap split">
+    <div>
+      <p class="project-where"><span class="project-status" data-status="{{ project.status }}">{{ status }}</span>
+        {{ project.category.name }}{% if project.subcategory %}, {{ project.subcategory.name }}{% endif %}</p>
+      <h1>{{ project.name }}</h1>
+      <p class="lede">{{ project.idea }}</p>
+    </div>
+    {{ art.fig("grandma-clipboard.png", "Grandma holding a clipboard, keeping an eye on you", "aside-fig project-fig") }}
+  </div>
+</section>
+
+<section class="scene project-body">
+  <div class="wrap">
+    {% if window %}
+    <div class="days" role="status">
+      {% if window.late %}
+      <b class="days-number">0</b>
+      <p class="days-text"><strong>days left, dear.</strong> The deadline has gone by. Hand it in as soon as you can, I'm still waiting.</p>
+      {% else %}
+      <b class="days-number">{{ window.days_left }}</b>
+      <p class="days-text"><strong>{{ "day" if window.days_left == 1 else "days" }} left.</strong>
+        {% if window.ready_in %}You can hand it in to me in {{ window.ready_in }} {{ "day" if window.ready_in == 1 else "days" }}, and I need it within {{ max_days }}.
+        {% else %}You may hand it in to me now, and I need it within {{ max_days }} days of starting.{% endif %}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <h2>{{ "Grandma's demand" if notes|length == 1 else "Grandma's demands" }}</h2>
+    <p class="project-sub">{{ "That's the one you kept. Build around it." if notes|length == 1 else "The ones you kept. Build around all of them." }}</p>
+    <ul class="hand">
+      {% for n in notes %}{{ hand.note(n) }}{% endfor %}
+    </ul>
+
+    {% if project.status == "building" %}
+    <p class="project-later">When it's done you'll hand it in to me here. That part of the house isn't open yet, so keep building, dear.</p>
+    {% endif %}
+    {% if can_start_another %}
+    <p class="actions"><a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a></p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,6 +1,8 @@
 {% import "macros/art.html" as art %}
+{% import "macros/notes.html" as hand %}
 {# One step of a dialogue (talk/flow.py): Grandma's portrait, her speech bubble, and what she wants from you.
-   kind is say, asktext, askchoice or end. Every answer is a normal form POST, no JavaScript needed. #}
+   kind is say, asktext, askchoice, deal, again or end. Every answer is a normal form POST, no JavaScript needed.
+   deal: the notes on her fridge below the bubble, tick the ones to keep. again: confirming a paid re-deal. #}
 <div class="talk">
   <figure class="fig aside-fig talk-face">{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
 
@@ -13,6 +15,19 @@
 
     {% if kind == "end" %}
     <p class="talk-actions"><a class="btn" href="{{ then }}">{{ step.button }}</a></p>
+
+    {% elif kind == "again" %}
+    <form class="talk-form" method="post" action="{{ again.url }}">
+      {{ csrf_input }}
+      <input type="hidden" name="expect" value="{{ again.number }}">
+      <p class="talk-actions">
+        {% if again.affordable %}<button class="btn" name="sure" value="1">Yes, deal again</button>{% endif %}
+        <a class="btn btn--plain" href="{{ then }}">{{ "No, I'll keep these" if again.affordable else "Back to my notes" }}</a>
+      </p>
+    </form>
+
+    {% elif kind == "deal" %}
+    {# the notes are below, outside the bubble #}
 
     {% else %}
     <form class="talk-form" method="post" action="">
@@ -33,7 +48,7 @@
 
       {% elif kind == "askchoice" %}
       <div class="talk-picks" role="group">
-        {% for value, label in step.choices %}
+        {% for value, label in choices %}
         <button class="pick{% if field.value() == value %} is-picked{% endif %}" name="{{ step.key }}" value="{{ value }}">{{ label }}</button>
         {% endfor %}
       </div>
@@ -49,3 +64,26 @@
     {% endif %}
   </div>
 </div>
+
+{% if kind == "deal" and notes %}
+<form class="hand-form" method="post" action="">
+  {{ csrf_input }}
+  <input type="hidden" name="at" value="{{ at }}">
+  <ul class="hand" aria-label="Grandma's fridge">
+    {% for n in notes %}
+    {{ hand.note(n, pick=true, checked=(n.id|string in (field.value() or []))) }}
+    {% endfor %}
+  </ul>
+  {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
+  <p class="talk-actions">
+    <button class="btn">{{ step.button }}</button>
+    {% if again %}
+    {% if again.cost %}
+    <a class="btn btn--plain" href="{{ again.url }}">Deal again ({{ again.cost }} cookies)</a>
+    {% else %}
+    <button class="btn btn--plain" formaction="{{ again.url }}" name="expect" value="{{ again.number }}" formnovalidate>Deal again ({{ again.free_left ~ " free left" if again.free_left else "free" }})</button>
+    {% endif %}
+    {% endif %}
+  </p>
+</form>
+{% endif %}

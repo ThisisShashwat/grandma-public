@@ -1,0 +1,62 @@
+/* Grandma's dealt notes on her fridge (the notes step of a dialogue, templates/components/talk.html) and a person's project page
+   (templates/pages/project.html). The home page's language: a grey fridge door, sticky notes in three colours with a red or blue
+   magnet (the magnet rule is in core/notes.css), 3px ink borders, tilts of at most 2 degrees. */
+
+/* the notes, on the fridge */
+.hand-form { display: grid; gap: 1.5rem; margin-top: 2.75rem; }
+.hand {
+  position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); gap: 2.25rem 1.5rem;
+  margin: 0; padding: 2.5rem 2.75rem 2rem 1.5rem; list-style: none; background: #d9d9d9; border: var(--line) solid var(--ink);
+}
+.hand::after { content: ""; position: absolute; right: 10px; top: 14%; width: 14px; height: 30%; background: #bdbdbd; border: 3px solid var(--ink); }   /* the handle, as on the home page's fridge */
+
+.dnote { position: relative; display: flex; }
+.dnote:nth-child(4n+1) { rotate: -1.2deg; }
+.dnote:nth-child(4n+2) { rotate: 0.9deg; }
+.dnote:nth-child(4n+3) { rotate: -0.5deg; }
+.dnote:nth-child(4n+4) { rotate: 1.4deg; }
+.dnote:nth-child(even)::before { background: var(--ribbon); }
+
+.dnote-body {
+  flex: 1; display: grid; align-content: start; gap: 0.45rem; padding: 1.3rem 1rem 0.9rem;
+  background: var(--paper); border: 3px solid var(--ink); font-size: 1.05rem; line-height: 1.25;
+}
+.dnote:nth-child(3n+2) .dnote-body { background: var(--note-pink); }
+.dnote:nth-child(3n) .dnote-body { background: var(--note-blue); }
+label.dnote-body { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
+.dnote:has(input:checked) .dnote-body { box-shadow: 5px 5px 0 var(--ink); }
+.dnote:has(input:focus-visible) .dnote-body { outline: 4px dashed var(--ribbon); outline-offset: 4px; }
+
+.dnote-name { font-family: var(--display); font-size: 1.7rem; font-weight: 400; line-height: 1; overflow-wrap: anywhere; }
+.dnote-tier { font-size: 0.9rem; font-style: italic; }
+.dnote-tier em { font-style: normal; font-weight: 700; }
+.dnote-line { font-size: 1rem; }
+.dnote-rule { font-weight: 700; }
+.dnote-foot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.6rem; margin-top: 0.4rem; }
+.dnote-mood { display: flex; align-items: center; gap: 0.5rem; flex: 1 1 8rem; min-width: 0; }
+.dnote-mood img { flex: none; width: 3.6rem; height: auto; }
+.dnote-mood small { font-size: 0.85rem; font-style: italic; line-height: 1.15; }
+.dnote-keep { display: flex; align-items: center; gap: 0.4rem; font-family: var(--display); font-size: 1.35rem; line-height: 1; }
+.dnote-keep input { width: 1.5rem; height: 1.5rem; margin: 0; accent-color: var(--ribbon); }
+
+@media (max-width: 800px) { .hand { padding-right: 1.5rem; } .hand::after { display: none; } }
+
+/* the confirmation page: Grandma asks "sure?" (no notes here, only her bubble and two buttons) */
+.talk-actions .btn--plain { text-decoration: none; }
+
+/* the project page */
+.project-head h1 { font-size: clamp(2.6rem, 8vw, 4.8rem); overflow-wrap: anywhere; }
+.project-head .lede { max-width: 32rem; font-size: clamp(1.3rem, 2.8vw, 1.8rem); line-height: 1.25; overflow-wrap: anywhere; }
+.project-fig { width: min(100%, 15rem); justify-self: center; }
+.project-where { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.8rem; margin: 0 0 0.6rem; font-weight: 700; }
+.project-status { padding: 0.05em 0.7em; font-family: var(--display); font-size: 1.5rem; font-weight: 400; background: var(--paper); border: 3px solid var(--ink); rotate: -1.5deg; }
+.project-status[data-status="approved"] { background: var(--note-blue); }
+.project-status[data-status="rejected"], .project-status[data-status="abandoned"] { background: var(--note-pink); }
+
+.days { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; margin: 0 0 3rem; padding: 0.8rem 1.4rem; max-width: 40rem; background: var(--canvas); border: var(--line) solid var(--ink); rotate: -0.6deg; }
+.days-number { font-family: var(--display); font-size: clamp(4rem, 12vw, 6rem); font-weight: 400; line-height: 1; }
+.days-text { flex: 1 1 14rem; margin: 0; font-size: 1.15rem; line-height: 1.3; }
+.project-body h2 { margin-top: 0; }
+.project-sub { margin: 0 0 1.75rem; font-size: 1.15rem; }
+.project-later { max-width: 40rem; margin: 2.5rem 0 0; font-size: 1.15rem; }
+.project-body .actions { margin-top: 2rem; }

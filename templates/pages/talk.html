@@ -4,6 +4,7 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ static('css/sections/talk.css') }}">
+{% if kind == "deal" %}<link rel="stylesheet" href="{{ static('css/sections/project.css') }}">{% endif %}
 {% endblock %}
 
 {% block scripts %}

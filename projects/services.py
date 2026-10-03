@@ -26,6 +26,11 @@ def active_project(user):
     return Project.objects.filter(user=user, status__in=rules.ACTIVE_STATUSES).select_related("category", "subcategory").first()
 
 
+def dealing_project(user):
+    """The project whose hand is on the table (not yet confirmed), or None."""
+    return Project.objects.filter(user=user, status=rules.DEALING).select_related("category").first()
+
+
 def latest_project(user):
     return Project.objects.filter(user=user).select_related("category", "subcategory").first()
 

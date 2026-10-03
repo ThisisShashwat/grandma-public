@@ -3,6 +3,7 @@
     Say(lines=...)                         Grandma talks, the person taps "go on"
     AskText(key=..., lines=...)            Grandma asks for a line of text
     AskChoice(key=..., choices=...)        Grandma asks, the person taps one answer
+    Deal(key=..., notes=...)               Grandma lays notes on her fridge, the person keeps some of them
     End(lines=...)                         the last word, with a button to somewhere else
 
 Every step can carry `face` (one of Grandma's faces or poses, talk/portraits.py) and `when`, a function of the answers
@@ -42,7 +43,21 @@ class AskText(Step):
 @dataclass(frozen=True, kw_only=True)
 class AskChoice(Step):
     key: str
-    choices: tuple               # (value, label) pairs
+    choices: Callable[[dict], tuple] | tuple     # (value, label) pairs, or a function of the answers so far that returns them
+
+
+@dataclass(frozen=True, kw_only=True)
+class Deal(Step):
+    """Notes on Grandma's fridge; the person keeps between `min_keep` and `max_keep` of them. `notes()` returns what is on the
+    table now (objects with `id` and `name`, shown by templates/macros/notes.html) and is called when the page is drawn and
+    when an answer is checked, so the table lives wherever the caller keeps it (the database), never in the page. `again()`
+    returns what the "deal again" button needs (templates/components/talk.html) or None for no button."""
+    key: str
+    notes: Callable[[], list]
+    min_keep: int = 1
+    max_keep: int = 3
+    again: Callable[[], object] | None = None
+    button: str = "Keep these"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,6 +77,11 @@ def next_position(steps, position, answers):
     while position < len(steps) and steps[position].when is not None and not steps[position].when(answers):
         position += 1
     return position
+
+
+def choices_for(step, answers):
+    """The (value, label) pairs of a choice step for the answers so far."""
+    return tuple(step.choices(answers) if callable(step.choices) else step.choices)
 
 
 def fill(line, answers):

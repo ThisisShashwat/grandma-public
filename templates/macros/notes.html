@@ -1,0 +1,18 @@
+{% import "macros/art.html" as art %}
+{# One of Grandma's notes (projects/notes.py Note): its name, how grumpy it is, her line, the proper rule and the mood face she
+   would show for it. With pick=true the whole note is a label around a checkbox named keep (the Deal step of a dialogue);
+   without it the note is only shown (the project page). No numbers on it, no dollars: only the face. #}
+{% macro note(n, pick=false, checked=false) -%}
+<li class="dnote" data-tier="{{ n.tier }}">
+  {% if pick %}<label class="dnote-body">{% else %}<div class="dnote-body">{% endif %}
+    <b class="dnote-name">{{ n.name }}</b>
+    <span class="dnote-tier">{{ n.tier_label }} <em>({{ n.level }})</em></span>
+    <i class="dnote-line">"{{ n.line }}"</i>
+    <span class="dnote-rule">{{ n.rule }}</span>
+    <span class="dnote-foot">
+      <span class="dnote-mood">{{ art.img(n.face_file, n.face_alt, none, false) }}<small>"{{ n.face_say }}"</small></span>
+      {% if pick %}<span class="dnote-keep"><input type="checkbox" name="keep" value="{{ n.id }}"{% if checked %} checked{% endif %}> Keep this one</span>{% endif %}
+    </span>
+  {% if pick %}</label>{% else %}</div>{% endif %}
+</li>
+{%- endmacro %}
