@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "pages",
     "accounts",
     "ledger",
+    "audit",
     "projects",
     "submissions",
     "shop",
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "audit.middleware.RequestId",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
