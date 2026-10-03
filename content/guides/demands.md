@@ -12,7 +12,6 @@ A demand is Grandma telling you how to build, never what to build. "Make a game"
 - You get at least 1 demand and at most 3.
 - Each demand has a **grumpiness level**: mild ("Just a thought, dear"), medium ("I'm just saying") or spicy ("Back in my day"). Spicier demands are harder, and they make your cookies worth more. See [payouts](/guides/payouts/).
 - Demands fit your kind of project. Nobody gets "No Soldering" for a website. The list below says what fits what.
-- If your project does not fit any of the usual kinds, you only get the demands that fit anything: Tiny, Two Colors and No Jargon.
 
 ## Asking again
 
@@ -29,5 +28,5 @@ Every demand, with what it means in plain words and what it fits.
 <div data-widget="demands-list"></div>
 
 ::: note
-The idea is that anyone can send Grandma a new demand. That form does not exist yet and nothing about it is decided.
+This list will keep growing, and Grandma will keep building on it. One day anyone may be able to send her a new demand, but that is not decided yet.
 :::

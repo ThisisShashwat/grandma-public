@@ -12,7 +12,7 @@ Your hours come from Hackatime, a free tool made by Hack Club that tracks the ti
 2. Code for a few minutes in your editor.
 3. Look at your Hackatime dashboard and check that the time showed up.
 
-Do step 3 now. Grandma has seen too many people build for two weeks and then find an empty dashboard.
+Do step 3 now. Grandma has seen too many people build for days and then find an empty dashboard.
 
 ::: tip
 Hackatime is made and maintained by Hack Club, so its own docs are the place to look for setup and fixes. We link to them rather than copy them, because they change.

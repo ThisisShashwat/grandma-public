@@ -4,30 +4,54 @@ order: 100
 section: Build and ship
 summary: "Go through this list before you hit submit. Grandma will."
 ---
-This is the checklist for the day you ship. Read it before you are tired and in a hurry.
-
-::: note
-This is a draft. The submit form is not built yet and the owner may still change the list.
-:::
+This is the checklist for the day you ship. Read it before you are tired and in a hurry. The hand-in note has the same boxes, and every one of them has to be ticked.
 
 ## The checklist
 
-- Your project is brand new, made after you talked to Grandma.
-- You did not take an old project and change it. See the [rules](/guides/rules/).
-- You are not submitting it to any other program.
-- You have a link where people can try it, and that link does not go to sleep (see below).
-- Your hours are in [Hackatime](/guides/hackatime-setup/).
-- You can say how much of your time went to AI, and it is under 30%.
-- You have at least one screenshot.
-- You have a short recording.
+The most important ones come first.
+
+**For every project**
+
+- Your project follows the demands Grandma gave you, and a reviewer can check every one of them.
+- You started it after you talked to Grandma.
+- It is not an old project with a new name. If you reused an old repository, say why in your description.
+- No other program has counted these hours or this work.
+- It is your own work, in your own time: not a copied tutorial, not someone else's code, not school work, not paid Hack Club work.
+- Everything your description says it does is true and works.
+- Your repository is public and opens without signing in.
+- Your README says what it is, how to set it up, and how to run, play or build it.
+- Your commits grew while you worked. One giant upload at the end looks suspicious.
+- Your hours are real work on this project: no idle timer, no scripts, nothing from other projects. They come from [Hackatime](/guides/hackatime-setup/).
+- AI took less than 30% of your total time, and you can explain every part of your project.
+- Your screenshot is a still picture of the real project. A recording, if you have one, is on YouTube, Vimeo or a plain mp4 link, not Google Drive.
+- You read the [rules](/guides/rules/).
+
+**If it is software**
+
+- Your link opens for anyone in a private window with no login (or you gave demo logins in your description), on a host that stays awake. A newcomer can try it in two minutes without compiling anything.
+- Your art, models and sound took at most a quarter of your hours, unless they are the heart of the project.
+
+**If it is hardware**
+
+- The page you linked shows it working: photos, a video or a viewer. It opens for anyone with no login.
+- Your parts list names every part exactly, including the ones you already own.
+- If it has electronics, you included a schematic or a wiring diagram.
+- Anything you print has editable CAD files (STEP or your own project files), not only an STL.
+- If this is your build ship, you only claim the hours since your design ship, and you say what changed.
+
+## Hours are not paid word for word
+
+::: warning
+A reviewer may reduce your hours if they look inflated. Grandma can only prove what she can verify, and Hackatime is not proof of work. Honest hours, a repository that shows the work, and a project that matches the number are your best friends.
+:::
 
 ## The link to try it
 
-If your project is software, people need to be able to use it. The link must not point to a host that goes to sleep when nobody visits, such as Streamlit Community Cloud or the free tier of Render. A reviewer who clicks a sleeping link just sees a loading screen, and Grandma does not wait for loading screens.
+If your project is software, people need to be able to use it. The link must not point to a host that goes to sleep when nobody visits, such as Streamlit or the free tier of Render. A reviewer who clicks a sleeping link just sees a loading screen, and Grandma does not wait for loading screens. The hand-in note refuses the hosts Grandma knows about, and so does a notebook on Colab: that is a page to read, not a project to try.
 
 ## The AI declaration
 
-When you submit, you declare how much of your total time you used AI for. The limit is under 30%. Be honest. It is much easier than being caught.
+When you submit, you say how you used AI. The limit is under 30% of your total time, and you must understand what you hand in. Be honest. It is much easier than being caught. [How this site was made](/guides/ai-disclosure/) is on its own page.
 
 ## The screenshot and the recording
 
@@ -35,6 +59,10 @@ The screenshot shows what it looks like. The short recording shows it working, s
 
 ## The code
 
+Your repository must be public, with a README. A licence is a nice idea but not a must.
+
 ::: note
-Not decided yet: whether your repository has to be public and open source. The FAQ currently says projects must be open-source, but the owner has not confirmed it. Treat it as TBD until this note is gone.
+Not decided yet: whether a project must be open source with a licence. The FAQ says "open-source", and for now a public repository with a README is what Grandma checks.
 :::
+
+Stuck on something? Ask in <span data-slack="help"></span>.

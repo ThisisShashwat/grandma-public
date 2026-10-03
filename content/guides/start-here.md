@@ -11,8 +11,8 @@ Grandma has one rule for guests: sit down, take a cookie, read this page. It is 
 1. **Sign up** on the [home page](/) and join the Slack. You need to be 13 to 18 (under 19).
 2. **Set up Hackatime**, so your hours count. [Here is how](/guides/hackatime-setup/).
 3. **Talk to Grandma.** Tell her what you want to build. She answers with 1 to 3 [demands](/guides/demands/): rules for how you build it, never for what.
-4. **Build it.** 10 to 15 days, on your own, one project at a time.
-5. **Submit it.** Read the [checklist](/guides/submitting/) first. A reviewer looks, and you earn cookies for your hours.
+4. **Build it.** On your own, one project at a time, for as long as it takes. Half an hour or ten days, nobody is timing you.
+5. **Submit it.** Read the [checklist](/guides/submitting/) first. A reviewer looks, and you earn cookies for your hours. Then you may start another project, as many as you like.
 
 Then you spend the cookies in the Pantry. [How that works](/guides/shop-and-grants/).
 
@@ -27,8 +27,4 @@ You always pick the project. Grandma only picks how. A website, a game, a robot 
 
 ## Lost already?
 
-The [FAQ](/guides/faq/) has the short answers. If you are still stuck, ask in the Slack. Somebody there is probably less grumpy than Grandma.
-
-::: note
-Still being built: the page where you ask Grandma for your real demands, the submit form and the buy button in the Pantry. The fridge on the home page is only a demo. These guides explain how it will work.
-:::
+The [FAQ](/guides/faq/) has the short answers. If you are still stuck, ask in <span data-slack="help"></span>, or come and chat in <span data-slack="grandma"></span>. Somebody there is probably less grumpy than Grandma.

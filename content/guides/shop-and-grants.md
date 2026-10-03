@@ -50,8 +50,10 @@ Screenshot the whole cart, not just the price. If the total is not visible, the 
 
 ## Hardware grants
 
-Hardware grants are different. They live in their own part of the Pantry, and each belongs to **one specific design project** that you already shipped. You pick that project, then list **every item** you are buying with its link and price, with screenshots. Only then can you buy. [More in the hardware guide](/guides/hardware/).
+Hardware grants are different. They live in their own part of the Pantry, and each belongs to **one specific design project** whose design ship was approved. You pick that project, then list **every item** you are buying with its link and price, with screenshots. Only then can you buy. [More in the hardware guide](/guides/hardware/).
 
-::: note
-The Pantry is look-only for now. Login, the buy button and this proof step are not built yet. [Have a look around](/shop/), and wipe your hands first.
-:::
+## Buying one
+
+You need an account and you need to have met Grandma (the welcome chat). Then every card in the [Pantry](/shop/) has a button, and the cookies come out of your jar when you press it. Grandma checks what you sent, and when she is happy she hands over the grant. If she is not, your cookies come back.
+
+Is a grant not what you wanted? Ask in <span data-slack="help"></span>.

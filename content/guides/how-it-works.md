@@ -18,7 +18,7 @@ You get at least 1 demand and at most 3. Do not like one? Ask again. [All about 
 
 ## 3. You build
 
-10 to 15 days, on your own. Hackatime counts your hours while you code. [Set it up first](/guides/hackatime-setup/), or Grandma has no proof you did anything.
+As long as it takes: half an hour or ten days, on your own. There is no time limit on a project. Hackatime counts your hours while you code. [Set it up first](/guides/hackatime-setup/), or Grandma has no proof you did anything.
 
 ## 4. You submit
 
@@ -28,10 +28,12 @@ One project, one submission. A reviewer checks that you really did what Grandma 
 
 Cookies are what you get for hours you shipped. Spicier demands and a project Grandma loves make each hour worth more. [The payouts](/guides/payouts/) page has a calculator to play with.
 
-## 6. You spend them
+## 6. You spend them, or you go again
 
 The Pantry sells Hack Club Bank grants, not parcels. Grandma does not post anything, dear, she has a bad hip. [How the shop works](/guides/shop-and-grants/).
 
+And when a project is finished, you may talk to Grandma about another one. Build as many as you like, one after another.
+
 ::: note
-Not decided yet: the exact dates for review and payouts.
+Not decided yet: the exact dates for review and payouts, and when the program as a whole ends.
 :::
