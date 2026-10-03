@@ -2,7 +2,9 @@
 the database is the truth from then on). A project cannot be made here: only Talk to Grandma makes one, so it always comes after
 talking to her. Staff can read every project and abandon one, which frees its owner to start another."""
 from django.contrib import admin
+from django.db import transaction
 
+from audit import services as audit
 from projects import rules, services
 from projects.models import Category, Demand, Project, ProjectDemand, Subcategory
 
@@ -83,5 +85,18 @@ class ProjectAdmin(admin.ModelAdmin):
 
     @admin.action(description="Abandon (frees the person to start another project)", permissions=["change"])
     def abandon(self, request, queryset):
-        count = queryset.filter(status__in=rules.ACTIVE_STATUSES).update(status=rules.ABANDONED)
+        count = 0
+        for project in queryset.filter(status__in=rules.ACTIVE_STATUSES).select_related("user"):
+            with transaction.atomic():
+                old_status = project.status
+                project.status = rules.ABANDONED
+                project.save(update_fields=["status"])
+                audit.record(
+                    "project.abandon",
+                    actor=request.user,
+                    subject=project.user,
+                    target=project,
+                    details={"from": old_status},
+                )
+            count += 1
         self.message_user(request, f"Abandoned {count} projects.")

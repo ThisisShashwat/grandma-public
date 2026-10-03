@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from audit import services as audit
 from ledger import services as ledger
 from projects import rules as project_rules
 from projects import services as project_services
@@ -66,6 +67,22 @@ def submit(user, *, repo_url, playable_url, description, screenshot, recording_u
     submission.save()
     project.status = project_rules.IN_REVIEW
     project.save(update_fields=["status"])
+    audit.record(
+        "submission.submit",
+        actor=user,
+        subject=user,
+        target=submission,
+        details={
+            "project": project.id,
+            "project_name": project.name,
+            "stage": submission.stage or "",
+            "category": project.category_id,
+            "subcategory": project.subcategory_id,
+            "kept": [d.id for d in project_services.kept_demands(project)],
+            "hand": list(project.hand),
+            "redeals_used": project.redeals_used,
+        },
+    )
     return submission
 
 
@@ -94,13 +111,30 @@ def review(submission, *, by, now=None):
     out the cookies, then saves only the review fields. Put back to `submitted`, the stamps are cleared. AlreadyCollected once
     the person has been handed the result: the check is made under a lock on the row, so a form opened before the handover cannot
     change it."""
-    if Submission.objects.select_for_update().filter(pk=submission.pk, claimed_at__isnull=False).exists():
+    current = Submission.objects.select_for_update().select_related("project__user").get(pk=submission.pk)
+    if current.claimed_at is not None:
         raise AlreadyCollected
+    changed = any(getattr(current, f) != getattr(submission, f) for f in ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note"))
+    if not changed and current.reviewed_at is not None:
+        return submission
     if submission.status == rules.SUBMITTED:
         submission.reviewed_by, submission.reviewed_at, submission.cookies_awarded = None, None, None
     else:
         submission.reviewed_by, submission.reviewed_at, submission.cookies_awarded = by, now or timezone.now(), cookies_for(submission)
     submission.save(update_fields=REVIEW_FIELDS)
+    audit.record(
+        "submission.review",
+        actor=by,
+        subject=current.project.user,
+        target=submission,
+        details={
+            "status": submission.status,
+            "quality": bool(submission.quality),
+            "ribbon": bool(submission.ribbon),
+            "approved_hours": str(submission.approved_hours) if submission.approved_hours is not None else None,
+            "cookies_awarded": submission.cookies_awarded or 0,
+        },
+    )
     return submission
 
 
@@ -126,6 +160,16 @@ def claim(user, submission_id, *, now=None):
     if project.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
         project.status = after_claim(submission)
         project.save(update_fields=["status"])
+    audit.record(
+        "submission.claim",
+        actor=user,
+        subject=user,
+        target=submission,
+        details={
+            "cookies": submission.cookies_awarded or 0,
+            "project_status": project.status,
+        },
+    )
     return submission
 
 

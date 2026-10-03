@@ -17,6 +17,7 @@ from django.db import transaction
 from django.db.models import F, Q, Sum
 from django.utils import timezone
 
+from audit import services as audit
 from ledger import rules as ledger_rules
 from ledger import services as ledger
 from orders import rules
@@ -182,6 +183,19 @@ def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, project_id=N
     save_parts(order, parts)
     ledger.debit(user, offer.cookies, reason=f"Grant: {base.name} (order {order.pk})"[:200], key=f"order:{order.pk}")
     take_stock(offer)
+    audit.record(
+        "order.place",
+        actor=user,
+        subject=user,
+        target=order,
+        details={
+            "item": base.pk,
+            "lines": [[line.item_id, line.quantity] for line in offer.lines],
+            "total_cookies": int(order.total_cookies),
+            "total_value": str(order.total_value),
+            "project": project.id if project else None,
+        },
+    )
     return order
 
 
@@ -208,6 +222,7 @@ def move(order_id, to, *, by=None, grant_ref=None, owner=None):
     if order.status == to:
         return order
     refuse(None if rules.can_move(order.status, to) else f"An order that is {rules.LABELS[order.status].lower()} can't become {rules.LABELS[to].lower()}.")
+    old_status = order.status
     if grant_ref is not None:
         order.grant_ref = grant_ref.strip()
     refuse(NEEDS_REF if to == rules.FULFILLED and not order.grant_ref else "")
@@ -217,6 +232,17 @@ def move(order_id, to, *, by=None, grant_ref=None, owner=None):
     if by is not None:
         order.reviewed_by, order.reviewed_at = by, timezone.now()
     order.save(update_fields=["status", "grant_ref", "reviewed_by", "reviewed_at"])
+    audit.record(
+        "order.move",
+        actor=by or owner,
+        subject=order.user,
+        target=order,
+        details={
+            "from": old_status,
+            "to": to,
+            "has_ref": bool(order.grant_ref),
+        },
+    )
     return order
 
 
@@ -249,6 +275,22 @@ def review(order, *, by):
     if order.status != stored.status:
         move(order.pk, order.status, by=by, grant_ref=order.grant_ref)
     current = Order.objects.select_for_update().get(pk=order.pk)
-    current.public_note, current.internal_note, current.grant_ref = order.public_note, order.internal_note, order.grant_ref.strip()
-    current.save(update_fields=["public_note", "internal_note", "grant_ref"])
+    new_grant_ref = (order.grant_ref or "").strip()
+    changed_fields = []
+    if current.public_note != (order.public_note or ""):
+        changed_fields.append("public_note")
+    if current.internal_note != (order.internal_note or ""):
+        changed_fields.append("internal_note")
+    if current.grant_ref != new_grant_ref:
+        changed_fields.append("grant_ref")
+    if changed_fields:
+        current.public_note, current.internal_note, current.grant_ref = order.public_note, order.internal_note, new_grant_ref
+        current.save(update_fields=["public_note", "internal_note", "grant_ref"])
+        audit.record(
+            "order.review",
+            actor=by,
+            subject=current.user,
+            target=current,
+            details={"fields": changed_fields},
+        )
     return current

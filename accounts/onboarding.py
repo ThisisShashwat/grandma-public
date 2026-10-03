@@ -1,11 +1,13 @@
 """Onboarding at /welcome/: the dialogue, who sees how much tutorial, and where the answers are kept."""
 from dataclasses import replace
 
+from django.db import transaction
 from django.utils import timezone
 
 from accounts import script
 from accounts.models import FILLED_IN
 from accounts.services import profile_of
+from audit import services as audit
 from program.tutorial import offers_skip, parts
 from talk.dialogue import State
 from talk.store import SessionStore
@@ -39,11 +41,15 @@ def dialogue(cfg):
 def finish(cfg, request, answers):
     """Called once, when the last step before the end is answered: they are onboarded. Safe to run twice."""
     profile = profile_of(request.user)
+    first_time = not profile.onboarded_at
     profile.onboarded_at = profile.onboarded_at or timezone.now()
     if cfg.TUTORIAL_ENABLED:
         profile.tutorial_done_at = profile.tutorial_done_at or profile.onboarded_at
     profile.full_clean(exclude=["user"])
-    profile.save()
+    with transaction.atomic():
+        profile.save()
+        if first_time:
+            audit.record("onboarding.finish", actor=request.user, subject=request.user, target=profile)
 
 
 class ProfileStore(SessionStore):
@@ -61,9 +67,13 @@ class ProfileStore(SessionStore):
 
     def save(self, request, state):
         profile = profile_of(request.user)
+        changed = [key for key in FILLED_IN if key in state.answers and getattr(profile, key) != state.answers[key]]
         for key in FILLED_IN:
             if key in state.answers:
                 setattr(profile, key, state.answers[key])
         profile.full_clean(exclude=["user"])        # the model's own rules and the unique Slack ID; raises before anything is stored
-        profile.save()
+        with transaction.atomic():
+            profile.save()
+            if changed:
+                audit.record("profile.update", actor=request.user, subject=request.user, target=profile, details={"fields": changed})
         super().save(request, state)

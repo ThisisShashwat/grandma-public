@@ -11,6 +11,7 @@ from django.db import transaction
 
 from accounts.models import Profile
 from accounts.services import profile_of
+from audit import services as audit
 from ledger import services as ledger
 from program import draw
 from projects import rules
@@ -128,8 +129,10 @@ def finish(user, pk):
     if not design_collected(project) or project.status not in (rules.AWAITING_BUILD, rules.APPROVED):
         return None
     if project.status == rules.AWAITING_BUILD:
+        old_status = project.status
         project.status = rules.APPROVED
         project.save(update_fields=["status"])
+        audit.record("project.finish", actor=user, subject=user, target=project, details={"from": old_status, "to": project.status})
     return project
 
 
@@ -145,6 +148,18 @@ def start(user, *, idea, name, category, subcategory, size, rng):
                       hand=draw.deal(cards(), size, rng, category.id))
     project.full_clean()
     project.save()
+    audit.record(
+        "project.start",
+        actor=user,
+        subject=user,
+        target=project,
+        details={
+            "category": category.id,
+            "subcategory": subcategory.id if subcategory else None,
+            "hand": list(project.hand),
+            "size": size,
+        },
+    )
     return project
 
 
@@ -166,6 +181,13 @@ def redeal(user, *, expect, free, cost, size, rng):
     project.hand = draw.deal(cards(), size, rng, project.category_id)
     project.redeals_used = next_one.number
     project.save(update_fields=["hand", "redeals_used"])
+    audit.record(
+        "project.redeal",
+        actor=user,
+        subject=user,
+        target=project,
+        details={"number": next_one.number, "cost": next_one.cost, "hand": list(project.hand)},
+    )
     return project
 
 
@@ -188,8 +210,16 @@ def keep(user, ids, now):
     demands = Demand.objects.in_bulk(kept)
     if not draw.keeps_fit(kept, project.hand) or len(demands) != len(kept):
         raise ValidationError(NOT_ON_THE_TABLE)
-    for order, demand_id in enumerate((i for i in project.hand if i in kept), start=1):
+    kept_in_order = [i for i in project.hand if i in kept]
+    for order, demand_id in enumerate(kept_in_order, start=1):
         ProjectDemand.objects.create(project=project, demand=demands[demand_id], order=order)
     project.status, project.started_at = rules.BUILDING, now
     project.save(update_fields=["status", "started_at"])
+    audit.record(
+        "project.keep",
+        actor=user,
+        subject=user,
+        target=project,
+        details={"kept": kept_in_order},
+    )
     return project
