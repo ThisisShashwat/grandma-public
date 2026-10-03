@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "projects",
     "submissions",
     "shop",
+    "orders",
     "guides",
 ]
 
@@ -110,7 +111,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"          # collectstatic target for a rea
 # DEBUG on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "media/"
-DATA_UPLOAD_MAX_NUMBER_FILES = 3                # the submit note takes one screenshot: a request with a pile of files is refused (400)
+# PRIVATE uploads (cart and part screenshots of an order, orders/storage.py): outside static, outside MEDIA_ROOT, gitignored, never
+# served as a file. Only the authenticated view orders/views.py hands them out. A web server must NOT expose this folder (docs/orders.md).
+PRIVATE_MEDIA_ROOT = Path(env("PRIVATE_MEDIA_ROOT", default=str(BASE_DIR / "private_media")))
+# A request may carry this many files: an order has a cart screenshot and up to ORDER_MAX_PARTS (at most 20) part screenshots. The
+# submit note takes one screenshot and refuses more than 3 itself (submissions/views.py).
+DATA_UPLOAD_MAX_NUMBER_FILES = 25
 
 # Login. Accounts are made in the admin (no signup). Axes locks a username from an address after repeated failures, on /login/ and
 # the admin alike. The lock is per (username, IP address) so one person's typos never lock out a school's shared address.

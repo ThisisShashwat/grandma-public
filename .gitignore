@@ -9,3 +9,4 @@ tests/visual/out/
 db.sqlite3
 staticfiles/
 media/
+private_media/

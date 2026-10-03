@@ -1,6 +1,7 @@
 """/submit/ (a person hands their project to Grandma) and /grandma/collect/ (she hands the result back). Both are for one signed-in,
 onboarded person and touch only their own project: no address carries a project or submission id, so there is nothing to guess."""
 from django.core.exceptions import ValidationError
+from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -16,6 +17,8 @@ from talk import flow
 from talk.dialogue import End
 from talk.portraits import portrait
 
+MAX_FILES = 3           # the note takes one screenshot; the site-wide limit is higher because an order carries more (settings.py)
+
 
 @onboarded
 @never_cache
@@ -23,6 +26,8 @@ from talk.portraits import portrait
 def submit(request):
     """Grandma's note. Only a project being built can be handed in (the stage, for hardware, is decided here and never by the
     person); anything else gets her saying why. A hand-in that works goes to the dashboard."""
+    if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
+        return HttpResponseBadRequest("Too many files.")
     project = services.shipping_project(request.user)
     if project is None:
         return not_now(request)
