@@ -4,6 +4,7 @@
 
 /* the notes, on the fridge */
 .hand-form { display: grid; gap: 1.5rem; margin-top: 2.75rem; }
+.hand-form .oops { justify-self: start; max-width: 100%; }
 .hand {
   position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); gap: 2.25rem 1.5rem;
   margin: 0; padding: 2.5rem 2.75rem 2rem 1.5rem; list-style: none; background: #d9d9d9; border: var(--line) solid var(--ink);
