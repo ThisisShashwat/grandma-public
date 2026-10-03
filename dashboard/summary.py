@@ -1,0 +1,120 @@
+"""What the dashboard shows one person, read from the database and handed to the templates as plain records (dashboard/records.py).
+Everything is filtered by the signed-in person: nothing here takes an id from a request, so there is nothing to guess. The reviewer's
+hours and internal note are never read into a record, and a result is only shown (cookies, ribbon, the public note) once Grandma
+has handed it over."""
+from zoneinfo import ZoneInfo
+
+from django.core.paginator import Paginator
+from django.db.models import Sum
+
+from accounts.services import profile_of
+from dashboard import mood, records
+from ledger import services as ledger
+from ledger.models import CookieEntry
+from projects import notes, rules, services as project_services
+from submissions import rules as submission_rules
+from submissions import services as submission_services
+from submissions.models import Submission
+from talk.portraits import portrait
+
+LATEST = 3          # submissions on the dashboard itself
+RECENT = 5          # cookie entries on the dashboard itself
+PAGE = 20           # per page on the sub pages
+
+
+def zone_of(profile):
+    """The person's own time zone (validated when they gave it), else UTC."""
+    try:
+        return ZoneInfo(profile.timezone)
+    except (KeyError, ValueError):
+        return ZoneInfo("UTC")
+
+
+def day(moment, zone):
+    local = moment.astimezone(zone)
+    return f"{local.day} {local:%b %Y}"
+
+
+def says(face, line):
+    file, alt = portrait(face)
+    return records.Says(face_file=file, face_alt=alt, line=line)
+
+
+def waiting_cookies(user):
+    """Cookies awarded and not yet handed over: reviewed and approved, not collected."""
+    total = Submission.objects.filter(project__user=user, status=submission_rules.APPROVED, claimed_at__isnull=True).aggregate(total=Sum("cookies_awarded"))["total"]
+    return total or 0
+
+
+def project_card(project, cfg, now):
+    window = None
+    ship = ""
+    if project.status == rules.BUILDING:
+        next_ship = submission_services.ship_for(project)
+        ship = submission_rules.STAGE_LABELS[next_ship.stage] if next_ship.stage else ""
+        if not project.submissions.exists():           # the countdown is for the first ship; a hardware build ship has no clock yet
+            window = rules.window(project.started_at, now, cfg.PROJECT_MIN_DAYS, cfg.PROJECT_MAX_DAYS)
+    action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.SHIPPED: "reading", rules.DEALING: "resume"}.get(project.status, "start")
+    return records.ProjectCard(
+        name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
+        status=project.status, status_label=rules.LABELS[project.status], ship=ship,
+        days_left=window.days_left if window else None, ready_in=window.ready_in if window else None, late=bool(window and window.late),
+        notes=tuple(notes.notes(project_services.kept_demands(project))), action=action)
+
+
+def submission_row(submission, zone):
+    """One thing handed in, as much as the person may know: a result is only shown once Grandma has handed it over."""
+    collected = submission.claimed_at is not None
+    if submission.status == submission_rules.SUBMITTED:
+        status, label = "handed_in", "Handed in"
+    elif not collected:
+        status, label = "waiting", "Waiting at Grandma's"
+    else:
+        status, label = submission.status, submission_rules.LABELS[submission.status]
+    approved = collected and submission.status == submission_rules.APPROVED
+    return records.SubmissionRow(
+        project=submission.project.name, ship=submission_rules.STAGE_LABELS[submission.stage], when=day(submission.submitted_at, zone), status=status,
+        status_label=label, cookies=submission.cookies_awarded if approved else None, ribbon=approved and submission.ribbon,
+        note=submission.public_note.strip() if collected else "")
+
+
+def cookie_row(entry, zone):
+    return records.CookieRow(when=day(entry.created_at, zone), amount=entry.amount, reason=entry.reason)
+
+
+def mine(user):
+    return Submission.objects.filter(project__user=user).select_related("project")
+
+
+def entries(user):
+    return CookieEntry.objects.filter(user=user).order_by("-created_at", "-id")
+
+
+def build(user, cfg, now):
+    profile = profile_of(user)
+    zone = zone_of(profile)
+    project = project_services.active_project(user) or project_services.latest_project(user)
+    card = project_card(project, cfg, now) if project else None
+    face, line = mood.says(project.status if project else None, card.days_left if card else None, bool(card and card.late))
+    submissions, history = mine(user), entries(user)
+    return records.Summary(
+        name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),
+        submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
+        history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count())
+
+
+def paged(queryset, number, make):
+    """One page of a person's list, as records. A page number that is not a number or out of range is the first or last page."""
+    page = Paginator(queryset, PAGE).get_page(number)
+    return records.Paged(rows=tuple(make(row) for row in page), number=page.number, pages=page.paginator.num_pages,
+                         previous=page.previous_page_number() if page.has_previous() else None, next=page.next_page_number() if page.has_next() else None)
+
+
+def submissions_page(user, number):
+    zone = zone_of(profile_of(user))
+    return paged(mine(user), number, lambda s: submission_row(s, zone))
+
+
+def cookies_page(user, number):
+    zone = zone_of(profile_of(user))
+    return paged(entries(user), number, lambda e: cookie_row(e, zone))

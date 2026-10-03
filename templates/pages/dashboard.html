@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/dashboard.html" as dd %}
+
+{% block title %}My dashboard{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/dashboard.css') }}">
+{% endblock %}
+
+{# A person's own dashboard (dashboard/views.py): sticky notes on Grandma's fridge. Everything comes from `dash`, plain records
+   (dashboard/records.py): cookies and her mood only, never hours, dollars or rates. #}
+{% block main %}
+{% set project = dash.project %}
+<section class="scene scene--sky dash-head">
+  <div class="wrap">
+    <h1>Hello, {{ dash.name }}</h1>
+    {% if handed_in %}<p class="dash-flash" role="status">Handed in, dear. I'll read it when I'm good and ready.</p>{% endif %}
+
+    <div class="dash-bal">
+      {{ art.fig("mood-0-asleep.png", "Grandma fast asleep", "aside-fig dash-jar") if dash.balance == 0 else art.fig("mood-5-pleased.png", "Grandma looking pleased with you", "aside-fig dash-jar") }}
+      <div class="talk-bubble dash-bubble">
+        <p class="dash-label">In your jar</p>
+        <p class="dash-big"><b>{{ dash.balance }}</b> <span>{{ "cookie" if dash.balance == 1 else "cookies" }}</span></p>
+        {% if dash.balance == 0 %}<p class="dash-small">Not a crumb, dear. Go and build something.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="dash-notes">
+      <section class="dash-note dash-note--pink" aria-labelledby="dash-waiting">
+        <h2 id="dash-waiting">Waiting at Grandma's</h2>
+        <p class="dash-big"><b>{{ dash.waiting }}</b> <span>{{ "cookie" if dash.waiting == 1 else "cookies" }}</span></p>
+        <p class="dash-small">{% if dash.waiting %}Awarded, not collected. Come and see me.{% else %}Nothing waiting. When I've read your work, your cookies wait for you here.{% endif %}</p>
+      </section>
+
+      <section class="dash-note dash-note--blue" aria-labelledby="dash-now">
+        <h2 id="dash-now">My project</h2>
+        {% if project %}
+        <p class="dash-name">{{ project.name }}</p>
+        <p class="dash-small"><span class="stamp" data-status="{{ project.status }}">{{ project.status_label }}</span></p>
+        {% else %}
+        <p class="dash-name">None yet</p>
+        <p class="dash-small">Talk to me, and you'll have one.</p>
+        {% endif %}
+      </section>
+
+      <section class="dash-note dash-note--says" aria-labelledby="dash-says">
+        <h2 id="dash-says">Grandma says</h2>
+        <div class="dash-says">
+          <figure class="fig dash-face">{{ art.img(dash.says.face_file, dash.says.face_alt, none, false) }}</figure>
+          <p class="dash-line">{{ dash.says.line }}</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<section class="scene dash-body">
+  <div class="wrap dash-grid">
+    <section class="dash-project" aria-labelledby="dash-project-title">
+      <h2 id="dash-project-title">{{ "What you're building" if project else "No project yet" }}</h2>
+      {% if project %}
+      <div class="dash-card">
+        <p class="dash-where">{{ project.where }}{% if project.ship %} <span class="stamp stamp--ship">{{ project.ship }}</span>{% endif %}</p>
+        <p class="dash-idea">{{ project.idea }}</p>
+
+        {% if project.days_left is not none %}
+        <div class="dash-days" role="status">
+          {% if project.late %}
+          <b>0</b><p><strong>days left, dear.</strong> The deadline has gone by. Hand it in as soon as you can.</p>
+          {% else %}
+          <b>{{ project.days_left }}</b>
+          <p><strong>{{ "day" if project.days_left == 1 else "days" }} left.</strong>
+            {% if project.ready_in %}You can hand it in to me in {{ project.ready_in }} {{ "day" if project.ready_in == 1 else "days" }}.{% else %}You may hand it in to me now.{% endif %}</p>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <h3>{{ "Your demand" if project.notes|length == 1 else "Your demands" }}</h3>
+        <ul class="minis">
+          {% for n in project.notes %}
+          <li class="mini" data-tier="{{ n.tier }}">
+            <b class="mini-name">{{ n.name }}</b>
+            <span class="mini-level">{{ n.level }}</span>
+            <span class="mini-rule">{{ n.rule }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <p class="actions">
+          {% if project.action == "ship" %}<a class="btn btn--big" href="{{ url('submit') }}">Ship it</a>
+          {% elif project.action == "resume" %}<a class="btn" href="{{ url('grandma') }}">Finish talking to Grandma</a>
+          {% elif project.action == "start" %}<a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a>{% endif %}
+          {% if project.action != "resume" %}<a class="btn btn--plain" href="{{ url('project') }}">Open my project</a>{% endif %}
+        </p>
+        {% if project.action == "reading" %}<p class="dash-small">It's with me, dear. I'm reading it. Don't hover.</p>{% endif %}
+      </div>
+      {% else %}
+      <div class="dash-card">
+        <p class="dash-idea">You haven't got a project yet, dear. Talk to me about one, and I'll deal you some demands.</p>
+        <p class="actions"><a class="btn" href="{{ url('grandma') }}">Talk to Grandma</a></p>
+      </div>
+      {% endif %}
+    </section>
+
+    <nav class="shortcuts" aria-label="Shortcuts">
+      <a class="shortcut" href="{{ url('shop') }}">{{ art.img("cookie.png", "", none, true) }}<b>The Pantry</b><span>spend your cookies</span></a>
+      <a class="shortcut" href="{{ url('guides') }}">{{ art.img("grandma-book.png", "", none, true) }}<b>The guides</b><span>how it all works</span></a>
+      <a class="shortcut" href="{{ url('grandma') }}">{{ art.img("grandma-wave.png", "", none, true) }}<b>Talk to Grandma</b><span>about a project</span></a>
+      <a class="shortcut" data-link="slack" {{ link_attrs("slack") }}>{{ art.img("grandma-phone.png", "", none, true) }}<b>Slack help</b><span>ask the others</span></a>
+    </nav>
+
+    <section class="dash-lists">
+      <div class="dash-list" aria-labelledby="dash-subs">
+        <h2 id="dash-subs">My submissions</h2>
+        {% if dash.submissions %}
+        <ul class="slips">{% for s in dash.submissions %}{{ dd.submission(s) }}{% endfor %}</ul>
+        {% if dash.submissions_total > dash.submissions|length %}<p><a href="{{ url('dashboard_submissions') }}">All {{ dash.submissions_total }} of them</a></p>{% endif %}
+        {% else %}
+        <p class="dash-empty">Nothing handed in yet, dear. Build something, then hand it to me.</p>
+        {% endif %}
+      </div>
+
+      <div class="dash-list" aria-labelledby="dash-cookies">
+        <h2 id="dash-cookies">My cookies</h2>
+        {% if dash.history %}
+        <ul class="receipts">{% for c in dash.history %}{{ dd.receipt(c) }}{% endfor %}</ul>
+        {% if dash.history_total > dash.history|length %}<p><a href="{{ url('dashboard_cookies') }}">All {{ dash.history_total }} of them</a></p>{% endif %}
+        {% else %}
+        <p class="dash-empty">Your jar has never held a cookie. Cookies come from work I've read, dear.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="dash-orders" aria-labelledby="dash-orders">
+      <h2 id="dash-orders">My orders</h2>
+      <p>Coming soon. Once the Pantry takes orders, they'll pile up here.</p>
+    </section>
+
+    <form class="dash-leave" method="post" action="{{ url('logout') }}">
+      {{ csrf_input }}
+      <button>Not you? Log out</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

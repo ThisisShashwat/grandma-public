@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/dashboard.html" as dd %}
+
+{% block title %}My cookies{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/dashboard.css') }}">
+{% endblock %}
+
+{# Every cookie that came in or went out for this person, newest first (dashboard/views.py cookies). #}
+{% block main %}
+<section class="scene scene--sky dash-head dash-head--sub">
+  <div class="wrap split">
+    <div>
+      <p class="dash-back"><a href="{{ url('dashboard') }}">Back to my dashboard</a></p>
+      <h1>My cookies</h1>
+    </div>
+    {{ art.fig("mood-5-pleased.png", "Grandma looking pleased with you", "aside-fig dash-fig") }}
+  </div>
+</section>
+<section class="scene dash-body">
+  <div class="wrap dash-single">
+    {% if paged.rows %}
+    <ul class="receipts">{% for c in paged.rows %}{{ dd.receipt(c) }}{% endfor %}</ul>
+    {{ dd.pager(paged, url('dashboard_cookies')) }}
+    {% else %}
+    <p class="dash-empty">Your jar has never held a cookie. Cookies come from work I've read, dear.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

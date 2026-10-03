@@ -1,9 +1,9 @@
-from django.http import HttpResponse
 from django.urls import path
 
-# placeholder until the dashboard is built
+from . import views
+
 urlpatterns = [
-    path("dashboard/", lambda request: HttpResponse("dashboard"), name="dashboard"),
-    path("dashboard/submissions/", lambda request: HttpResponse("submissions"), name="dashboard_submissions"),
-    path("dashboard/cookies/", lambda request: HttpResponse("cookies"), name="dashboard_cookies"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("dashboard/submissions/", views.submissions, name="dashboard_submissions"),
+    path("dashboard/cookies/", views.cookies, name="dashboard_cookies"),
 ]

@@ -1,0 +1,33 @@
+{# Pieces of the dashboard (dashboard/records.py): all of them take plain records, never a model. Cookies only: no dollars, no hours, no rates. #}
+
+{% macro cookies(n) -%}{{ n }} {{ "cookie" if n == 1 or n == -1 else "cookies" }}{%- endmacro %}
+
+{# one thing handed in, as a slip pinned to the fridge: what it was, how it stands and, once Grandma has handed the result over, her note #}
+{% macro submission(s) -%}
+<li class="slip" data-status="{{ s.status }}">
+  <p class="slip-top"><span class="stamp" data-status="{{ s.status }}">{{ s.status_label }}</span>{% if s.ribbon %} <span class="stamp stamp--ribbon">Blue Ribbon</span>{% endif %}</p>
+  <p class="slip-name"><b>{{ s.project }}</b> <span>{{ s.ship }}, {{ s.when }}</span></p>
+  {% if s.cookies %}<p class="slip-cookies">Grandma gave you {{ cookies(s.cookies) }}.</p>{% endif %}
+  {% if s.note %}<blockquote class="slip-note">{{ s.note }}</blockquote>{% endif %}
+</li>
+{%- endmacro %}
+
+{# one line of the cookie history, a receipt: what moved and why #}
+{% macro receipt(c) -%}
+<li class="receipt" data-sign="{{ 'plus' if c.amount > 0 else 'minus' }}">
+  <b class="receipt-amount">{{ "+" if c.amount > 0 else "-" }}{{ c.amount|abs }}</b>
+  <span class="receipt-why">{{ c.reason }}</span>
+  <small class="receipt-when">{{ c.when }}</small>
+</li>
+{%- endmacro %}
+
+{# older and newer pages of a long list #}
+{% macro pager(paged, address) -%}
+{% if paged.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if paged.previous %}<a class="btn btn--plain" href="{{ address }}?page={{ paged.previous }}">Newer</a>{% endif %}
+  <span>Page {{ paged.number }} of {{ paged.pages }}</span>
+  {% if paged.next %}<a class="btn btn--plain" href="{{ address }}?page={{ paged.next }}">Older</a>{% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}

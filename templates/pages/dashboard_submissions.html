@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/dashboard.html" as dd %}
+
+{% block title %}My submissions{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/dashboard.css') }}">
+{% endblock %}
+
+{# Everything this person has handed in, newest first (dashboard/views.py submissions), with Grandma's notes once she has handed a result over. #}
+{% block main %}
+<section class="scene scene--sky dash-head dash-head--sub">
+  <div class="wrap split">
+    <div>
+      <p class="dash-back"><a href="{{ url('dashboard') }}">Back to my dashboard</a></p>
+      <h1>My submissions</h1>
+    </div>
+    {{ art.fig("grandma-writing.png", "Grandma scribbling on a piece of paper", "aside-fig dash-fig") }}
+  </div>
+</section>
+<section class="scene dash-body">
+  <div class="wrap dash-single">
+    {% if paged.rows %}
+    <ul class="slips">{% for s in paged.rows %}{{ dd.submission(s) }}{% endfor %}</ul>
+    {{ dd.pager(paged, url('dashboard_submissions')) }}
+    {% else %}
+    <p class="dash-empty">Nothing handed in yet, dear. Build something, then hand it to me.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

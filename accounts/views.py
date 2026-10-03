@@ -13,13 +13,13 @@ from talk import flow
 
 class Login(LoginView):
     """Django's login view with our template. A safe `next` is honoured (Django refuses other hosts and other schemes);
-    without one, people who have not finished /welcome/ go there and everybody else goes home."""
+    without one, people who have not finished /welcome/ go there and everybody else goes to their dashboard."""
     template_name = "pages/login.html"
     authentication_form = LoginForm
     redirect_authenticated_user = True
 
     def get_default_redirect_url(self):
-        return resolve_url("home" if profile_of(self.request.user).onboarded_at else "welcome")
+        return resolve_url("dashboard" if profile_of(self.request.user).onboarded_at else "welcome")
 
 
 @login_required

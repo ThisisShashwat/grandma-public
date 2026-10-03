@@ -1,0 +1,110 @@
+/* A person's dashboard and its two longer lists (templates/pages/dashboard*.html). Sticky notes on Grandma's fridge: the cookie balance in
+   her speech bubble (the bubble's frame and tail are shared, core/notes.css), three notes under it, then slips and receipts. The home page's
+   language: 3 to 4px ink borders, wobbly corners, tilts under two degrees, muted yellow, pink and blue. No tables of numbers. */
+.dash-head { padding-block: clamp(2rem, 5vw, 3.5rem); }
+.dash-head h1 { margin-bottom: 0.6rem; font-size: clamp(2.6rem, 8vw, 4.6rem); overflow-wrap: anywhere; }
+.dash-head--sub h1 { margin-bottom: 0; }
+.dash-back { margin: 0 0 0.6rem; font-weight: 700; }
+.dash-fig { width: min(100%, 12rem); justify-self: center; }
+.dash-flash { display: inline-block; margin: 0 0 1.2rem; padding: 0.4rem 1rem; font-weight: 700; background: var(--paper); border: 3px solid var(--ink); rotate: -0.6deg; }
+
+/* the balance, in her speech bubble */
+.dash-bal { display: flex; align-items: center; gap: clamp(1.5rem, 4vw, 3rem); margin-top: 1.5rem; }
+.dash-jar { flex: none; width: clamp(6rem, 16vw, 10rem); }
+.dash-bubble { flex: 1; min-width: 0; padding: 1rem clamp(1rem, 3vw, 2rem) 1.2rem; }
+.dash-bubble p { margin: 0; }
+.dash-label { font-weight: 700; }
+.dash-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.7rem; margin: 0; font-family: var(--display); line-height: 1; }
+.dash-big b { font-size: clamp(3.4rem, 12vw, 6rem); font-weight: 400; }
+.dash-big span { font-size: clamp(1.6rem, 4vw, 2.2rem); }
+.dash-small { margin: 0.5rem 0 0; font-size: 1.05rem; line-height: 1.3; }
+@media (max-width: 800px) {   /* stacked: the bubble's tail points up at her */
+  .dash-bal { flex-direction: column; align-items: stretch; gap: 1.75rem; }
+  .dash-jar { align-self: center; width: min(45%, 8rem); }
+}
+
+/* three notes under it */
+.dash-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 2.25rem 1.75rem; margin-top: 2.75rem; }
+.dash-note { position: relative; min-width: 0; padding: 1.5rem 1.2rem 1.1rem; background: var(--paper); border: 3px solid var(--ink); }
+.dash-note:nth-child(3n+1) { rotate: -0.9deg; }
+.dash-note:nth-child(3n+2) { rotate: 0.7deg; }
+.dash-note:nth-child(3n+3) { rotate: -0.4deg; }
+.dash-note--pink { background: var(--note-pink); }
+.dash-note--blue { background: var(--note-blue); }
+.dash-note h2 { margin: 0 0 0.3rem; font-size: 1.7rem; }
+.dash-name { margin: 0; font-family: var(--display); font-size: 2rem; line-height: 1; overflow-wrap: anywhere; }
+.dash-says { display: flex; align-items: center; gap: 0.9rem; }
+.dash-face { flex: none; width: 5.2rem; margin: 0; }
+.dash-line { margin: 0; font-family: var(--display); font-size: 1.45rem; line-height: 1.1; overflow-wrap: anywhere; }
+
+.stamp { display: inline-block; padding: 0.02em 0.65em; font-family: var(--display); font-size: 1.25rem; line-height: 1.3; background: var(--paper); border: 3px solid var(--ink); rotate: -1.2deg; }
+.stamp[data-status="approved"], .stamp--ship { background: var(--note-blue); }
+.stamp[data-status="rejected"], .stamp[data-status="abandoned"] { background: var(--note-pink); }
+.stamp[data-status="waiting"] { background: var(--canvas); }
+.stamp--ribbon { color: var(--canvas); background: var(--ribbon); }
+
+/* the body: the project card, shortcuts, the lists */
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(2.5rem, 6vw, 3.5rem); }
+.dash-grid h2, .dash-single h2 { margin: 0 0 0.9rem; font-size: clamp(2rem, 5vw, 2.8rem); }
+.dash-card { padding: 1.2rem clamp(1rem, 3vw, 1.6rem) 1.4rem; background: var(--canvas); border: var(--line) solid var(--ink); rotate: -0.3deg; }
+.dash-card h3 { margin: 1.5rem 0 0.7rem; }
+.dash-where { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.8rem; margin: 0 0 0.3rem; font-weight: 700; }
+.dash-idea { margin: 0 0 1.2rem; font-size: 1.2rem; line-height: 1.3; overflow-wrap: anywhere; }
+.dash-days { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1.2rem; margin: 0; padding: 0.4rem 1rem; max-width: 36rem; background: var(--paper); border: 3px solid var(--ink); }
+.dash-days b { font-family: var(--display); font-size: clamp(3.4rem, 10vw, 4.6rem); font-weight: 400; line-height: 1; }
+.dash-days p { flex: 1 1 12rem; margin: 0; font-size: 1.1rem; line-height: 1.3; }
+.dash-card .actions { margin: 1.6rem 0 0; }
+
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.mini { display: grid; align-content: start; gap: 0.25rem; padding: 0.8rem 0.9rem; background: var(--paper); border: 3px solid var(--ink); font-size: 1rem; line-height: 1.25; }
+.mini:nth-child(3n+2) { background: var(--note-pink); }
+.mini:nth-child(3n+3) { background: var(--note-blue); }
+.mini-name { font-family: var(--display); font-size: 1.5rem; font-weight: 400; line-height: 1; overflow-wrap: anywhere; }
+.mini-level { font-size: 0.9rem; font-style: italic; }
+.mini-rule { font-weight: 700; }
+
+.shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr)); gap: 1.2rem; }
+.shortcut { display: grid; justify-items: center; align-content: start; gap: 0.2rem; padding: 0.9rem 0.8rem 0.8rem; color: var(--ink); text-align: center; text-decoration: none; background: var(--paper); border: 3px solid var(--ink); }
+.shortcut:nth-child(4n+2) { background: var(--note-blue); rotate: 0.8deg; }
+.shortcut:nth-child(4n+3) { background: var(--note-pink); rotate: -0.7deg; }
+.shortcut:nth-child(4n+1) { rotate: -0.9deg; }
+.shortcut:nth-child(4n+4) { rotate: 0.6deg; }
+.shortcut:hover { box-shadow: 5px 5px 0 var(--ink); }
+.shortcut img { height: 4.6rem; width: auto; max-width: 100%; object-fit: contain; }
+.shortcut b { font-family: var(--display); font-size: 1.5rem; font-weight: 400; line-height: 1.05; }
+.shortcut span { font-size: 0.95rem; }
+
+.dash-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 3rem 2.5rem; align-items: start; }
+.dash-list { min-width: 0; }
+
+/* what was handed in: slips pinned to the fridge */
+.slips { display: grid; gap: 1.6rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.slip { position: relative; padding: 1.3rem 1rem 0.9rem; background: var(--paper); border: 3px solid var(--ink); }
+.slip:nth-child(odd) { rotate: -0.6deg; }
+.slip:nth-child(even) { rotate: 0.6deg; }
+.slip[data-status="approved"] { background: var(--note-blue); }
+.slip[data-status="rejected"] { background: var(--note-pink); }
+.slip p { margin: 0; }
+.slip-top { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; margin-bottom: 0.4rem !important; }
+.slip-name { overflow-wrap: anywhere; }
+.slip-name span { display: block; font-size: 0.95rem; font-style: italic; }
+.slip-cookies { margin-top: 0.4rem !important; font-weight: 700; }
+.slip-note { margin: 0.7rem 0 0; padding: 0.1rem 0 0.1rem 0.8rem; font-family: var(--display); font-size: 1.35rem; line-height: 1.15; white-space: pre-line; overflow-wrap: anywhere; border-left: 4px solid var(--ink); }
+
+/* the cookie history: a receipt per line */
+.receipts { display: grid; gap: 0.7rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.receipt { display: grid; grid-template-columns: minmax(4.2rem, auto) minmax(0, 1fr); align-items: baseline; gap: 0 0.9rem; padding: 0.5rem 0.9rem; background: var(--canvas); border: 3px solid var(--ink); border-bottom-style: dashed; }
+.receipt-amount { font-family: var(--display); font-size: 2rem; font-weight: 400; line-height: 1.1; color: var(--ribbon); }
+.receipt[data-sign="minus"] .receipt-amount { color: var(--red); }
+.receipt-why { overflow-wrap: anywhere; }
+.receipt-when { grid-column: 2; font-size: 0.9rem; font-style: italic; }
+
+.dash-empty { margin: 0; padding: 0.9rem 1.1rem; font-size: 1.1rem; line-height: 1.3; background: var(--canvas); border: 3px dashed var(--ink); rotate: -0.4deg; }
+.dash-orders { padding: 1.1rem 1.3rem 0.4rem; background: var(--canvas); border: 3px dashed var(--ink); rotate: 0.3deg; }
+.dash-orders h2 { margin-bottom: 0.4rem !important; }
+
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.9rem 1.2rem; margin-top: 2rem; }
+.pager .btn { font-size: 1.3rem; }
+.dash-single { max-width: 46rem; }
+.dash-leave { text-align: center; }
+.dash-leave button { padding: 0; font: inherit; font-size: 1rem; color: var(--ink); background: none; border: 0; text-decoration: underline; }
