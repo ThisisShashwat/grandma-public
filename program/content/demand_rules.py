@@ -14,6 +14,14 @@ class Rule(NamedTuple):
     fits: tuple    # the categories it can be dealt for
 
 
+#: the blocklist: pairs that are never dealt in one hand (docs/program.md). The projects app seeds it into the database.
+CONFLICTS = (
+    ("Audio Only", "Big Print"), ("Audio Only", "Two Colors"),
+    ("Single Pin", "No Microcontroller"),
+    ("Snap-Fit", "Print-in-Place"),
+    ("No JavaScript", "URL State"), ("No JavaScript", "Undo Everything"),
+)
+
 RULES = {
     "Tiny": Rule("A hard size cap for your category: about 500 lines of code, 10 components, or a 5 cm cube.", CATEGORIES),
     "One Button": Rule("One input controls everything: one key, one tap zone or one physical switch.", (WEB, SOFTWARE, GAMEDEV, ELECTRONICS)),
