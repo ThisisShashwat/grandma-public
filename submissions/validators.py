@@ -2,6 +2,7 @@
 hosts is not here: it needs the admin settings, so the form makes it (submissions/forms.py)."""
 from django.core.exceptions import ValidationError
 
+from projects.validators import plain_text
 from submissions import links
 
 
@@ -16,3 +17,10 @@ def validate_web_url(url):
 
 def validate_repo_url(url):
     raise_if(links.repo_problem(url))
+
+
+def validate_prose(text):
+    """Text a person writes for others to read (a description, an AI declaration): plain visible characters, line breaks allowed.
+    No control, zero width, bidirectional or private use characters, and no look-alike spaces (they are how text gets spoofed)."""
+    if not plain_text(text.replace("\n", " ")):
+        raise ValidationError("Plain characters only, dear. Something invisible has crept in there.")

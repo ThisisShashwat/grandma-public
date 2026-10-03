@@ -15,3 +15,6 @@
 .btn:active { translate: 3px 3px; }
 .btn--plain { background: var(--canvas); border-radius: var(--wobble-b); }
 .btn--big { font-size: clamp(2rem, 6vw, 3.2rem); }
+/* a button for something that does not work yet: grey and dashed (the Hackatime step, the submit note) */
+.btn:disabled { opacity: 0.55; border-style: dashed; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--canvas); }

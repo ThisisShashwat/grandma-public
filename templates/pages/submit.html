@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Hand it to Grandma{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/submit.css') }}">
+{% endblock %}
+
+{# Grandma's note (submissions/views.py submit): the form is only the validation, every field is drawn here by hand. Cookies only: no
+   dollars, no hours, no rates. The checklist comes from the SUBMISSION_CHECKS setting, so it is always rendered from `checks`. #}
+{% macro oops(name) -%}
+{% if form[name].errors %}<p class="oops" id="err-{{ name }}" role="alert">{% for message in form[name].errors %}{{ message }} {% endfor %}</p>{% endif %}
+{%- endmacro %}
+
+{% block main %}
+<section class="scene scene--sky submit-scene">
+  <div class="wrap submit">
+    <figure class="fig aside-fig submit-face">{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
+
+    <div class="submit-main">
+      <div class="talk-bubble submit-bubble">
+        <p>Right. Show me what you made, dear.</p>
+        <p>Write it all on my note. Every box ticked, and ticked honestly. I check.</p>
+      </div>
+
+      <form class="submit-note" method="post" enctype="multipart/form-data" action="{{ url('submit') }}">
+        {{ csrf_input }}
+        <h1>Hand it to Grandma</h1>
+        <p class="submit-for"><b>{{ project_name }}</b>{% if stage %} <span class="submit-stage">{{ stage }}</span>{% endif %}</p>
+        {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
+        {% if form.errors %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
+
+        <div class="nf">
+          <label class="nf-label" for="hackatime">Hackatime project</label>
+          <div class="nf-row">
+            <input class="input" id="hackatime" value="Not connected yet" disabled aria-describedby="hackatime-hint">
+            <button class="btn btn--plain" type="button" disabled>Connect Hackatime</button>
+          </div>
+          <p class="nf-hint" id="hackatime-hint">Your tracked time will come from here, once it can be connected. It can't yet, so there is nothing to do.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="repo_url">Your repository</label>
+          <input class="input" id="repo_url" name="repo_url" type="url" inputmode="url" maxlength="300" required autocomplete="off" spellcheck="false"
+                 placeholder="https://github.com/you/your-project" value="{{ form['repo_url'].value() or '' }}"{% if form['repo_url'].errors %} aria-invalid="true" aria-describedby="err-repo_url"{% endif %}>
+          {{ oops("repo_url") }}
+          <p class="nf-hint">The project's own page on GitHub, GitLab, Codeberg, Bitbucket or SourceHut. Public, with a README that says how to run it.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="playable_url">Where I can try it</label>
+          <input class="input" id="playable_url" name="playable_url" type="url" inputmode="url" maxlength="300" required autocomplete="off" spellcheck="false"
+                 placeholder="https://your-project.example.com" value="{{ form['playable_url'].value() or '' }}"{% if form['playable_url'].errors %} aria-invalid="true" aria-describedby="err-playable_url"{% endif %}>
+          {{ oops("playable_url") }}
+          <p class="nf-hint">{% if hardware %}A page anyone can open that shows it working: photos, a video, a viewer for your design.{% else %}A link anyone can open and use.{% endif %}
+            Not on a host that falls asleep when nobody visits{% if sleepers %}, like {{ sleepers|join(", ") }}{% endif %}.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="description">What is it?</label>
+          <textarea class="input" id="description" name="description" rows="5" minlength="20" maxlength="1500" required
+                    placeholder="What it is, what it does, what you are proud of."{% if form['description'].errors %} aria-invalid="true" aria-describedby="err-description"{% endif %}>{{ form['description'].value() or '' }}</textarea>
+          {{ oops("description") }}
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="screenshot">A screenshot of the real thing</label>
+          <input class="nf-file" id="screenshot" name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" required aria-describedby="shot-hint{% if form['screenshot'].errors %} err-screenshot{% endif %}">
+          {{ oops("screenshot") }}
+          <p class="nf-hint" id="shot-hint">PNG, JPEG or WebP, {{ max_mb }} MB at the very most. I wipe out whatever your camera wrote into it, such as where you were.
+            {% if form.errors %}<b>Pick it again, dear: your browser won't let me keep it.</b>{% endif %}</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="recording_url">A short recording <small>(if you have one)</small></label>
+          <input class="input" id="recording_url" name="recording_url" type="url" inputmode="url" maxlength="300" autocomplete="off" spellcheck="false"
+                 placeholder="https://..." value="{{ form['recording_url'].value() or '' }}"{% if form['recording_url'].errors %} aria-invalid="true" aria-describedby="err-recording_url"{% endif %}>
+          {{ oops("recording_url") }}
+          <p class="nf-hint">A link to a video of it working. I don't take video files, dear, my cupboard is full.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="ai_declaration_text">Did you use AI? <small>(say how)</small></label>
+          <textarea class="input" id="ai_declaration_text" name="ai_declaration_text" rows="3" maxlength="1000"
+                    placeholder="What for, and roughly how much. Leave it empty if you used none."{% if form['ai_declaration_text'].errors %} aria-invalid="true" aria-describedby="err-ai_declaration_text"{% endif %}>{{ form['ai_declaration_text'].value() or '' }}</textarea>
+          {{ oops("ai_declaration_text") }}
+          <p class="nf-hint">Under 30% of your time, and I mean it.</p>
+        </div>
+
+        <fieldset class="submit-checks"{% if form['declarations'].errors %} aria-describedby="err-declarations"{% endif %}>
+          <legend>Tick every one, honestly</legend>
+          {% set ticked = form['declarations'].value() or [] %}
+          <ul>
+            {% for check in checks %}
+            <li><label class="check"><input type="checkbox" name="declarations" value="{{ check.key }}"{% if check.key in ticked %} checked{% endif %}> <span>{{ check.text }}</span></label></li>
+            {% endfor %}
+          </ul>
+          {{ oops("declarations") }}
+        </fieldset>
+
+        <p class="submit-actions"><button class="btn btn--big">Hand it to Grandma</button></p>
+        <p class="nf-hint">Once it is with me, it stays with me. I'll tell you what I think when I've read it.</p>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

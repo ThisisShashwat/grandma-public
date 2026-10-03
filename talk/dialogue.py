@@ -6,7 +6,7 @@
     Deal(key=..., notes=...)               Grandma lays notes on her fridge, the person keeps some of them
     End(lines=...)                         the last word, with a button to somewhere else
 
-Every step can carry `face` (one of Grandma's faces or poses, talk/portraits.py) and `when`, a function of the answers
+Every step can carry `face` (one of Grandma's faces or poses, talk/portraits.py), `celebrate` and `when`, a function of the answers
 so far that says whether the step is played at all. A line may hold {key} placeholders, filled from the answers.
 Running one is talk/flow.py, how to add one is docs/accounts.md.
 """
@@ -20,6 +20,7 @@ class Step:
     lines: tuple = ()
     face: str = "smug"
     when: Callable[[dict], bool] | None = None
+    celebrate: bool = False      # her picture pops in and confetti goes off (static/js/features/celebrate.js), for a Blue Ribbon
 
 
 @dataclass(frozen=True, kw_only=True)

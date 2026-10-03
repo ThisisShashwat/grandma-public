@@ -20,8 +20,6 @@
 .talk-form { display: grid; gap: 1rem; }
 .talk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem; margin: 0; }
 .talk-actions .btn { font-size: 1.5rem; }
-.btn:disabled { opacity: 0.55; border-style: dashed; cursor: not-allowed; }
-.btn:disabled:hover { background: var(--canvas); }
 
 /* tap-to-pick answers, sticky notes like the pay calculator's demand slots */
 .talk-picks { display: flex; flex-wrap: wrap; gap: 0.9rem 1.1rem; }

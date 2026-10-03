@@ -16,7 +16,7 @@ from django.db.models import Q
 from projects.models import Category, Project
 from submissions import rules
 from submissions.images import FORMATS
-from submissions.validators import validate_repo_url, validate_web_url
+from submissions.validators import validate_prose, validate_repo_url, validate_web_url
 
 EXTENSIONS = {f".{extension}" for extension, _ in FORMATS.values()}
 
@@ -41,11 +41,11 @@ class Submission(models.Model):
     repo_url = models.URLField(max_length=300, validators=[validate_repo_url])
     playable_url = models.URLField(max_length=300, validators=[validate_web_url],
                                    help_text="Where anyone can try it. Not on a host that falls asleep (the BLOCKED_HOSTS setting).")
-    description = models.TextField(max_length=1500)
+    description = models.TextField(max_length=1500, validators=[validate_prose])
     screenshot = models.ImageField(upload_to=screenshot_path, max_length=100)
     recording_url = models.URLField(max_length=300, blank=True, validators=[validate_web_url], help_text="A link to a short recording. No video is uploaded.")
     declarations = models.JSONField(default=list, help_text="The keys of the boxes they ticked (the SUBMISSION_CHECKS setting).")
-    ai_declaration_text = models.TextField(max_length=1000, blank=True, help_text="What they used AI for, in their words.")
+    ai_declaration_text = models.TextField(max_length=1000, blank=True, validators=[validate_prose], help_text="What they used AI for, in their words.")
 
     # what the reviewer decided (the admin's Review form; frozen once claimed)
     approved_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True,
