@@ -7,12 +7,15 @@ Each widget that needs JavaScript or CSS is named in the guide's front matter, a
 import re
 
 from django.template.loader import render_to_string
+from django.utils.html import format_html
 
 from program.content.demand_rules import RULES
 from program.content.demands import LEVELS, POOL, TIERS
 from program.content.faces import FACES
 
 PLACEHOLDER = re.compile(r'<div data-widget="([\w-]+)"[^>]*></div>')
+CHANNEL = re.compile(r'<span data-slack="(grandma|help)"></span>')
+CHANNELS = {"grandma": ("#grandma", "slack_grandma"), "help": ("#grandma-help", "slack_help")}     # name shown, key of the admin link
 
 
 def payout_calculator():
@@ -29,6 +32,18 @@ def demands_list():
 WIDGETS = {"payout-calculator": payout_calculator, "demands-list": demands_list}
 
 
-def expand(html):
-    """Swap every placeholder for its widget, wrapped in a div the guide styles can find."""
-    return PLACEHOLDER.sub(lambda m: f'<div class="widget widget--{m[1]}">{WIDGETS[m[1]]()}</div>' if m[1] in WIDGETS else "", html)
+def channel(which, links):
+    """A Slack channel's name, as a link when the admin has set its address (a web address only) and as plain text while it is empty."""
+    name, key = CHANNELS[which]
+    url = links.get(key, "")
+    if url.startswith("http"):
+        return format_html('<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>', url, name)
+    return format_html('<b class="slack-name">{}</b>', name)
+
+
+def expand(html, links=None):
+    """Swap every widget placeholder for its widget, wrapped in a div the guide styles can find, and every
+    <span data-slack="grandma"></span> or "help" for that channel's name (a link only when its address is set). `links` is the
+    program's links by name (pages.context.program_links)."""
+    html = PLACEHOLDER.sub(lambda m: f'<div class="widget widget--{m[1]}">{WIDGETS[m[1]]()}</div>' if m[1] in WIDGETS else "", html)
+    return CHANNEL.sub(lambda m: channel(m[1], links or {}), html)

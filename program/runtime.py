@@ -18,6 +18,9 @@ CONFIG = {
 
     "LINK_SIGNUP": ("", "Where the Sign up buttons go (a form). Empty means a placeholder link that goes nowhere.", "link"),
     "LINK_SLACK": ("", "The Slack join link.", "link"),
+    "LINK_SLACK_GRANDMA": ("", "The #grandma channel in Slack, where people chat. Empty means the guides show the name as plain text, not a link.", "link"),
+    "LINK_SLACK_HELP": ("", "The #grandma-help channel in Slack, where people ask for help. Empty means the guides show the name as plain text, not a link. "
+                            "The dashboard's Slack help button goes here.", "link"),
     "LINK_REPO": ("", "The code repository.", "link"),
     "LINK_BOARD": ("", "Where complaints (new demands) get sent.", "link"),
     "LINK_RULES": ("", "The fine print and Hack Club policies.", "link"),
@@ -32,7 +35,7 @@ CONFIG = {
                           'The boxes a person must tick before they can hand a project in, as JSON: a list of {"key": "...", "text": "..."}. '
                           "Every box has to be ticked. The key is what gets stored, so keep one stable once people have ticked it.", "checks"),
     "BLOCKED_HOSTS": (submission.default_hosts_text(),
-                      "Hosts a playable link may not be on (free tiers that fall asleep when idle), one per line. A host also blocks its "
+                      "Hosts a playable link may not be on (free tiers that fall asleep when idle, tunnels to a laptop, notebooks), one per line. A host also blocks its "
                       "subdomains: streamlit.app blocks myapp.streamlit.app.", "hosts"),
     "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes.", "megabytes"),
 
@@ -58,7 +61,7 @@ CONFIG = {
 # the admin's groups, in this order (a tuple, because constance sorts a plain dict by title)
 FIELDSETS = (
     ("Launch", ("LAUNCH", "FREE_ASKS")),
-    ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
+    ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS", "ORDER_MAX_PARTS")),
