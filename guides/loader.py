@@ -140,22 +140,22 @@ def _load(slug, path, mtime):
     )
 
 
-def slugs(directory=CONTENT_DIR):
-    """The guides that exist, {slug: path}. A slug is a file name without .md."""
-    return {path.stem: path for path in sorted(Path(directory).glob("*.md"))}
+def slugs(directory=None):
+    """The guides that exist, {slug: path}. A slug is a file name without .md. `directory` is for tests."""
+    return {path.stem: path for path in sorted(Path(directory or CONTENT_DIR).glob("*.md"))}
 
 
 def _guide(slug, path):
     return _load(slug, str(path), path.stat().st_mtime_ns)
 
 
-def get(slug, directory=CONTENT_DIR):
+def get(slug, directory=None):
     """One guide, or None when no such file exists. The slug is only ever a dict key."""
     path = slugs(directory).get(slug)
     return None if path is None else _guide(slug, path)
 
 
-def all_guides(directory=CONTENT_DIR):
+def all_guides(directory=None):
     """Every guide in reading order (the `order` front matter)."""
     return sorted((_guide(slug, path) for slug, path in slugs(directory).items()), key=lambda guide: guide.order)
 
