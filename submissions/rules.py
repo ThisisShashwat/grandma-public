@@ -40,12 +40,14 @@ def next_ship(hardware, shipped):
     return Ship(BUILD, "") if BUILD not in done else Ship(None, "You have already handed in the build.")
 
 
-def award(status, tiers, hours, quality, ribbon):
+def award(status, tiers, hours, quality, ribbon, ribbon_holder=False):
     """The cookies a review is worth, a whole number: the payout formula for an approved submission, nothing for anything else.
-    `tiers` are the tiers of the demands the person kept. Rounded the way the page rounds (payout.shown)."""
+    `tiers` are the tiers of the demands the person kept; `ribbon_holder` is whether they already held a Blue Ribbon from an earlier
+    submission (the permanent bonus, payout.CONFIG["ribbon_holder"], 0.0 until the owner sets it). Rounded the way the page rounds
+    (payout.shown)."""
     if status != APPROVED or not hours:
         return 0
-    return payout.shown(payout.cookies(tuple(tiers), float(hours), quality, ribbon))
+    return payout.shown(payout.cookies(tuple(tiers), float(hours), quality, ribbon, ribbon_holder))
 
 
 def mood(tiers, hours, quality, ribbon):

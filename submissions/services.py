@@ -65,9 +65,18 @@ def tiers_of(project):
     return [demand.tier for demand in project_services.kept_demands(project)]
 
 
+def holds_ribbon(submission):
+    """Whether the person who made this submission already held a Blue Ribbon before it: an EARLIER submission of theirs (any project,
+    any ship) that was approved with the ribbon and that Grandma has handed over. One that is still waiting at her does not count."""
+    return Submission.objects.filter(project__user_id=submission.project.user_id, status=rules.APPROVED, ribbon=True,
+                                     claimed_at__isnull=False, pk__lt=submission.pk).exists()
+
+
 def cookies_for(submission):
-    """What this submission's saved review is worth in cookies (rules.award over the demands the project kept)."""
-    return rules.award(submission.status, tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon)
+    """What this submission's saved review is worth in cookies (rules.award over the demands the project kept, with the permanent
+    ribbon holder bonus when the person already holds a ribbon)."""
+    return rules.award(submission.status, tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon,
+                       holds_ribbon(submission))
 
 
 @transaction.atomic

@@ -3,9 +3,12 @@
 The formula comes from the "Modifiers ysws" canvas PDF and is FROZEN. Do not change a constant or the shape of it
 without the owner saying so (docs/payout.md has the reference table that tests/test_payout.py checks).
 
-    x          = min(xmax, demand tiers + cool + huge (at 20 hours and up) + Blue Ribbon)
+    x          = min(xmax, demand tiers + cool + huge (at 20 hours and up) + Blue Ribbon + ribbon holder)
     multiplier = 1 + (cap - 1) * (1 - e^(-k x)) / (1 - e^(-k xmax))
     cookies    = base * multiplier * cookies_per_usd * hours
+
+`ribbon_holder` is a permanent small bonus for someone who already holds a Blue Ribbon from an earlier project. It is one more additive term
+inside x (so the formula's shape, the min with xmax, is unchanged), it is 0.0 until the owner decides, and with 0.0 nothing changes.
 
 Dollars are internal only. Never show a dollar figure or a per-hour rate anywhere on the site.
 static/js/modules/pay/math.js is the browser twin of this file and reads the same CONFIG.
@@ -22,6 +25,7 @@ CONFIG = {
     "huge": 0.1,               # huge project ...
     "huge_hours": 20,          # ... at this many hours and above
     "ribbon": 0.1,             # Blue Ribbon
+    "ribbon_holder": 0.0,      # permanent bonus for holding a Blue Ribbon from an EARLIER project: undecided, 0.0 changes nothing, the owner sets it
     "cookies_per_usd": 10,
 
     # Grandma's face: look only, never changes a payout. Score = demands and hours, each as a share of its maximum.
@@ -37,12 +41,12 @@ def multiplier(x):
     return 1 + (c["cap"] - 1) * (1 - exp(-c["k"] * x)) / (1 - exp(-c["k"] * c["xmax"]))
 
 
-def x_for(tiers=(), hours=0, quality=False, ribbon=False):
-    """tiers: up to three demand tiers (0 means an empty slot)."""
+def x_for(tiers=(), hours=0, quality=False, ribbon=False, ribbon_holder=False):
+    """tiers: up to three demand tiers (0 means an empty slot). ribbon_holder: the person held a Blue Ribbon before this project."""
     c = CONFIG
     demands = sum(c["tier"].get(t, 0) for t in tiers)
-    return min(c["xmax"], demands + (c["quality"] if quality else 0)
-               + (c["huge"] if hours >= c["huge_hours"] else 0) + (c["ribbon"] if ribbon else 0))
+    return min(c["xmax"], demands + (c["quality"] if quality else 0) + (c["huge"] if hours >= c["huge_hours"] else 0)
+               + (c["ribbon"] if ribbon else 0) + (c["ribbon_holder"] if ribbon_holder else 0))
 
 
 def usd_per_hour(x):
@@ -50,9 +54,9 @@ def usd_per_hour(x):
     return CONFIG["base"] * multiplier(x)
 
 
-def cookies(tiers=(), hours=0, quality=False, ribbon=False):
+def cookies(tiers=(), hours=0, quality=False, ribbon=False, ribbon_holder=False):
     """Cookies for the whole project, not rounded: round when you show it."""
-    return usd_per_hour(x_for(tiers, hours, quality, ribbon)) * CONFIG["cookies_per_usd"] * hours
+    return usd_per_hour(x_for(tiers, hours, quality, ribbon, ribbon_holder)) * CONFIG["cookies_per_usd"] * hours
 
 
 def shown(cookie_amount):
@@ -68,7 +72,7 @@ def hours_range(cookie_amount):
     return max(1, shown(cookie_amount / best)), max(1, shown(cookie_amount / worst))
 
 
-def face(tiers=(), hours=0, quality=False, ribbon=False, hours_max=None):
+def face(tiers=(), hours=0, quality=False, ribbon=False, hours_max=None, ribbon_holder=False):
     """Which Grandma, 0 to 9 (index into content.faces.FACES). Furious only while no demand is picked."""
     c = CONFIG
     if not any(tiers):

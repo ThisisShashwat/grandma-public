@@ -2,6 +2,7 @@
    Pure functions, no page needed: `config` is payout.CONFIG as JSON (data.pay).
      const pay = createPay(data.pay);
      pay.cookies({ tiers: [2, 3], hours: 24, quality: true, ribbon: false })   // cookies for those hours
+     (ribbonHolder: true adds config.ribbonHolder, the permanent bonus for holding a Blue Ribbon from an earlier project; 0 until the owner sets it)
      pay.face({ tiers: [2, 3], hours: 24, quality: true })                     // 0 to 9, index into the faces list
    Dollars are internal only: never show usdPerHour. */
 export function createPay(config) {
@@ -10,11 +11,11 @@ export function createPay(config) {
     return 1 + ((cap - 1) * (1 - Math.exp(-k * x))) / (1 - Math.exp(-k * xmax));
   };
 
-  /* input: { tiers: [0 to 3, ...up to 3], hours, quality: bool, ribbon: bool } */
-  const xFor = ({ tiers = [], hours = 0, quality = false, ribbon = false }) => {
+  /* input: { tiers: [0 to 3, ...up to 3], hours, quality: bool, ribbon: bool, ribbonHolder: bool } */
+  const xFor = ({ tiers = [], hours = 0, quality = false, ribbon = false, ribbonHolder = false }) => {
     const { tier, huge, hugeHours, xmax } = config;
     const demands = tiers.reduce((sum, t) => sum + (tier[t] || 0), 0);
-    return Math.min(xmax, demands + (quality ? config.quality : 0) + (hours >= hugeHours ? huge : 0) + (ribbon ? config.ribbon : 0));
+    return Math.min(xmax, demands + (quality ? config.quality : 0) + (hours >= hugeHours ? huge : 0) + (ribbon ? config.ribbon : 0) + (ribbonHolder ? config.ribbonHolder : 0));
   };
 
   const usdPerHour = (x) => config.base * multiplier(x);
