@@ -1,0 +1,118 @@
+"""Everything that changes a submission, and the reads the pages need. Rules are in rules.py (pure); this layer applies them to the
+database. Every change takes the same locks as projects and the ledger, in the same order: the person's Profile row first, then the
+rows being changed, so two clicks on the same button cannot both win (SQLite is in IMMEDIATE mode, settings.py; on Postgres the row
+locks do the work). The cookie handover writes the ledger only through ledger.services, under the key `submission:{id}`."""
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.utils import timezone
+
+from ledger import services as ledger
+from projects import rules as project_rules
+from projects import services as project_services
+from projects.models import Category, Project
+from submissions import rules
+from submissions.models import Submission
+
+NOTHING_TO_SHIP = "You have nothing to hand in right now, dear. Only a project you are building."
+REVIEW_FIELDS = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note", "reviewed_by", "reviewed_at", "cookies_awarded")
+
+
+class AlreadyCollected(Exception):
+    """The person has already been handed the result: the review is frozen (a correction is a ledger adjustment)."""
+
+
+def shipping_project(user):
+    """The project this person could hand in now: the one they are building. None if there is none."""
+    return Project.objects.filter(user=user, status=project_rules.BUILDING).select_related("category").first()
+
+
+def ship_for(project):
+    """What this project may hand in next (rules.next_ship) given what it has handed in so far."""
+    shipped = [(s.stage, s.status, s.claimed_at is not None) for s in project.submissions.all()]
+    return rules.next_ship(project.category.kind == Category.Kind.HARDWARE, shipped)
+
+
+def waiting(user):
+    """The oldest reviewed submission of this person that Grandma has not yet handed over, or None."""
+    return (Submission.objects.filter(project__user=user, status__in=rules.REVIEWED, claimed_at__isnull=True)
+            .select_related("project").order_by("reviewed_at", "id").first())
+
+
+@transaction.atomic
+def submit(user, *, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
+    """Hand in the person's project in building. The stage is decided here, never by the person. The project becomes `in_review`.
+    ValidationError (a sentence for the person) when there is nothing to hand in. One at a time: a second click finds the project
+    already in review."""
+    project_services.lock_person(user)
+    locked = project_services.locked_project(user, project_rules.BUILDING)
+    if locked is None:
+        raise ValidationError(NOTHING_TO_SHIP)
+    project = Project.objects.select_related("category").get(pk=locked.pk)
+    ship = ship_for(project)
+    if ship.problem:
+        raise ValidationError(ship.problem)
+    submission = Submission(project=project, stage=ship.stage, repo_url=repo_url, playable_url=playable_url, description=description,
+                            screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text)
+    submission.full_clean()
+    submission.save()
+    project.status = project_rules.IN_REVIEW
+    project.save(update_fields=["status"])
+    return submission
+
+
+def tiers_of(project):
+    """The tiers of the demands this project kept: what the payout formula wants."""
+    return [demand.tier for demand in project_services.kept_demands(project)]
+
+
+def cookies_for(submission):
+    """What this submission's saved review is worth in cookies (rules.award over the demands the project kept)."""
+    return rules.award(submission.status, tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon)
+
+
+@transaction.atomic
+def review(submission, *, by, now=None):
+    """Save the reviewer's decision, which is already on `submission` (the admin form put it there). Stamps who and when and works
+    out the cookies, then saves only the review fields. Put back to `submitted`, the stamps are cleared. AlreadyCollected once
+    the person has been handed the result: the check is made under a lock on the row, so a form opened before the handover cannot
+    change it."""
+    if Submission.objects.select_for_update().filter(pk=submission.pk, claimed_at__isnull=False).exists():
+        raise AlreadyCollected
+    if submission.status == rules.SUBMITTED:
+        submission.reviewed_by, submission.reviewed_at, submission.cookies_awarded = None, None, None
+    else:
+        submission.reviewed_by, submission.reviewed_at, submission.cookies_awarded = by, now or timezone.now(), cookies_for(submission)
+    submission.save(update_fields=REVIEW_FIELDS)
+    return submission
+
+
+@transaction.atomic
+def claim(user, submission_id, *, now=None):
+    """Grandma hands over the result of a review, once. Approved: the cookies go on the ledger under the key `submission:{id}`
+    (nothing is written for 0 cookies) and `claimed_at` is set in the same transaction, so a double click or a reload credits once.
+    The project becomes approved or rejected, which frees the person for another one, except a hardware design that was approved:
+    that project goes back to building, for its build ship. Only the person's own submission, only a reviewed one. Returns the
+    submission, None if there is nothing of theirs to collect."""
+    project_services.lock_person(user)
+    submission = Submission.objects.select_for_update().filter(pk=submission_id, project__user=user, status__in=rules.REVIEWED).first()
+    if submission is None:
+        return None
+    if submission.claimed_at:
+        return submission
+    project = Project.objects.select_for_update().get(pk=submission.project_id)
+    if submission.cookies_awarded:
+        ledger.credit(user, submission.cookies_awarded, key=f"submission:{submission.pk}",
+                      reason=f"Grandma paid for {project.name}" + (f" ({rules.STAGE_LABELS[submission.stage].lower()})" if submission.stage else ""))
+    submission.claimed_at = now or timezone.now()
+    submission.save(update_fields=["claimed_at"])
+    if project.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
+        project.status = after_claim(submission)
+        project.save(update_fields=["status"])
+    return submission
+
+
+def after_claim(submission):
+    """The project's status once the person has heard the result."""
+    if submission.status == rules.REJECTED:
+        return project_rules.REJECTED
+    return project_rules.BUILDING if submission.stage == rules.DESIGN else project_rules.APPROVED
