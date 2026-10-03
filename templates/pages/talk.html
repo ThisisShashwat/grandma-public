@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/talk.css') }}">
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ static('js/pages/talk.js') }}"></script>
+{% endblock %}
+
+{% block main %}
+<section class="scene scene--sky talk-scene">
+  <div class="wrap">
+    {% include "components/talk.html" %}
+    {% if request.user.is_authenticated %}
+    <form class="talk-leave" method="post" action="{{ url('logout') }}">
+      {{ csrf_input }}
+      <button>Not you? Log out</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

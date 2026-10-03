@@ -39,6 +39,13 @@ p { margin: 0 0 1em; }
 .skip:focus { left: 1rem; top: 1rem; z-index: 100; background: var(--canvas); padding: 0.5rem 1rem; border: 3px solid var(--ink); }
 .fine { margin-top: 1.5rem; font-size: 0.95rem; }
 
+/* a text box drawn by hand: the sign-in form and every dialogue use it */
+.input {
+  width: 100%; padding: 0.35em 0.7em; font: inherit; font-size: 1.4rem; color: var(--ink);
+  background: var(--canvas); border: var(--line) solid var(--ink); border-radius: var(--wobble-b);
+}
+.input::placeholder { color: rgba(0, 0, 0, 0.45); }
+
 /* a real to-do: bright yellow with a dashed red outline. Accents use the muted scribble, never this. */
 .todo { background: #ff0; outline: 2px dashed var(--red); padding: 0 0.25em; }
 

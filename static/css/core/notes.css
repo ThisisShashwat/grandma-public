@@ -19,3 +19,6 @@
   .bubble::before, .bubble::after, .talk-bubble::before, .talk-bubble::after { left: 2.5rem; top: -22px; border: 14px solid transparent; border-bottom: 22px solid var(--ink); border-top: 0; }
   .bubble::after, .talk-bubble::after { top: -15px; border-bottom-color: var(--canvas); }
 }
+
+/* Something went wrong: a pink sticky note under the box that caused it (sign-in, dialogues). */
+.oops { margin: 0; padding: 0.35rem 0.8rem; font-weight: 700; line-height: 1.25; background: var(--note-pink); border: 3px solid var(--ink); rotate: -0.6deg; }

@@ -1,0 +1,39 @@
+/* Talk to Grandma: one step of a dialogue (talk/flow.py, templates/components/talk.html). The bubble's frame and tail are
+   shared with the pay calculator, in core/notes.css. */
+.talk-scene { min-height: 68vh; display: grid; align-content: center; }
+
+.talk { display: grid; grid-template-columns: minmax(9rem, 16rem) 1fr; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+.talk-face { width: min(100%, 16rem); justify-self: center; }
+@media (max-width: 800px) {   /* stacked: Grandma on top, the bubble's tail points up at her */
+  .talk { grid-template-columns: 1fr; gap: 1.75rem; }
+  .talk-face { width: min(55%, 11rem); }
+}
+
+.talk-bubble { display: grid; gap: 1.1rem; padding: 1.25rem clamp(1rem, 3vw, 2rem) 1.5rem; }
+
+/* her words appear a line at a time; the buttons never wait */
+.talk-lines p { margin: 0 0 0.55em; font-family: var(--display); font-size: clamp(1.5rem, 3.2vw, 2.1rem); line-height: 1.15; animation: talk-in 0.4s steps(4) both; animation-delay: calc(var(--i) * 0.5s); }
+.talk-lines p:last-child { margin-bottom: 0; }
+@keyframes talk-in { from { opacity: 0; translate: 0 0.6rem; } }
+@media (prefers-reduced-motion: reduce) { .talk-lines p { animation: none; } }
+
+.talk-form { display: grid; gap: 1rem; }
+.talk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem; margin: 0; }
+.talk-actions .btn { font-size: 1.5rem; }
+.btn:disabled { opacity: 0.55; border-style: dashed; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--canvas); }
+
+/* tap-to-pick answers, sticky notes like the pay calculator's demand slots */
+.talk-picks { display: flex; flex-wrap: wrap; gap: 0.9rem 1.1rem; }
+.pick {
+  padding: 0.35em 0.9em; font-family: var(--display); font-size: 1.5rem; line-height: 1.1; text-align: center; color: var(--ink);
+  background: var(--paper); border: 3px solid var(--ink);
+}
+.pick:nth-child(3n+1) { rotate: -1.2deg; }
+.pick:nth-child(3n+2) { rotate: 1deg; background: var(--note-blue); }
+.pick:nth-child(3n+3) { rotate: -0.6deg; background: var(--note-pink); }
+.pick:hover { background: var(--pink); }
+.pick.is-picked { box-shadow: 4px 4px 0 var(--ink); }
+
+.talk-leave { margin-top: 2rem; text-align: center; }
+.talk-leave button { padding: 0; font: inherit; font-size: 1rem; color: var(--ink); background: none; border: 0; text-decoration: underline; }

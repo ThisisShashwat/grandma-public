@@ -1,0 +1,51 @@
+{% import "macros/art.html" as art %}
+{# One step of a dialogue (talk/flow.py): Grandma's portrait, her speech bubble, and what she wants from you.
+   kind is say, asktext, askchoice or end. Every answer is a normal form POST, no JavaScript needed. #}
+<div class="talk">
+  <figure class="fig aside-fig talk-face">{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
+
+  <div class="talk-bubble">
+    <div class="talk-lines">
+      {% for line in lines %}
+      <p style="--i: {{ loop.index0 }}">{{ line }}</p>
+      {% endfor %}
+    </div>
+
+    {% if kind == "end" %}
+    <p class="talk-actions"><a class="btn" href="{{ then }}">{{ step.button }}</a></p>
+
+    {% else %}
+    <form class="talk-form" method="post" action="">
+      {{ csrf_input }}
+      <input type="hidden" name="at" value="{{ at }}">
+
+      {% if kind == "asktext" %}
+      <label class="sr" for="talk-answer">{{ step.label }}</label>
+      <input class="input" id="talk-answer" name="{{ step.key }}" value="{{ field.value() or '' }}" maxlength="{{ step.max_length }}"
+             required autofocus placeholder="{{ step.label }}"{% if step.prefill %} data-prefill="{{ step.prefill }}"{% endif %}
+             {%- if suggestions %} list="talk-suggestions"{% endif %}
+             {%- for name, value in step.attrs.items() %} {{ name }}="{{ value }}"{% endfor %}>
+      {% if suggestions %}
+      <datalist id="talk-suggestions">{% for item in suggestions %}<option value="{{ item }}">{% endfor %}</datalist>
+      {% endif %}
+      {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
+      <p class="talk-actions"><button class="btn">{{ step.button }}</button></p>
+
+      {% elif kind == "askchoice" %}
+      <div class="talk-picks" role="group">
+        {% for value, label in step.choices %}
+        <button class="pick{% if field.value() == value %} is-picked{% endif %}" name="{{ step.key }}" value="{{ value }}">{{ label }}</button>
+        {% endfor %}
+      </div>
+      {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
+
+      {% else %}
+      <p class="talk-actions">
+        {% if step.disabled %}<button class="btn btn--plain" type="button" disabled>{{ step.disabled }}</button>{% endif %}
+        <button class="btn" autofocus>{{ step.button }}</button>
+      </p>
+      {% endif %}
+    </form>
+    {% endif %}
+  </div>
+</div>
