@@ -9,4 +9,7 @@
 {% block main %}
 {% include "sections/shop_head.html" %}
 {% include "sections/shop_shelves.html" %}
+{% if shop.hardware %}
+{% include "sections/shop_hardware.html" %}
+{% endif %}
 {% endblock %}

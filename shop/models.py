@@ -81,11 +81,14 @@ class ShopItem(models.Model):
     stackable = models.BooleanField(default=False, help_text="Can be bought more than once and the copies add up.")
     max_per_user = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)],
                                                help_text="Empty = no limit. A non-stackable item is always one per person.")
-    stock = models.PositiveIntegerField(null=True, blank=True, help_text="Empty = unlimited. 0 = sold out.")
+    stock = models.PositiveIntegerField(null=True, blank=True, help_text="What is left. Empty = unlimited, 0 = sold out. Each order takes from it and a rejected or cancelled order gives it back.")
     base_item = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="upgrades", limit_choices_to={"base_item__isnull": True},
         help_text="Set this to make the item an UPGRADE of that base grant: it tops up the same card and is never sold alone.",
     )
+    needs_project = models.BooleanField(
+        default=False, help_text="A hardware grant: bought for one specific shipped hardware design, with every part listed. "
+                                 "It sits in the separate Hardware section of the shop.")
     active = models.BooleanField(default=True)
     sort_order = models.PositiveSmallIntegerField(default=0)
 
@@ -144,5 +147,7 @@ class ShopItem(models.Model):
             self.cookies = self.compute_cookies()       # so the rate rules below compare the price this save will store
         if not self.stackable and self.max_per_user not in (None, 1):
             raise ValidationError({"max_per_user": "A non-stackable item is one per person: leave this empty or use 1."})
+        if self.needs_project and (self.kind != self.Kind.GRANT or self.base_item_id):
+            raise ValidationError({"needs_project": "Only a card grant that is not an upgrade can be tied to a hardware project."})
         if problem := self.upgrade_problem():
             raise ValidationError({"base_item": problem})

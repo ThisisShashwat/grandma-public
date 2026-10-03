@@ -8,12 +8,14 @@
       <p class="shelf-blurb">{{ shelf.blurb }}</p>
       <ul class="items">
         {% for p in shelf.products %}
-        <li>{{ shopui.card(p) }}</li>
+        <li>{{ shopui.card(p, jar) }}</li>
         {% endfor %}
       </ul>
     </section>
     {% else %}
+    {% if not shop.hardware %}
     {% include "sections/shop_empty.html" %}
+    {% endif %}
     {% endfor %}
   </div>
 </section>

@@ -1,0 +1,18 @@
+{% import "macros/shop.html" as shopui %}
+{# The separate Hardware section: grants that are bought for one hardware design the person shipped (orders/, docs/orders.md). #}
+<section class="scene scene--blush pantry-hardware" id="hardware" aria-labelledby="shelf-{{ shop.hardware.key }}">
+  <div class="wrap">
+    <h2 class="shelf-label" id="shelf-{{ shop.hardware.key }}">{{ shop.hardware.title }}</h2>
+    <p class="shelf-blurb">{{ shop.hardware.blurb }}</p>
+    <ol class="howto">
+      <li class="howto-note"><b>Ship a design.</b>I read it, approve it, and tell you first.</li>
+      <li class="howto-note"><b>Pick the project.</b>One grant for one design. List every part with its link and its price.</li>
+      <li class="howto-note"><b>Too dear?</b>Upgrades cover whatever the parts cost over the grant.</li>
+    </ol>
+    <ul class="items">
+      {% for p in shop.hardware.products %}
+      <li>{{ shopui.card(p, jar) }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>

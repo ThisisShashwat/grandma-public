@@ -1,11 +1,15 @@
 {% import "macros/art.html" as art %}
-{# The Pantry's header band: Grandma and her jar, one line of copy, and the note that says why nothing can be bought yet. #}
+{# The Pantry's header band: Grandma and her jar, one line of copy, and a note: guests are told to sign in, a signed-in person sees their jar. #}
 <section class="scene scene--sky pantry-head">
   <div class="wrap split">
     <div>
       <h1>The Pantry</h1>
       <p class="lede">Everything on these shelves costs cookies. Look all you like, dear, but wipe your hands first.</p>
+      {% if jar is none %}
       <p class="guest-note"><b>Browsing as a guest</b>Sign in to spend cookies.</p>
+      {% else %}
+      <p class="guest-note"><b>In your jar</b>{{ "{:,}".format(jar) }} {{ "cookie" if jar == 1 else "cookies" }}. Pick a grant, show me the cart, and I'll pay.</p>
+      {% endif %}
     </div>
     {{ art.fig("grandma-cookie-jar.png", "Grandma hugging a jar full of cookies", "aside-fig pantry-jar") }}
   </div>
