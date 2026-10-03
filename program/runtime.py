@@ -39,6 +39,14 @@ CONFIG = {
                       "subdomains: streamlit.app blocks myapp.streamlit.app.", "hosts"),
     "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes.", "megabytes"),
 
+    "SLACK_WORKSPACE_URL": ("https://hackclub.slack.com", "The address of the Slack workspace. A public profile links to this address plus /team/ and the person's Slack ID. "
+                                                         "Just the address, nothing after it.", "workspace"),
+    "SHOW_REJECTED_PUBLICLY": (True, "Show rejected projects on the public profile and project pages (only after the person has heard the result). Off hides them."),
+    "LEADERBOARD_SIZE": (50, "How many people the cookie board lists, the most cookies earned all time first.", "leaderboard_size"),
+    "PUBLIC_PAGES_INDEXABLE": (False, "Let search engines list the public profiles, project pages, Blue Ribbon wall and cookie board. "
+                                      "Off (the default) puts noindex, nofollow on them: the pages stay open to anyone with the link, but they are not found by searching, "
+                                      "because the people on them are 13 to 18."),
+
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
     "TUTORIAL_FOR_SOME": ("second", "What someone who has shipped a project or two sees.", "tutorial_depth"),
@@ -52,6 +60,7 @@ FIELDSETS = (
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Projects", ("PROJECT_MIN_DAYS", "PROJECT_MAX_DAYS")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
+    ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 
@@ -67,5 +76,7 @@ FIELDS = {
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
+    "workspace": ("pages.fields.WorkspaceField",),
+    "leaderboard_size": ("django.forms.IntegerField", {"min_value": 1, "max_value": 500}),
     "tutorial_depth": ("django.forms.ChoiceField", {"choices": DEPTHS}),
 }

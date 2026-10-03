@@ -2,7 +2,7 @@
 (select_for_update), so two requests for the same person never read the same balance, and refuses to go below zero. Posting
 a key twice writes once. Rules and maths: ledger/rules.py."""
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 
 from accounts.models import Profile
 from accounts.services import profile_of
@@ -14,10 +14,19 @@ def balance(user):
     return CookieEntry.objects.filter(user=user).aggregate(total=Sum("amount"))["total"] or 0
 
 
+EARNED = Q(kind=rules.EARNING, amount__gt=0)      # what counts as earned: spending, refunds and adjustments do not
+
+
 def earned_total(user):
     """Everything this person has ever earned: the positive earning entries only (spending, refunds and adjustments do
     not count). For the all-time leaderboard."""
-    return CookieEntry.objects.filter(user=user, kind=rules.EARNING, amount__gt=0).aggregate(total=Sum("amount"))["total"] or 0
+    return CookieEntry.objects.filter(EARNED, user=user).aggregate(total=Sum("amount"))["total"] or 0
+
+
+def earned_totals(users):
+    """`earned_total` for every person in `users` (a User queryset) who has earned anything, in ONE query: rows of
+    {"user": id, "total": n}, the most first, ties by user id so the order never wobbles. Nobody with 0 is in it."""
+    return CookieEntry.objects.filter(EARNED, user__in=users).values("user").annotate(total=Sum("amount")).order_by("-total", "user")
 
 
 def credit(user, amount, *, reason, key, kind=rules.EARNING, by=None):
