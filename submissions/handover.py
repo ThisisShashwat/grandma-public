@@ -6,6 +6,7 @@ services.claim (once, whatever happens: a double click, a reload, two tabs).
 The claim happens inside the store's save, before the person's place in the session moves on, so a failure can never leave
 someone standing at the last page with nothing handed over. Until a submission is claimed the person cannot be past the step that
 claims it, whatever the session says."""
+from accounts.services import profile_of
 from projects.conversation import cookies
 from submissions import rules, script, services
 from submissions.models import Submission
@@ -31,8 +32,8 @@ def dialogue(submission):
 
 
 def answers(submission):
-    """What her lines quote: the project's name, the reviewer's note and the amount. Always fresh from the database."""
-    return {"submission": str(submission.pk), "name": submission.project.name, "note": submission.public_note.strip(), "cookies": cookies(submission.cookies_awarded or 0)}
+    """What her lines quote: the person's name, the project's name, the reviewer's note and the amount. Always fresh from the database."""
+    return {"submission": str(submission.pk), "display_name": profile_of(submission.project.user).display_name, "name": submission.project.name, "note": submission.public_note.strip(), "cookies": cookies(submission.cookies_awarded or 0)}
 
 
 def current(request):

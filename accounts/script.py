@@ -13,19 +13,19 @@ OPENING = [
 ]
 
 QUESTIONS = [
-    AskText(key="display_name", face="writing", label="Your name", validators=(validate_display_name,), max_length=30,
+    AskText(key="display_name", face="writing", label="Your name", validators=(validate_display_name,), max_length=30, button="That's me",
             attrs={"autocomplete": "nickname", "autocapitalize": "words", "spellcheck": "false"}, lines=(
                 "First things first. What should I call you, dear?",
                 "Pick a name you don't mind other people seeing. It goes on my wall.")),
     Say(face="smug", lines=("{display_name}.", "Hm. I've heard worse.")),
     AskText(key="slack_id", face="magnifier", label="Slack member ID, like U01ABC23DEF", validators=(validate_slack_id,), max_length=12,
-            attrs={"autocomplete": "off", "autocapitalize": "characters", "spellcheck": "false"}, lines=(
-                "Now your Slack ID. Not your username, dear. Your ID.",
+            button="That's my ID", attrs={"autocomplete": "off", "autocapitalize": "characters", "spellcheck": "false"}, lines=(
+                "Now your Slack ID, {display_name}. Not your username. Your ID.",
                 "Open your profile in Slack, tap the three dots and pick Copy member ID. It starts with a U or a W.")),
     AskChoice(key="region", face="phone", choices=tuple(REGIONS), lines=(
-        "Where in the world are you?", "I need to know how far I have to shout.")),
+        "Where in the world are you, {display_name}?", "I need to know how far I have to shout.")),
     AskText(key="timezone", face="clipboard", label="Time zone, like Asia/Kolkata", validators=(validate_timezone,), max_length=64,
-            prefill="timezone", suggestions=suggested_timezones, attrs={"autocomplete": "off", "autocapitalize": "off", "spellcheck": "false"}, lines=(
+            prefill="timezone", suggestions=suggested_timezones, button="That's my zone", attrs={"autocomplete": "off", "autocapitalize": "off", "spellcheck": "false"}, lines=(
                 "And your time zone, so I don't phone you at silly o'clock.",
                 "Your browser usually knows. I've asked it nicely.")),
     AskChoice(key="expertise", face="eyeroll", choices=tuple(EXPERTISE), lines=(

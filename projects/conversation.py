@@ -12,6 +12,7 @@ from dataclasses import replace
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.services import profile_of
 from projects import notes, rules, script, services
 from projects.validators import validate_idea, validate_project_name
 from talk.dialogue import Deal, State
@@ -62,10 +63,11 @@ class Store(SessionStore):
 
     def load(self, request):
         state = super().load(request)
+        person = {"display_name": profile_of(request.user).display_name}    # always fresh from the Profile, so her lines can use it
         project = services.active_project(request.user)
         if project is None:                       # nothing dealt yet: questions in progress (a stale finished place starts over)
-            return state if state.position < self.deal_at else State()
-        answers = {"idea": project.idea, "name": project.name} | state.answers
+            return State(state.position, state.answers | person) if state.position < self.deal_at else State(0, person)
+        answers = {"idea": project.idea, "name": project.name} | state.answers | person
         if project.status == rules.DEALING:       # a hand is on the table: always at the notes, from any session
             return State(self.deal_at, answers)
         return State(state.position, answers)

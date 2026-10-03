@@ -38,7 +38,7 @@ class AskText(Step):
     attrs: dict = field(default_factory=dict)       # extra HTML attributes: autocomplete, inputmode, placeholder...
     suggestions: Callable[[], list] | tuple = ()    # offered as a datalist, never enforced (the validators are the rule)
     prefill: str = ""            # name of a browser hint talk.js can fill in when the box is empty ("timezone")
-    button: str = "That's me"
+    button: str = "Go on"
 
 
 @dataclass(frozen=True, kw_only=True)

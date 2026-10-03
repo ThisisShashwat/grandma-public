@@ -4,7 +4,7 @@ from talk.dialogue import AskChoice, AskText, Deal, End, Say
 
 INTRO = [
     Say(face="wave", lines=(
-        "Ah. A visitor. Sit down, dear, and mind the cat. She bites.",
+        "Ah, {display_name}. Sit down, dear, and mind the cat. She bites.",
         "You've come about a project. Good. I've been waiting all week for somebody to boss about.")),
     Say(face="finger", lines=(
         "Here's the arrangement. You tell me what you're making. That part is yours: I wouldn't dream of choosing.",
@@ -14,13 +14,13 @@ INTRO = [
         "Don't like your hand? I'll deal again. The first few times are free. After that it costs cookies, because the jar doesn't refill itself.")),
 ]
 
-ASK_IDEA = AskText(key="idea", face="writing", label="What you're going to make", max_length=200,
+ASK_IDEA = AskText(key="idea", face="writing", label="What you're going to make", max_length=200, button="That's the idea",
                    attrs={"autocomplete": "off", "spellcheck": "true"}, lines=(
-                       "So. What are you going to make, dear?",
+                       "So, {display_name}. What are you going to make?",
                        "A sentence will do. 'A weather station that sulks when it rains' is the sort of thing I enjoy."))
-SAID_IDEA = Say(face="smug", lines=("{idea}.", "Hm. Everybody starts somewhere."))
+SAID_IDEA = Say(face="smug", lines=("{idea}.", "Hm. Everybody starts somewhere, {display_name}."))
 
-ASK_NAME = AskText(key="name", face="clipboard", label="Project name", max_length=40,
+ASK_NAME = AskText(key="name", face="clipboard", label="Project name", max_length=40, button="That's the name",
                    attrs={"autocomplete": "off", "spellcheck": "false"}, lines=(
                        "Every project needs a name, same as a cat.", "What are we calling it?"))
 SAID_NAME = Say(face="eyeroll", lines=("{name}.", "I'd have gone shorter. But nobody asked me. I'll put it on the fridge."))
@@ -33,14 +33,14 @@ ASK_SUBCATEGORY = AskChoice(key="subcategory", face="magnifier", choices=(), lin
 
 # `notes` and `again` are filled in per request from the person's project (conversation.py)
 DEAL = Deal(key="keep", face="note", notes=list, lines=(
-    "Right. Hold still while I rummage in the jar.",
+    "Right, {display_name}. Hold still while I rummage in the jar.",
     "There. The little face on each note is how I'd feel about you taking it. The happier I look, the more I think of you.",
     "Keep one, two or three. Don't like them? Ask me to deal again."))
 EMPTY_JAR = ("My jar is empty for that kind of project, dear, which is not your fault.", "Tell the staff in the Slack. Somebody forgot to fill it.")
 
 
 ENDING = End(face="approved", button="Show me my project", lines=(
-    "{name}. Good. Build it.", "Take as long as it needs, dear. Half an hour or ten days, I'm in no hurry. I will be watching.", "Now off you go. And wipe your feet."))
+    "{name}. Good. Build it.", "Take as long as it needs, dear. Half an hour or ten days, I'm in no hurry. I will be watching.", "Now off you go, {display_name}. And wipe your feet."))
 
 
 # the re-deal confirmation page; {cost} and {balance} are filled with "10 cookies" and the like (conversation.cookies)
