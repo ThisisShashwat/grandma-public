@@ -6,13 +6,10 @@ summary: "Grandma says honesty is the best policy, so here is how this site was 
 ---
 Grandma asks you to be honest about AI, so it would be rude not to be honest about it here. This is Shashwat speaking, the person who runs the program.
 
-## The code
-
-I wrote the code for this site with the help of Claude, an AI assistant made by Anthropic.
 
 ## The pictures
 
-Grandma's pictures were generated with Gemini. I drew the first few myself, by hand. Then I gave those to Gemini and had it create the other frames in exactly the same art style. Grandma says the likeness is very flattering.
+Some of Grandma's pictures were generated with Gemini. I drew the first bunch myself, by hand, on a drawing tablet. Then I gave those to Gemini and had it create the other frames in exactly the same art style. Grandma says the likeness is very flattering.
 
 ## That is the disclosure
 
