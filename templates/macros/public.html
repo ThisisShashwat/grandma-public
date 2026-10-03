@@ -24,7 +24,7 @@
   {% if c.ribbon %}{{ ribbon() }}{% endif %}
   {% if c.screenshot %}<img class="pub-shot" src="{{ c.screenshot }}" alt="Screenshot of {{ c.name }}" loading="lazy">{% endif %}
   <h3 class="pub-card-name"><a href="{{ c.path }}">{{ c.name }}</a></h3>
-  <p class="pub-card-where">{{ c.where }}{% if c.ship %}, {{ c.ship|lower }}{% endif %}</p>
+  <p class="pub-card-where">{{ c.where }}</p>
   <p class="pub-tags">{{ stamp(c.status, c.status_label) }}{% if c.ribbon and c.status != "ribbon" %} {{ stamp("ribbon", "Blue Ribbon") }}{% endif %}</p>
   {% if maker %}<p class="pub-card-by">by <a href="{{ c.maker_path }}">{{ c.maker }}</a></p>{% endif %}
 </li>

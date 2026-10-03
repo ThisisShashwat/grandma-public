@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Exists, OuterRef
 from django.urls import reverse
 
 from accounts.models import Profile
@@ -49,7 +49,6 @@ class Card:
     status: str         # in_review, approved, ribbon or rejected (showcase/rules.py)
     status_label: str
     ribbon: bool        # some ship of it earned a Blue Ribbon
-    ship: str           # "Design ship", "Build ship" or "" (hardware only: which ship the status is about)
     screenshot: str     # an address, or ""
     maker: str
     maker_path: str
@@ -83,7 +82,6 @@ class Link:
 
 @dataclass(frozen=True)
 class Ship:
-    label: str          # "", "Design ship" or "Build ship"
     status: str
     status_label: str
     ribbon: bool
@@ -184,15 +182,13 @@ def external(label, url):
 
 
 def card(project, rows, maker, maker_id):
-    """One project as a card. `rows` are its visible ships; the build ship (else the design ship) gives the status, the ribbon
-    shows if any ship earned one."""
-    by_stage = {row["stage"]: row for row in rows}
-    top = by_stage[rules.headline(by_stage)]
+    """One project as a card. `rows` are its visible ships; top gives the status, the ribbon shows if any ship earned one."""
+    top = rows[0]
     status = ship_status(top)
     return Card(
         name=project["name"], path=project_path(project["id"], project["name"]),
         where=where(project["category__name"], project["subcategory__name"]), status=status, status_label=rules.LABELS[status],
-        ribbon=any(ship_status(row) == rules.RIBBON for row in rows), ship=rules.STAGE_LABELS[top["stage"]], screenshot=picture(top["screenshot"]),
+        ribbon=any(ship_status(row) == rules.RIBBON for row in rows), screenshot=picture(top["screenshot"]),
         maker=maker, maker_path=profile_path(maker_id, maker))
 
 
@@ -210,7 +206,7 @@ def profile_page(pk, number, cfg):
     shown = Project.objects.filter(user_id=pk).filter(Exists(visible.filter(project=OuterRef("pk"))))
     page = Paginator(shown.values("id", "name", "category__name", "subcategory__name").order_by("-id"), PAGE).get_page(number)
     by_project = defaultdict(list)
-    for row in visible.filter(project__in=[p["id"] for p in page]).values("project_id", "stage", "status", "ribbon", "claimed_at", "screenshot"):
+    for row in visible.filter(project__in=[p["id"] for p in page]).values("project_id", "status", "ribbon", "claimed_at", "screenshot"):
         by_project[row["project_id"]].append(row)
     name = person["display_name"]
     return ProfilePage(
@@ -228,7 +224,7 @@ def ship(row):
     status = ship_status(row)
     note = row["public_note"].strip() if row["claimed_at"] is not None else ""
     return Ship(
-        label=rules.STAGE_LABELS[row["stage"]], status=status, status_label=rules.LABELS[status], ribbon=status == rules.RIBBON,
+        status=status, status_label=rules.LABELS[status], ribbon=status == rules.RIBBON,
         description=row["description"], screenshot=picture(row["screenshot"]), note=note,
         links=external("Try it", row["playable_url"]) + external("The code", row["repo_url"]) + external("Recording", row["recording_url"]))
 
@@ -242,9 +238,8 @@ def project_page(pk, cfg):
     if project is None:
         return None
     rows = list(visible.filter(project_id=pk).values(
-        "stage", "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note"))
-    rows.sort(key=lambda row: rules.STAGE_ORDER[row["stage"]])
-    top = rows[-1]
+        "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note"))
+    top = rows[0]
     status = ship_status(top)
     face, line = rules.SAYS[status]
     file, alt = portrait(face)
@@ -258,11 +253,9 @@ def project_page(pk, cfg):
 
 
 def wall_page(number, cfg):
-    """Every project that earned a Blue Ribbon, newest ribbon first, once each (a hardware project with two ribbons shows its newest)."""
-    earned = ribboned(ships(cfg.SHOW_REJECTED_PUBLICLY))
-    newer = earned.filter(project=OuterRef("project")).filter(Q(claimed_at__gt=OuterRef("claimed_at")) | Q(claimed_at=OuterRef("claimed_at"), pk__gt=OuterRef("pk")))
-    rows = earned.filter(~Exists(newer)).values(
-        "project_id", "stage", "status", "ribbon", "claimed_at", "screenshot", "project__name", "project__category__name", "project__subcategory__name",
+    """Every project that earned a Blue Ribbon, newest ribbon first."""
+    rows = ribboned(ships(cfg.SHOW_REJECTED_PUBLICLY)).values(
+        "project_id", "status", "ribbon", "claimed_at", "screenshot", "project__name", "project__category__name", "project__subcategory__name",
         "project__user_id", "project__user__profile__display_name").order_by("-claimed_at", "-id")
     page = Paginator(rows, WALL_PAGE).get_page(number)
     cards = tuple(card({"id": r["project_id"], "name": r["project__name"], "category__name": r["project__category__name"], "subcategory__name": r["project__subcategory__name"]},

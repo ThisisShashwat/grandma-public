@@ -16,7 +16,6 @@ from orders import rules as order_rules
 from orders.models import Order
 from projects import notes, rules, services as project_services
 from submissions import rules as submission_rules
-from submissions import services as submission_services
 from submissions.models import Submission
 from talk.portraits import portrait
 
@@ -50,14 +49,10 @@ def waiting_cookies(user):
 
 
 def project_card(project):
-    ship = ""
-    if project.status == rules.BUILDING:
-        next_ship = submission_services.ship_for(project)
-        ship = submission_rules.STAGE_LABELS[next_ship.stage] if next_ship.stage else ""
     action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.SHIPPED: "reading", rules.DEALING: "resume"}.get(project.status, "start")
     return records.ProjectCard(
         name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
-        status=project.status, status_label=rules.LABELS[project.status], ship=ship,
+        status=project.status, status_label=rules.LABELS[project.status],
         notes=tuple(notes.notes(project_services.kept_demands(project))), action=action)
 
 
@@ -72,7 +67,7 @@ def submission_row(submission, zone):
         status, label = submission.status, submission_rules.LABELS[submission.status]
     approved = collected and submission.status == submission_rules.APPROVED
     return records.SubmissionRow(
-        project=submission.project.name, ship=submission_rules.STAGE_LABELS[submission.stage], when=day(submission.submitted_at, zone), status=status,
+        project=submission.project.name, when=day(submission.submitted_at, zone), status=status,
         status_label=label, cookies=submission.cookies_awarded if approved else None, ribbon=approved and submission.ribbon,
         note=submission.public_note.strip() if collected else "")
 
@@ -82,18 +77,14 @@ def cookie_row(entry, zone):
 
 
 def order_detail(order):
-    """The parts of an order worth a line under its title: the project, how many parts, how many upgrades."""
+    """The parts of an order worth a line under its title: how many upgrades."""
     upgrades = sum(line.quantity for line in order.lines.all() if line.upgrade)
-    parts = len(order.parts.all())
-    pieces = [f"for {order.project.name}" if order.project else "", f"{parts} {'part' if parts == 1 else 'parts'}" if parts else "",
-              f"plus {upgrades} {'upgrade' if upgrades == 1 else 'upgrades'}" if upgrades else ""]
-    return ", ".join(piece for piece in pieces if piece)
+    return f"plus {upgrades} {'upgrade' if upgrades == 1 else 'upgrades'}" if upgrades else ""
 
 
 def order_proofs(order):
     """The person's own screenshots, as addresses of the login-checked view (never a file address: there is none)."""
-    proofs = [("Cart screenshot", reverse("order_cart", args=[order.pk]))] if order.cart_screenshot else []
-    return tuple(proofs + [(f"{part.name}", reverse("order_part", args=[order.pk, part.pk])) for part in order.parts.all() if part.screenshot])
+    return (("Cart screenshot", reverse("order_cart", args=[order.pk])),) if order.cart_screenshot else ()
 
 
 def order_row(order, zone):
@@ -106,7 +97,7 @@ def order_row(order, zone):
 
 
 def my_orders(user):
-    return Order.objects.filter(user=user).select_related("item", "project").prefetch_related("lines", "parts")
+    return Order.objects.filter(user=user).select_related("item").prefetch_related("lines")
 
 
 def mine(user):
@@ -123,7 +114,7 @@ def build(user):
     project = project_services.working_project(user) or project_services.latest_project(user)
     card = project_card(project) if project else None
     face, line = mood.says(project.status if project else None)
-    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.AWAITING_BUILD), limit=5)
+    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED), limit=5)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),

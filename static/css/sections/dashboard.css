@@ -42,7 +42,7 @@
 .dash-other-name { font-weight: 700; overflow-wrap: anywhere; }
 
 .stamp { display: inline-block; padding: 0.02em 0.65em; font-family: var(--display); font-size: 1.25rem; line-height: 1.3; background: var(--paper); border: 3px solid var(--ink); rotate: -1.2deg; }
-.stamp[data-status="approved"], .stamp--ship { background: var(--note-blue); }
+.stamp[data-status="approved"] { background: var(--note-blue); }
 .stamp[data-status="rejected"], .stamp[data-status="abandoned"] { background: var(--note-pink); }
 .stamp[data-status="waiting"] { background: var(--canvas); }
 .stamp--ribbon { color: var(--canvas); background: var(--ribbon); }

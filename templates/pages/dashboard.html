@@ -76,7 +76,7 @@
       <h2 id="dash-project-title">{{ "What you're building" if project else "No project yet" }}</h2>
       {% if project %}
       <div class="dash-card">
-        <p class="dash-where">{{ project.where }}{% if project.ship %} <span class="stamp stamp--ship">{{ project.ship }}</span>{% endif %}</p>
+        <p class="dash-where">{{ project.where }}</p>
         <p class="dash-idea">{{ project.idea }}</p>
 
         <h3>{{ "Your demand" if project.notes|length == 1 else "Your demands" }}</h3>

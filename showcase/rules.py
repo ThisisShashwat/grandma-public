@@ -30,15 +30,6 @@ def public_status(status, collected, ribbon):
     return RIBBON if ribbon else APPROVED
 
 
-STAGE_LABELS = {None: "", submission_rules.DESIGN: "Design ship", submission_rules.BUILD: "Build ship"}
-STAGE_ORDER = {None: 0, submission_rules.DESIGN: 1, submission_rules.BUILD: 2}
-
-
-def headline(stages):
-    """The ship a project is shown by: the build ship if there is one, else the design ship, else the one ship of a software project."""
-    return max(stages, key=STAGE_ORDER.__getitem__)
-
-
 # Grandma's face (a name in talk/portraits.py) and her line for a project that stands like this. Kind: it is somebody's work, said
 # to the whole world, and the maker is 13 to 18.
 SAYS = {
