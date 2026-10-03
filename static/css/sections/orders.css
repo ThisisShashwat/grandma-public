@@ -3,7 +3,7 @@
    language: 4px ink borders, wobbly corners, tilts under a degree. The magnets on .order-sums and .order-stop live in core/notes.css. */
 
 .order-facts { display: flex; flex-wrap: wrap; gap: 0.9rem 1.1rem; margin: 0; padding: 0; list-style: none; }
-.order-fact { padding: 0.45rem 0.9rem 0.4rem; background: var(--canvas); border: 3px solid var(--ink); font-size: 1rem; line-height: 1.15; rotate: -0.8deg; }
+.order-fact { flex: 1 1 9rem; padding: 0.45rem 0.9rem 0.4rem; background: var(--canvas); border: 3px solid var(--ink); font-size: 1rem; line-height: 1.15; rotate: -0.8deg; }
 .order-fact span { display: block; font-size: 0.9rem; font-style: italic; }
 .order-fact b { font-family: var(--display); font-weight: 400; font-size: 1.9rem; }
 .order-fact:nth-child(2) { rotate: 0.9deg; background: var(--note-blue); }
