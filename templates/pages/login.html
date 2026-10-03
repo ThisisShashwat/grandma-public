@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/login.css') }}">
+{% endblock %}
+
+{% block main %}
+<section class="scene scene--lilac login-scene">
+  <div class="wrap split">
+    <div class="login-card">
+      <h1>Come in, dear</h1>
+      <p class="lede">Name and password, please. Grandma doesn't let just anybody in.</p>
+
+      <form class="login-form" method="post">
+        {{ csrf_input }}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ next }}">
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
+        <p class="actions"><button class="btn">Let me in</button></p>
+      </form>
+
+      <p class="fine">No account? Grandma makes those herself. Ask in <a data-link="slack" {{ link_attrs("slack") }}>the Slack</a>.</p>
+    </div>
+    {{ art.fig("grandma-clipboard.png", "Grandma holding a clipboard, waiting", "aside-fig login-fig") }}
+  </div>
+</section>
+{% endblock %}

@@ -1,5 +1,6 @@
 """Django settings. Everything that differs between a laptop and a server comes from the environment or a gitignored
 `.env` file (copy `.env.example`). With DEBUG off the security settings switch on by themselves."""
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -25,8 +26,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "constance",
+    "axes",
     "program",
     "pages",
+    "accounts",
+    "ledger",
     "shop",
     "guides",
 ]
@@ -39,6 +43,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",          # last: turns a lockout into the themed 429 page
 ]
 
 ROOT_URLCONF = "grandma.urls"
@@ -71,11 +76,14 @@ TEMPLATES = [
     },
 ]
 
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+# IMMEDIATE: a write transaction takes SQLite's write lock when it starts, so "read the balance, then add an entry" in
+# ledger/services.py cannot interleave with another writer. (On Postgres select_for_update does this job.)
+DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3",
+                         "OPTIONS": {"transaction_mode": "IMMEDIATE"}}}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
@@ -94,6 +102,25 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"          # collectstatic target for a real server (gitignored)
+
+# Login. Accounts are made in the admin (no signup). Axes locks a username from an address after repeated failures, on /login/ and
+# the admin alike. The lock is per (username, IP address) so one person's typos never lock out a school's shared address.
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "home"
+AUTHENTICATION_BACKENDS = ["axes.backends.AxesStandaloneBackend", "django.contrib.auth.backends.ModelBackend"]
+AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", default=5)
+AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_MINUTES", default=30))
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = "pages/locked.html"        # answered with HTTP 429
+
+# Cookies: the session cookie is HttpOnly and SameSite=Lax (Django's defaults, stated so they stay), the CSRF cookie too and
+# HttpOnly as well (no script of ours reads it: every POST form carries its own token).
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # Production security: on whenever DEBUG is off, each one can be overridden from the environment.
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)

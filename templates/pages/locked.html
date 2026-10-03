@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Too many tries{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/login.css') }}">
+{% endblock %}
+
+{% block main %}
+{# django-axes answers with this page (HTTP 429) after too many wrong passwords. It never says which name or password was wrong. #}
+<section class="scene scene--sky login-scene">
+  <div class="wrap split">
+    <div class="login-card">
+      <h1>That's enough, dear</h1>
+      <p class="lede">Too many wrong guesses. Sit down, have a biscuit and try again{% if cooloff_timedelta %} in about {{ (cooloff_timedelta.total_seconds() // 60)|int }} minutes{% else %} later{% endif %}.</p>
+      <p class="fine">Still stuck? Ask in <a data-link="slack" {{ link_attrs("slack") }}>the Slack</a>. Somebody there will let you back in.</p>
+    </div>
+    {{ art.fig("grandma-nose-up.png", "Grandma with her nose in the air and arms crossed", "aside-fig login-fig") }}
+  </div>
+</section>
+{% endblock %}
