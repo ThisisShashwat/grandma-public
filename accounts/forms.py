@@ -5,6 +5,8 @@ class LoginForm(AuthenticationForm):
     """Django's login form (one wrong-username-or-password message, so nobody can tell which half was wrong) with the
     attributes a password manager and a phone keyboard want, and the site's hand-drawn text box."""
 
+    error_messages = {**AuthenticationForm.error_messages, "invalid_login": "That's not right, dear. Check your username and password: capitals matter."}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget.attrs.update(
