@@ -113,6 +113,7 @@ AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", default=5)
 AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_MINUTES", default=30))
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
+AXES_DISABLE_ACCESS_LOG = True                     # do not keep a log of every successful sign-in (IP addresses of minors): only failures are kept, to count them
 AXES_LOCKOUT_TEMPLATE = "pages/locked.html"        # answered with HTTP 429
 
 # Cookies: the session cookie is HttpOnly and SameSite=Lax (Django's defaults, stated so they stay), the CSRF cookie too and
