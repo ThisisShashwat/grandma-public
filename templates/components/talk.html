@@ -45,7 +45,10 @@
       <datalist id="talk-suggestions">{% for item in suggestions %}<option value="{{ item }}">{% endfor %}</datalist>
       {% endif %}
       {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
-      <p class="talk-actions"><button class="btn">{{ step.button }}</button></p>
+      <p class="talk-actions">
+        <button class="btn">{{ step.button }}</button>
+        {% if can_back %}<button class="btn btn--plain talk-back" name="back" value="1" formnovalidate>Back</button>{% endif %}
+      </p>
 
       {% elif kind == "askchoice" %}
       <div class="talk-picks" role="group">
@@ -54,11 +57,13 @@
         {% endfor %}
       </div>
       {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
+      {% if can_back %}<p class="talk-actions"><button class="btn btn--plain talk-back" name="back" value="1" formnovalidate>Back</button></p>{% endif %}
 
       {% else %}
       <p class="talk-actions">
         {% if step.disabled %}<button class="btn btn--plain" type="button" disabled>{{ step.disabled }}</button>{% endif %}
         <button class="btn">{{ step.button }}</button>
+        {% if can_back %}<button class="btn btn--plain talk-back" name="back" value="1" formnovalidate>Back</button>{% endif %}
       </p>
       {% endif %}
     </form>

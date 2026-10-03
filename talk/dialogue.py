@@ -80,6 +80,20 @@ def next_position(steps, position, answers):
     return position
 
 
+def previous_position(steps, position, answers):
+    """The nearest step before `position` that is played for these answers, or None when there is none. Back goes there."""
+    for index in range(position - 1, -1, -1):
+        if steps[index].when is None or steps[index].when(answers):
+            return index
+    return None
+
+
+def without_skipped(steps, answers):
+    """The answers minus those of keyed steps that are not played for them: after Back and a changed answer, a step may now be skipped and its old answer must not linger."""
+    stale = {step.key for step in steps if hasattr(step, "key") and step.when is not None and not step.when(answers)}
+    return {key: value for key, value in answers.items() if key not in stale}
+
+
 def choices_for(step, answers):
     """The (value, label) pairs of a choice step for the answers so far."""
     return tuple(step.choices(answers) if callable(step.choices) else step.choices)

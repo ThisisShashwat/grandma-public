@@ -11,10 +11,15 @@ from django.db import transaction
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 
-from talk.dialogue import AskChoice, AskText, Deal, End, State, choices_for, fill, next_position
+from talk.dialogue import AskChoice, AskText, Deal, End, Say, State, choices_for, fill, next_position, previous_position, without_skipped
 from talk.portraits import portrait
 
 ERROR_FACE = "sideeye"
+
+
+def back_allowed(steps, step, position, answers):
+    """Back is offered on a step that talks or asks, when an earlier step is played. Never on the notes or the end."""
+    return isinstance(step, (Say, AskText, AskChoice)) and previous_position(steps, position, answers) is not None
 
 
 def run(request, steps, *, store, finish, then, title="Grandma"):
@@ -28,18 +33,23 @@ def run(request, steps, *, store, finish, then, title="Grandma"):
     if position >= len(steps):
         return redirect(then)
     step = steps[position]
+    back = back_allowed(steps, step, position, state.answers)
     if request.method == "POST":
-        return answer(request, steps, step, position, state, store=store, finish=finish, then=then, title=title)
-    return show(request, step, position, state.answers, None, then, title)
+        return answer(request, steps, step, position, state, store=store, finish=finish, then=then, title=title, back=back)
+    return show(request, step, position, state.answers, None, then, title, back)
 
 
-def answer(request, steps, step, position, state, *, store, finish, then, title):
+def answer(request, steps, step, position, state, *, store, finish, then, title, back=False):
     if request.POST.get("at") != str(position) or isinstance(step, End):    # a stale tab or a double click: show where we are
+        return redirect(request.path)
+    if "back" in request.POST:                      # the Back button: one played step back, nothing validated, nothing saved
+        if back:
+            store.go_to(request, previous_position(steps, position, state.answers))
         return redirect(request.path)
     form = form_for(step, request.POST, state.answers)
     if form is not None and not form.is_valid():
-        return show(request, step, position, state.answers, form, then, title)
-    answers = state.answers | ({step.key: form.cleaned_data[step.key]} if form else {})
+        return show(request, step, position, state.answers, form, then, title, back)
+    answers = without_skipped(steps, state.answers | ({step.key: form.cleaned_data[step.key]} if form else {}))
     ahead = next_position(steps, position + 1, answers)
     try:
         with transaction.atomic():
@@ -50,7 +60,7 @@ def answer(request, steps, step, position, state, *, store, finish, then, title)
         if form is None:
             raise
         form.add_error(step.key, messages_for(error, step.key))
-        return show(request, step, position, state.answers, form, then, title)
+        return show(request, step, position, state.answers, form, then, title, back)
     return redirect(request.path)
 
 
@@ -89,7 +99,7 @@ def keeps_between(step):
     return check
 
 
-def show(request, step, position, answers, form, then, title):
+def show(request, step, position, answers, form, then, title, back=False):
     face = ERROR_FACE if form is not None and form.errors else step.face
     if form is None:
         form = form_for(step, None, answers)
@@ -100,7 +110,8 @@ def show(request, step, position, answers, form, then, title):
         suggestions=list(suggestions() if callable(suggestions) else suggestions),
         choices=choices_for(step, answers) if isinstance(step, AskChoice) else (),
         notes=step.notes() if isinstance(step, Deal) else (),
-        again=step.again() if isinstance(step, Deal) and step.again else None)
+        again=step.again() if isinstance(step, Deal) and step.again else None,
+        can_back=back)
 
 
 def page(request, *, title, kind, lines, face, then, step=None, at=0, field=None, **extra):
@@ -108,5 +119,5 @@ def page(request, *, title, kind, lines, face, then, step=None, at=0, field=None
     confirmation) uses it directly, with whatever the template's branch for that kind needs in `extra`."""
     file, alt = portrait(face)
     context = {"title": title, "step": step, "kind": kind, "at": at, "then": then, "lines": lines, "portrait": {"file": file, "alt": alt},
-               "field": field, "suggestions": [], "choices": (), "notes": (), "again": None}
+               "field": field, "suggestions": [], "choices": (), "notes": (), "again": None, "can_back": False}
     return render(request, "pages/talk.html", context | extra)
