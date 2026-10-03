@@ -2,10 +2,11 @@
 onboarded person and shows only their own project: no URL carries a project id, so there is nothing to guess (no IDOR)."""
 import random
 
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_http_methods, require_safe
+from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
 from accounts.access import onboarded
 from ledger import services as ledger
@@ -79,4 +80,16 @@ def project(request):
     request.session.pop("talk:grandma", None)          # the send-off has been seen
     return render(request, "pages/project.html", {
         "project": mine, "status": rules.LABELS[mine.status], "hardware": mine.category.kind == "hardware",
-        "notes": notes.notes(services.kept_demands(mine)), "can_start_another": not mine.active})
+        "notes": notes.notes(services.kept_demands(mine)), "can_start_another": not mine.active,
+        "can_finish": mine.status == rules.BUILDING and services.design_collected(mine), "closed": services.closed_without_build(mine)})
+
+
+@onboarded
+@never_cache
+@require_POST
+def finish(request):
+    """"I am done with this project": closes the person's own hardware project without a build ship. No id in the address, so only
+    their own project is ever touched; anything else (software, a design not yet through, nothing to close) is a 404."""
+    if services.finish(request.user) is None:
+        raise Http404
+    return redirect("project")

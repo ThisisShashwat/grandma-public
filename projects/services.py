@@ -83,6 +83,36 @@ def locked_project(user, *statuses):
     return Project.objects.select_for_update().filter(user=user, status__in=statuses).first()
 
 
+def design_collected(project):
+    """A hardware project whose design ship was approved and handed over (collected). Asked through the reverse relation so that
+    projects never imports submissions; tests/test_projects_finish.py pins these words to submissions.rules.next_ship."""
+    return project.category.kind == Category.Kind.HARDWARE and project.submissions.filter(stage="design", status="approved", claimed_at__isnull=False).exists()
+
+
+def closed_without_build(project):
+    """An approved hardware project that never had a build ship: the person closed it with the finish button."""
+    return project.status == rules.APPROVED and design_collected(project) and not project.submissions.filter(stage="build").exists()
+
+
+@transaction.atomic
+def finish(user):
+    """The "I am done with this project" button, for a hardware project that sits in `building` after its design ship was approved and
+    collected: the build ship is optional (it may go to this program, another one, or nowhere), and only one project can be active at
+    a time, so such a person must be able to close the project without one. It becomes `approved`, the status that frees the person to
+    start another. Asking again changes nothing. Returns the person's current project, or None when there is nothing to finish."""
+    lock_person(user)
+    current = active_project(user) or latest_project(user)
+    if current is None:
+        return None
+    project = Project.objects.select_for_update().get(pk=current.pk)
+    if not design_collected(project) or project.status not in (rules.BUILDING, rules.APPROVED):
+        return None
+    if project.status == rules.BUILDING:
+        project.status = rules.APPROVED
+        project.save(update_fields=["status"])
+    return project
+
+
 @transaction.atomic
 def start(user, *, idea, name, category, subcategory, size, rng):
     """Make the person's project and deal its first hand. Called when they have answered Grandma's four questions, and only

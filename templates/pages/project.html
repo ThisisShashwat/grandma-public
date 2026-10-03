@@ -34,8 +34,17 @@
     {% if project.status == "building" %}
     <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
     <p class="actions"><a class="btn btn--big" href="{{ url('submit') }}">Ship it</a></p>
+    {% if can_finish %}
+    <p class="project-later">Not planning a build ship, dear? It's optional: it can come to me, go to somebody else's program, or go nowhere at all. If you're finished, tell me and I'll close the books, so you can start another.</p>
+    <form class="actions" method="post" action="{{ url('finish_project') }}">
+      {{ csrf_input }}
+      <button class="btn" type="submit">I am done with this project</button>
+    </form>
+    {% endif %}
     {% elif project.status in ("in_review", "shipped") %}
     <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>
+    {% elif closed %}
+    <p class="project-later">You told me you're done, dear, so I've closed the books on this one. No build ship, no fuss.</p>
     {% endif %}
     {% if can_start_another %}
     <p class="actions"><a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a></p>
