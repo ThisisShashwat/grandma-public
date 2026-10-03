@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
 {% endblock %}
 
-{# Someone's own project (projects/views.py project): what they said they would make, where it stands, how many days are left and
-   the demands they kept. Cookies and faces only: no dollars, no rates. #}
+{# Someone's own project (projects/views.py project): what they said they would make, where it stands, how many days are left, the
+   demands they kept and, while it is being built, the button that hands it in. Cookies and faces only: no dollars, no rates. #}
 {% block main %}
 <section class="scene scene--sky project-head">
   <div class="wrap split">
@@ -46,7 +46,10 @@
     </ul>
 
     {% if project.status == "building" %}
-    <p class="project-later">When it's done you'll hand it in to me here. That part of the house isn't open yet, so keep building, dear.</p>
+    <p class="project-later">When it's done, hand it in to me.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
+    <p class="actions"><a class="btn btn--big" href="{{ url('submit') }}">Ship it</a></p>
+    {% elif project.status in ("in_review", "shipped") %}
+    <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>
     {% endif %}
     {% if can_start_another %}
     <p class="actions"><a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a></p>

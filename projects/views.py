@@ -82,4 +82,4 @@ def project(request):
     window = rules.window(mine.started_at, timezone.now(), cfg.PROJECT_MIN_DAYS, cfg.PROJECT_MAX_DAYS) if mine.status == rules.BUILDING else None
     return render(request, "pages/project.html", {
         "project": mine, "status": rules.LABELS[mine.status], "window": window, "max_days": max(cfg.PROJECT_MIN_DAYS, cfg.PROJECT_MAX_DAYS),
-        "min_days": cfg.PROJECT_MIN_DAYS, "notes": notes.notes(services.kept_demands(mine)), "can_start_another": not mine.active})
+        "min_days": cfg.PROJECT_MIN_DAYS, "hardware": mine.category.kind == "hardware", "notes": notes.notes(services.kept_demands(mine)), "can_start_another": not mine.active})

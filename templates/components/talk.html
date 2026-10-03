@@ -2,9 +2,10 @@
 {% import "macros/notes.html" as hand %}
 {# One step of a dialogue (talk/flow.py): Grandma's portrait, her speech bubble, and what she wants from you.
    kind is say, asktext, askchoice, deal, again or end. Every answer is a normal form POST, no JavaScript needed.
-   deal: the notes on her fridge below the bubble, tick the ones to keep. again: confirming a paid re-deal. #}
+   deal: the notes on her fridge below the bubble, tick the ones to keep. again: confirming a paid re-deal.
+   A step with celebrate pops her picture in and sets off confetti (a Blue Ribbon, static/js/features/celebrate.js). #}
 <div class="talk">
-  <figure class="fig aside-fig talk-face">{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
+  <figure class="fig aside-fig talk-face"{% if step and step.celebrate %} data-celebrate{% endif %}>{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
 
   <div class="talk-bubble">
     <div class="talk-lines">
