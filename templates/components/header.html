@@ -5,8 +5,15 @@
     {{ site.name }}
   </a>
   <nav aria-label="Main">
+    <a href="{{ url('guides') }}">Guides</a>
+    <a href="{{ url('shop') }}">Pantry</a>
     <a href="{{ url('home') }}#faq">FAQ</a>
     <a data-link="slack" {{ link_attrs("slack") }}>Slack</a>
+    {% if request is defined and request.user.is_authenticated %}
+    <a href="{{ url('dashboard') }}">Dashboard</a>
+    {% else %}
+    <a href="{{ url('login') }}">Sign in</a>
+    {% endif %}
     <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
   </nav>
 </header>
