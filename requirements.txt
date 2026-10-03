@@ -6,3 +6,5 @@ markdown-it-py>=4.2
 mdit-py-plugins>=0.6
 Pygments>=2.21
 nh3>=0.3.7
+django-constance>=4.3
+django-axes>=8.3
