@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+
+{% block title %}Guides{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/guides.css') }}">
+{% endblock %}
+
+{% block main %}
+<div class="wrap">
+  <header class="guides-head">
+    <div>
+      <h1>Grandma's guides</h1>
+      <p class="lede">Read these before you pick up the phone, dear. {{ ui.mark("Short ones.") }} She does not like waiting.</p>
+    </div>
+    {{ art.fig("grandma-book.png", "Grandma reading a big book, doing her homework", "aside-fig guides-fig") }}
+  </header>
+
+  {% for name, items in sections %}
+  <section class="g-section">
+    <h2 class="g-label">{{ name }}</h2>
+    <ul class="g-list">
+      {% for g in items %}
+      <li class="g-item">
+        <h3><a href="{{ url('guide', args=[g.slug]) }}">{{ g.title }}</a></h3>
+        <p>{{ g.summary }}</p>
+        <p class="g-time">{{ g.minutes }} min read</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

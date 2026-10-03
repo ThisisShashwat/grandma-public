@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{{ guide.title }} | Guides{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/guides.css') }}">
+{% if "payout-calculator" in guide.widgets %}
+<link rel="stylesheet" href="{{ static('css/sections/pay.css') }}">
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if "payout-calculator" in guide.widgets %}
+<script type="module" src="{{ static('js/pages/guides.js') }}"></script>
+{% endif %}
+{% endblock %}
+
+{% block main %}
+<div class="wrap guide-layout">
+  <aside class="g-side">
+    {% include "components/guide_nav.html" %}
+  </aside>
+
+  <article class="g-article">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="{{ url('guides') }}">Guides</a></li>
+        <li>{{ guide.section }}</li>
+        <li aria-current="page">{{ guide.title }}</li>
+      </ol>
+    </nav>
+
+    <h1>{{ guide.title }}</h1>
+    <p class="g-time">{{ guide.minutes }} min read</p>
+    <p class="g-summary">{{ guide.summary }}</p>
+
+    {% if guide.toc|length >= 3 %}
+    <nav class="g-toc" aria-label="On this page">
+      <b>On this page</b>
+      <ol>
+        {% for h in guide.toc %}
+        <li{% if h.level == 3 %} class="sub"{% endif %}><a href="#{{ h.id }}">{{ h.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </nav>
+    {% endif %}
+
+    <div class="prose">{{ body|safe }}</div>
+
+    {% if guide.source %}
+    <p class="g-credit">Adapted from {% if guide.source.startswith("http") %}<a href="{{ guide.source }}" target="_blank" rel="noopener">{{ guide.source }}</a>{% else %}{{ guide.source }}{% endif %}, licensed {{ guide.license }}. The credits page has the details.</p>
+    {% endif %}
+
+    <nav class="g-pager" aria-label="More guides">
+      {% if previous %}
+      <a class="btn btn--plain" href="{{ url('guide', args=[previous.slug]) }}" rel="prev"><small>Previous</small>{{ previous.title }}</a>
+      {% endif %}
+      {% if following %}
+      <a class="btn btn--plain g-next" href="{{ url('guide', args=[following.slug]) }}" rel="next"><small>Next</small>{{ following.title }}</a>
+      {% endif %}
+    </nav>
+  </article>
+</div>
+{% endblock %}
