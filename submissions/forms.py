@@ -53,7 +53,21 @@ class SubmitForm(forms.Form):
         return [check.key for check in self.checks]
 
     def clean_screenshot(self):
-        return images.clean_screenshot(self.cleaned_data["screenshot"], self.max_bytes)
+        upload = self.cleaned_data["screenshot"]
+        if upload.size > self.max_bytes:
+            raise ValidationError(images.too_big_file(self.max_bytes))
+        return upload
+
+    def clean(self):
+        """The picture is only decoded and re-encoded (the costly part, images.py) once everything else is right, so a stream of
+        half-filled forms costs next to nothing."""
+        cleaned = super().clean()
+        if not self.errors and "screenshot" in cleaned:
+            try:
+                cleaned["screenshot"] = images.clean_screenshot(cleaned["screenshot"], self.max_bytes)
+            except ValidationError as error:
+                self.add_error("screenshot", error)
+        return cleaned
 
     @staticmethod
     def checked(value, problem):

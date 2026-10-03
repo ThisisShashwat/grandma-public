@@ -110,6 +110,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"          # collectstatic target for a rea
 # DEBUG on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "media/"
+DATA_UPLOAD_MAX_NUMBER_FILES = 3                # the submit note takes one screenshot: a request with a pile of files is refused (400)
 
 # Login. Accounts are made in the admin (no signup). Axes locks a username from an address after repeated failures, on /login/ and
 # the admin alike. The lock is per (username, IP address) so one person's typos never lock out a school's shared address.
