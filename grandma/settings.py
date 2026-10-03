@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "program",
     "pages",
     "shop",
+    "guides",
 ]
 
 MIDDLEWARE = [
