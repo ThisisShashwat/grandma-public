@@ -24,17 +24,23 @@ A design needs to show a reviewer everything, so hand in:
 - **editable CAD files** for anything printed (STEP or your own project files, an STL on its own is not enough),
 - the **firmware**, if it needs any (it can be basic at this stage), and a README that says anything unusual about building it.
 
-Reviewers check it by hand, with our own review screens. No special code, just a person looking.
+As soon as the design is handed in you can start another project: you do not sit and wait. Reviewers check it by hand, with our own review screens. No special code, just a person looking.
+
+::: note
+Not decided yet: how long reviews take.
+:::
 
 ## The hardware grant
 
-Once your design is approved and Grandma has told you so, you can pick that project and order a **hardware grant** for it. A hardware grant belongs to that one project and cannot be used for any other. You list every item you are buying, with its link and price, and attach screenshots. The rest works like any other grant: [the shop guide](/guides/shop-and-grants/).
+When the design is approved and Grandma has told you, that project shows as "Waiting for parts" on your project page (under My other projects). Parts can take months to arrive and that is fine.
+
+Ordering the hardware grant for it is done from the shop once the project is waiting for parts. A hardware grant belongs to that one project and cannot be used for any other. You list every item you are buying, with its link and price, and attach screenshots. The rest works like any other grant: [the shop guide](/guides/shop-and-grants/).
 
 ## The build ship
 
-When you have built it, you may ship it again, to this program or to any other program. Grandma does not mind. If it comes here, it is reviewed like the design was, and you claim only the hours you worked since the design.
+When your parts arrive, open your project page, find the project under My other projects, and press "Ship the real build" to hand the finished build in here (a build ship). If it comes here, it is reviewed like the design was, and you claim only the hours you worked since the design.
 
-You do not have to. If you are done with the project, say so on your project page: Grandma closes it, and you can talk to her about the next one. Do that after you have bought your grant, because a closed project cannot have one.
+You do not have to hand it in here. The build ship is optional: you may instead ship the build to another program, or build it and never hand it in anywhere. When you are done, press "I am done with this project" on your project page to close it. Do that after you have bought your grant, because a closed project cannot have one.
 
 ::: note
 Not decided yet: how a build ship is paid when you hand it in here.

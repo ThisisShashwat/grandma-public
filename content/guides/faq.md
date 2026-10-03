@@ -56,7 +56,7 @@ No. You work alone, and so does everyone else. Grandma has only one lap.
 ## Rules
 
 ::: faq How many projects can I build?
-As many as you like, one after another. Only one at a time, and every one starts with a chat with Grandma. See the [rules](/guides/rules/).
+As many as you like. You can have only one project in the works at a time (talking to Grandma or building it), but the moment you hand it in you may start the next one. You can have several projects handed in and waiting for review at once. See the [rules](/guides/rules/).
 :::
 
 ::: faq How long do I have for a project?
@@ -94,7 +94,7 @@ Yes, when it is real work on your project: reading, trying things, getting stuck
 :::
 
 ::: faq When do I get my cookies?
-After a reviewer has checked your project and your hours. Then Grandma hands them over herself, the next time you visit. How long the review takes is not decided yet.
+After a reviewer has checked your project and your hours. Grandma tells you each result herself and hands them over, one project at a time, the next time you visit. How long the review takes is not decided yet.
 :::
 
 ## AI
@@ -130,7 +130,7 @@ A public repository and a README that says what it is and how to run it, yes. A 
 :::
 
 ::: faq What if my project is turned down?
-Grandma tells you why when you next visit, in her own words. That project is finished, and you can talk to her about a new one.
+Grandma tells you why when you next visit, in her own words. That project is finished. You do not have to wait for review to start another project anyway: the moment you hand one in, you can start the next.
 :::
 
 ## Hardware
@@ -140,11 +140,11 @@ A parts list with exact names (even the parts you already own), a schematic or w
 :::
 
 ::: faq When can I buy a hardware grant?
-After your design ship is approved and Grandma has told you so. Then you pick that project and list every part with its link and price. [The details](/guides/hardware/).
+After your design ship is approved and Grandma has told you so, that project shows as "Waiting for parts" on your project page. Ordering the hardware grant for it is done from the shop once the project is waiting for parts. [The details](/guides/hardware/).
 :::
 
 ::: faq Do I have to hand in the build here?
-No. The build ship is up to you: hand it in here, hand it in to another program, or not at all. If you are done with the project, tell Grandma on your project page and you can start another.
+No. The build ship is up to you: hand it in here with "Ship the real build", hand it in to another program, or not at all. If you are not handing it in here, press "I am done with this project" on your project page to close it.
 :::
 
 ## Shop and grants

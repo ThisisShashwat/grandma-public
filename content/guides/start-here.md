@@ -11,8 +11,8 @@ Grandma has one rule for guests: sit down, take a cookie, read this page. It is 
 1. **Sign up** on the [home page](/) and join the Slack. You need to be 13 to 18 (under 19).
 2. **Set up Hackatime**, so your hours count. [Here is how](/guides/hackatime-setup/).
 3. **Talk to Grandma.** Tell her what you want to build. She answers with 1 to 3 [demands](/guides/demands/): rules for how you build it, never for what.
-4. **Build it.** On your own, one project at a time, for as long as it takes. Half an hour or ten days, nobody is timing you.
-5. **Submit it.** Read the [checklist](/guides/submitting/) first. A reviewer looks, and you earn cookies for your hours. Then you may start another project, as many as you like.
+4. **Build it.** On your own, one project in the works at a time, for as long as it takes. Half an hour or ten days, nobody is timing you.
+5. **Submit it.** Read the [checklist](/guides/submitting/) first. The moment you hand a project in you may start the next one: it does not wait for the reviewers. When a reviewer looks, you earn cookies for your hours, and Grandma tells you each result herself the next time you visit.
 
 Then you spend the cookies in the Pantry. [How that works](/guides/shop-and-grants/).
 

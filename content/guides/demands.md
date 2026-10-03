@@ -13,9 +13,11 @@ A demand is Grandma telling you how to build, never what to build. "Make a game"
 - Each demand has a **grumpiness level**: mild ("Just a thought, dear"), medium ("I'm just saying") or spicy ("Back in my day"). Spicier demands are harder, and they make your cookies worth more. See [payouts](/guides/payouts/).
 - Demands fit your kind of project. Nobody gets "No Soldering" for a website. The list below says what fits what.
 
-## Asking again
+## Dealing again and changing demands
 
-Got a demand you cannot do? Ask again and Grandma changes her mind. The first three asks are free. After that each ask costs a few cookies, because Grandma is not a charity.
+Got demands you cannot do? Ask Grandma to deal again. The free deals are counted for the whole project: the first few are free, whichever way you got them, and after that each deal costs cookies. Dealing again takes away the demands you had kept so you choose again from the new hand.
+
+If you like the hand you were dealt but want to pick different notes, you can change which demands you keep from your project page using "Change my demands" while building. Once you hand a project in, nothing about it can be changed.
 
 ::: tip
 A spicy demand is not a punishment. It is the quickest way to a bigger payout, if you can pull it off.

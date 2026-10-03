@@ -45,6 +45,14 @@ The most important ones come first.
 A reviewer may reduce your hours if they look inflated. Grandma can only prove what she can verify, and Hackatime is not proof of work. Honest hours, a repository that shows the work, and a project that matches the number are your best friends.
 :::
 
+## After you submit
+
+Once you hand a project in, nothing about it can be changed.
+
+The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. Grandma tells you each result herself, one at a time, the next time you visit.
+
+If this was a hardware design ship, once it is approved and Grandma has told you, it will show as "Waiting for parts" on your project page. When your parts arrive, you open your project page, find the project under My other projects, and press "Ship the real build" to hand the finished build in here.
+
 ## The link to try it
 
 If your project is software, people need to be able to use it. The link must not point to a host that goes to sleep when nobody visits, such as Streamlit or the free tier of Render. A reviewer who clicks a sleeping link just sees a loading screen, and Grandma does not wait for loading screens. The hand-in note refuses the hosts Grandma knows about, and so does a notebook on Colab: that is a page to read, not a project to try.

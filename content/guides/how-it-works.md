@@ -14,25 +14,25 @@ Anything technical you want to build. A website, an app, a game, a gadget, somet
 
 You tell her what you are building. She reaches into the cookie jar and pulls out a note: a demand. Each demand is an annoying rule about how you build, like "only two colors" or "it has to work with the internet unplugged".
 
-You get at least 1 demand and at most 3. Do not like one? Ask again. [All about demands](/guides/demands/).
+You get at least 1 demand and at most 3. Do not like them? Ask Grandma to deal again. [All about demands](/guides/demands/).
 
 ## 3. You build
 
-As long as it takes: half an hour or ten days, on your own. There is no time limit on a project. Hackatime counts your hours while you code. [Set it up first](/guides/hackatime-setup/), or Grandma has no proof you did anything.
+As long as it takes: half an hour or ten days, on your own. There is no time limit on a project. Hackatime counts your hours while you code. [Set it up first](/guides/hackatime-setup/), or Grandma has no proof you did anything. If you change your mind while building, you can change the idea, name, kind, or demands from your project page before handing it in.
 
 ## 4. You submit
 
-One project, one submission. A reviewer checks that you really did what Grandma demanded, and that the hours are real. [The checklist](/guides/submitting/).
+Software ships once. Hardware hands in the design first, then an optional build ship. The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. [The checklist](/guides/submitting/).
 
 ## 5. You earn cookies
 
-Cookies are what you get for hours you shipped. Spicier demands and a project Grandma loves make each hour worth more. [The payouts](/guides/payouts/) page has a calculator to play with.
+Cookies are what you get for hours you shipped. Spicier demands and a project Grandma loves make each hour worth more. Grandma tells you each result herself, one at a time, the next time you visit. [The payouts](/guides/payouts/) page has a calculator to play with.
 
 ## 6. You spend them, or you go again
 
 The Pantry sells Hack Club Bank grants, not parcels. Grandma does not post anything, dear, she has a bad hip. [How the shop works](/guides/shop-and-grants/).
 
-And when a project is finished, you may talk to Grandma about another one. Build as many as you like, one after another.
+You can have only one project in the works at a time, but build as many as you like. The moment you hand one in, you can talk to Grandma about the next.
 
 ::: note
 Not decided yet: the exact dates for review and payouts, and when the program as a whole ends.

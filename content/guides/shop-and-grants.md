@@ -50,7 +50,7 @@ Screenshot the whole cart, not just the price. If the total is not visible, the 
 
 ## Hardware grants
 
-Hardware grants are different. They live in their own part of the Pantry, and each belongs to **one specific design project** whose design ship was approved. You pick that project, then list **every item** you are buying with its link and price, with screenshots. Only then can you buy. [More in the hardware guide](/guides/hardware/).
+Hardware grants are different. They live in their own part of the Pantry, and ordering one is done from the shop once your project is waiting for parts. That means its design ship was approved and Grandma has told you. You pick that project, then list **every item** you are buying with its link and price, with screenshots. Only then can you buy. [More in the hardware guide](/guides/hardware/).
 
 ## Buying one
 
