@@ -1,0 +1,18 @@
+{# Pieces of the order page (orders/views.py). The Django form only validates; every field is drawn by hand on the page. Cookies and a grant's
+   dollar value only: no hours, no rates. #}
+
+{# a pink note under a field that was wrong #}
+{% macro oops(field) -%}
+{% if field.errors %}<p class="oops" id="err-{{ field.html_name }}" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}
+{%- endmacro %}
+
+{# the attributes that tie a field to its error note #}
+{% macro invalid(field) -%}
+{% if field.errors %} aria-invalid="true" aria-describedby="err-{{ field.html_name }}"{% endif %}
+{%- endmacro %}
+
+{# a number of cookies, "1 cookie" or "5 cookies" #}
+{% macro cookies(n) -%}{{ "{:,}".format(n) }} {{ "cookie" if n == 1 else "cookies" }}{%- endmacro %}
+
+{# cents for the page's script (the sums are done in whole cents, never in floats of dollars) #}
+{% macro cents(value) -%}{{ (value * 100)|int }}{%- endmacro %}

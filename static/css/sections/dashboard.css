@@ -108,3 +108,10 @@
 .dash-single { max-width: 46rem; }
 .dash-leave { text-align: center; }
 .dash-leave button { padding: 0; font: inherit; font-size: 1rem; color: var(--ink); background: none; border: 0; text-decoration: underline; }
+
+/* orders: stamps and slips follow the order's status (pending is the yellow default; approved is the blue one above) */
+.stamp[data-status="fulfilled"], .slip[data-status="fulfilled"] { background: var(--note-blue); }
+.stamp[data-status="cancelled"], .stamp[data-status="refunded"], .slip[data-status="cancelled"], .slip[data-status="refunded"] { background: var(--note-pink); }
+.slip-proofs { margin-top: 0.5rem !important; font-size: 0.95rem; overflow-wrap: anywhere; }
+.slip-cancel { margin: 0.7rem 0 0; }
+.slip-cancel .btn { font-size: 1.2rem; }

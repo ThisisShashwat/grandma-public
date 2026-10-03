@@ -29,5 +29,13 @@ def submissions(request):
 @onboarded
 @never_cache
 @require_safe
+def orders(request):
+    flash = request.session.pop("order_flash", "")           # what an order just did (placed, taken back, refused), shown once
+    return render(request, "pages/dashboard_orders.html", {"paged": summary.orders_page(request.user, request.GET.get("page")), "flash": flash})
+
+
+@onboarded
+@never_cache
+@require_safe
 def cookies(request):
     return render(request, "pages/dashboard_cookies.html", {"paged": summary.cookies_page(request.user, request.GET.get("page"))})

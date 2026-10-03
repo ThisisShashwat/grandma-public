@@ -1,0 +1,63 @@
+/* Getting a grant (templates/pages/order.html): Grandma's note again (submit.css gives the note, the labels, the hints and the pink checklist),
+   plus the three facts, the sums, a hardware grant's parts as small clippings, and the page for when nothing can be ordered. The home page's
+   language: 4px ink borders, wobbly corners, tilts under a degree. The magnets on .order-sums and .order-stop live in core/notes.css. */
+
+.order-facts { display: flex; flex-wrap: wrap; gap: 0.9rem 1.1rem; margin: 0; padding: 0; list-style: none; }
+.order-fact { padding: 0.45rem 0.9rem 0.4rem; background: var(--canvas); border: 3px solid var(--ink); font-size: 1rem; line-height: 1.15; rotate: -0.8deg; }
+.order-fact span { display: block; font-size: 0.9rem; font-style: italic; }
+.order-fact b { font-family: var(--display); font-weight: 400; font-size: 1.9rem; }
+.order-fact:nth-child(2) { rotate: 0.9deg; background: var(--note-blue); }
+.order-fact:nth-child(3) { rotate: -0.4deg; background: var(--note-pink); }
+
+.nf-num { width: 8rem; max-width: 100%; }
+
+/* upgrades: a count next to each */
+.order-ups { min-width: 0; margin: 0; padding: 0; border: 0; }
+.order-ups ul { display: grid; gap: 0.9rem; margin: 0.3rem 0 0; padding: 0; list-style: none; }
+.order-ups li { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; }
+.order-ups label { flex: 1 1 14rem; font-size: 1.1rem; line-height: 1.25; }
+.order-ups .oops { flex-basis: 100%; }
+
+/* the project, tap to pick */
+.order-projects { min-width: 0; margin: 0; padding: 0; border: 0; }
+.order-picks { display: grid; gap: 0.7rem; margin: 0.3rem 0 0; padding: 0; list-style: none; }
+.order-pick { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 0.8rem; align-items: center; padding: 0.5rem 0.9rem; background: var(--canvas); border: 3px solid var(--ink); }
+.order-pick input { grid-row: span 2; width: 1.6rem; height: 1.6rem; margin: 0; accent-color: var(--ribbon); }
+.order-pick b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; overflow-wrap: anywhere; }
+.order-pick span { font-size: 0.95rem; font-style: italic; overflow-wrap: anywhere; }
+.order-pick:has(input:checked) { background: var(--note-blue); box-shadow: 4px 4px 0 var(--ink); }
+.order-pick:has(input:focus-visible) { outline: 4px dashed var(--ribbon); outline-offset: 3px; }
+
+/* the parts: one small white clipping each */
+.order-parts { gap: 0.9rem; }
+.order-parts > .nf-label { margin: 0; }
+.part { min-width: 0; margin: 0; padding: 0.3rem 0.9rem 0.9rem; background: var(--canvas); border: 3px solid var(--ink); }
+.part:nth-of-type(odd) { rotate: -0.3deg; }
+.part:nth-of-type(even) { rotate: 0.3deg; }
+.part legend { padding: 0 0.4rem; font-family: var(--display); font-size: 1.4rem; }
+.part-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 0.7rem 1rem; }
+.part-field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.2rem; min-width: 0; font-size: 0.95rem; }
+.part-field > span { font-weight: 700; }
+.part-field .input { font-size: 1.15rem; }
+.part .oops { margin-top: 0.6rem; }
+.part-more { margin: 0; }
+
+/* the sums, a blue sticky note */
+.order-sums { position: relative; padding: 1.7rem 1.2rem 1.1rem; background: var(--note-blue); border: 3px solid var(--ink); rotate: 0.4deg; }
+.order-sums h2 { margin: 0 0 0.5rem; font-size: 1.9rem; }
+.sum { margin: 0 0 0.3rem; font-size: 1.15rem; line-height: 1.3; }
+.sum span { font-style: italic; }
+.sum b { font-family: var(--display); font-weight: 400; font-size: 1.6rem; }
+.sum-warn { margin: 0.7rem 0 0; padding: 0.35rem 0.8rem; font-weight: 700; line-height: 1.25; background: var(--note-pink); border: 3px solid var(--ink); }
+.order-sums.is-short [data-sum="left"] { color: var(--red); }
+
+/* "Grandma checks before she pays": the pink note (submit.css) with a short list */
+.order-promise-title { margin: 0 0 0.6rem; font-family: var(--display); font-size: 1.8rem; line-height: 1.1; }
+.submit-checks.order-promise ul { display: grid; gap: 0.5rem; padding-left: 1.2rem; font-size: 1.1rem; line-height: 1.3; list-style: disc; }
+
+/* nothing can be ordered right now: Grandma says why on a white card */
+.order-stop { position: relative; padding: 2.2rem clamp(1rem, 4vw, 2.2rem) 1.6rem; background: var(--canvas); border: var(--line) solid var(--ink); rotate: -0.5deg; }
+.order-stop h1 { margin: 0 0 0.6rem; font-size: clamp(2.2rem, 6vw, 3.4rem); rotate: -1deg; overflow-wrap: anywhere; }
+.order-stop p { overflow-wrap: anywhere; }
+.order-sub { font-style: italic; }
+@media (max-width: 800px) { .order-stop .btn { width: 100%; } }

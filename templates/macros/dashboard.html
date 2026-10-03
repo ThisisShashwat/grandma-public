@@ -12,6 +12,23 @@
 </li>
 {%- endmacro %}
 
+{# one order, as a slip: what it was, how it stands, Grandma's note and the person's own screenshots (links to the login-checked view) #}
+{% macro order(o) -%}
+<li class="slip" data-status="{{ o.status }}">
+  <p class="slip-top"><span class="stamp" data-status="{{ o.status }}">{{ o.status_label }}</span></p>
+  <p class="slip-name"><b>{{ o.title }}</b> <span>{% if o.detail %}{{ o.detail }}, {% endif %}{{ o.when }}</span></p>
+  <p class="slip-cookies">{{ cookies(o.cookies) }}, a grant worth ${{ ("{:,.0f}" if o.value == o.value.to_integral_value() else "{:,.2f}").format(o.value) }}.</p>
+  {% if o.note %}<blockquote class="slip-note">{{ o.note }}</blockquote>{% endif %}
+  {% if o.proofs %}<p class="slip-proofs">Your proof: {% for label, address in o.proofs %}<a href="{{ address }}" target="_blank" rel="noopener">{{ label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  {% if o.can_cancel %}
+  <form class="slip-cancel" method="post" action="{{ url('order_cancel', args=[o.id]) }}">
+    {{ csrf_input }}
+    <button class="btn btn--plain">Take it back</button>
+  </form>
+  {% endif %}
+</li>
+{%- endmacro %}
+
 {# one line of the cookie history, a receipt: what moved and why #}
 {% macro receipt(c) -%}
 <li class="receipt" data-sign="{{ 'plus' if c.amount > 0 else 'minus' }}">

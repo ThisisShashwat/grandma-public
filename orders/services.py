@@ -58,6 +58,11 @@ def held(user, item_id):
     return total or 0
 
 
+def already_placed(user, nonce):
+    """Has this page (its nonce) already made an order for this person? Then posting it again places nothing."""
+    return bool(nonce) and Order.objects.filter(user=user, nonce=nonce).exists()
+
+
 def project_problem(user, project, item):
     """Why this project may not have this grant, or "" (rules.hardware_problem over the facts in the database)."""
     design = project.submissions.filter(stage=submission_rules.DESIGN).first()
@@ -69,7 +74,7 @@ def project_problem(user, project, item):
 
 def eligible_projects(user, item):
     """The person's own hardware projects that may have this grant now: a design approved and collected, at the build, none yet."""
-    mine = Project.objects.filter(user=user, category__kind=Category.Kind.HARDWARE, status=project_rules.BUILDING).select_related("category")
+    mine = Project.objects.filter(user=user, category__kind=Category.Kind.HARDWARE, status=project_rules.BUILDING).select_related("category", "subcategory")
     return [project for project in mine if not project_problem(user, project, item)]
 
 

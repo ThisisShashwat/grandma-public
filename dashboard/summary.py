@@ -6,11 +6,14 @@ from zoneinfo import ZoneInfo
 
 from django.core.paginator import Paginator
 from django.db.models import Sum
+from django.urls import reverse
 
 from accounts.services import profile_of
 from dashboard import mood, records
 from ledger import services as ledger
 from ledger.models import CookieEntry
+from orders import rules as order_rules
+from orders.models import Order
 from projects import notes, rules, services as project_services
 from submissions import rules as submission_rules
 from submissions import services as submission_services
@@ -82,6 +85,34 @@ def cookie_row(entry, zone):
     return records.CookieRow(when=day(entry.created_at, zone), amount=entry.amount, reason=entry.reason)
 
 
+def order_detail(order):
+    """The parts of an order worth a line under its title: the project, how many parts, how many upgrades."""
+    upgrades = sum(line.quantity for line in order.lines.all() if line.upgrade)
+    parts = len(order.parts.all())
+    pieces = [f"for {order.project.name}" if order.project else "", f"{parts} {'part' if parts == 1 else 'parts'}" if parts else "",
+              f"plus {upgrades} {'upgrade' if upgrades == 1 else 'upgrades'}" if upgrades else ""]
+    return ", ".join(piece for piece in pieces if piece)
+
+
+def order_proofs(order):
+    """The person's own screenshots, as addresses of the login-checked view (never a file address: there is none)."""
+    proofs = [("Cart screenshot", reverse("order_cart", args=[order.pk]))] if order.cart_screenshot else []
+    return tuple(proofs + [(f"{part.name}", reverse("order_part", args=[order.pk, part.pk])) for part in order.parts.all() if part.screenshot])
+
+
+def order_row(order, zone):
+    base = next((line for line in order.lines.all() if not line.upgrade), None)
+    quantity = f" x {base.quantity}" if base and base.quantity > 1 else ""
+    return records.OrderRow(
+        id=order.pk, title=order.item.name + quantity, detail=order_detail(order), when=day(order.created_at, zone), status=order.status,
+        status_label=order_rules.LABELS[order.status], cookies=order.total_cookies, value=order.total_value, note=order.public_note.strip(),
+        proofs=order_proofs(order), can_cancel=order.status == order_rules.PENDING)
+
+
+def my_orders(user):
+    return Order.objects.filter(user=user).select_related("item", "project").prefetch_related("lines", "parts")
+
+
 def mine(user):
     return Submission.objects.filter(project__user=user).select_related("project")
 
@@ -96,11 +127,12 @@ def build(user, cfg, now):
     project = project_services.active_project(user) or project_services.latest_project(user)
     card = project_card(project, cfg, now) if project else None
     face, line = mood.says(project.status if project else None, card.days_left if card else None, bool(card and card.late))
-    submissions, history = mine(user), entries(user)
+    submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),
         submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
-        history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count())
+        history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count(),
+        orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count())
 
 
 def paged(queryset, number, make):
@@ -113,6 +145,11 @@ def paged(queryset, number, make):
 def submissions_page(user, number):
     zone = zone_of(profile_of(user))
     return paged(mine(user), number, lambda s: submission_row(s, zone))
+
+
+def orders_page(user, number):
+    zone = zone_of(profile_of(user))
+    return paged(my_orders(user), number, lambda o: order_row(o, zone))
 
 
 def cookies_page(user, number):

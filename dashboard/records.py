@@ -1,6 +1,7 @@
 """What the dashboard's templates may know: frozen records of plain fields, never a model (the same boundary as shop/catalog.py and
 projects/notes.py). The reviewer's hours and internal note are not fields of any of them, so no template can print them."""
 from dataclasses import dataclass
+from decimal import Decimal
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,22 @@ class SubmissionRow:
 
 
 @dataclass(frozen=True)
+class OrderRow:
+    """One order, as much as the person may know: no internal note, no grant reference, no reviewer."""
+    id: int
+    title: str              # "iPad", or "AI credits x 3"
+    detail: str             # "for Moon Lamp, 3 parts, plus 7 upgrades"
+    when: str
+    status: str             # the order's status key, for the stamp's colour
+    status_label: str
+    cookies: int            # what they paid, frozen
+    value: Decimal          # what the grant is worth in dollars, frozen
+    note: str               # Grandma's public note
+    proofs: tuple           # (label, address) pairs: the person's own screenshots, served by orders.views to them and to staff only
+    can_cancel: bool        # only while nobody has looked at it
+
+
+@dataclass(frozen=True)
 class CookieRow:
     when: str
     amount: int         # signed
@@ -64,3 +81,5 @@ class Summary:
     submissions_total: int
     history: tuple          # the latest few
     history_total: int
+    orders: tuple           # the latest few, OrderRow records
+    orders_total: int
