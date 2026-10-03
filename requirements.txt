@@ -8,3 +8,4 @@ Pygments>=2.21
 nh3>=0.3.7
 django-constance>=4.3
 django-axes>=8.3
+pillow>=12.3

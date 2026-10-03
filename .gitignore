@@ -8,3 +8,4 @@ instance/
 tests/visual/out/
 db.sqlite3
 staticfiles/
+media/

@@ -6,6 +6,7 @@ maths, the footer's Hack Club links, the site name) stay in payout.py and config
 
 grandma/settings.py hands CONFIG, FIELDS and FIELDSETS to constance. Read values with pages.live.live().
 """
+from program import submission
 from program.tutorial import DEPTHS
 
 # key: (default, help text shown in the admin, optional name of a field in FIELDS)
@@ -30,6 +31,14 @@ CONFIG = {
     "PROJECT_MIN_DAYS": (10, "The earliest a project may be handed in, in days after it starts. Shown on the project page, not enforced yet.", "days"),
     "PROJECT_MAX_DAYS": (15, "The project's deadline, in days after it starts. The page counts down to it. Not enforced yet.", "days"),
 
+    "SUBMISSION_CHECKS": (submission.default_checks_json(),
+                          'The boxes a person must tick before they can hand a project in, as JSON: a list of {"key": "...", "text": "..."}. '
+                          "Every box has to be ticked. The key is what gets stored, so keep one stable once people have ticked it.", "checks"),
+    "BLOCKED_HOSTS": (submission.default_hosts_text(),
+                      "Hosts a playable link may not be on (free tiers that fall asleep when idle), one per line. A host also blocks its "
+                      "subdomains: streamlit.app blocks myapp.streamlit.app.", "hosts"),
+    "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes.", "megabytes"),
+
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
     "TUTORIAL_FOR_SOME": ("second", "What someone who has shipped a project or two sees.", "tutorial_depth"),
@@ -42,6 +51,7 @@ FIELDSETS = (
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Projects", ("PROJECT_MIN_DAYS", "PROJECT_MAX_DAYS")),
+    ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 
@@ -54,5 +64,8 @@ FIELDS = {
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
     "days": ("django.forms.IntegerField", {"min_value": 1, "max_value": 90}),
+    "checks": ("pages.fields.ChecksField",),
+    "hosts": ("pages.fields.HostsField",),
+    "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
     "tutorial_depth": ("django.forms.ChoiceField", {"choices": DEPTHS}),
 }
