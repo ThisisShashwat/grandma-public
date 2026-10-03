@@ -1,6 +1,6 @@
-"""Getting a grant: /shop/<slug>/get/ for a plain grant, /shop/hardware/<slug>/get/ for a hardware one, a person taking back an order nobody has
+"""Getting a grant: /shop/<slug>/get/ for a plain grant, a person taking back an order nobody has
 looked at, and the private proof screenshots. Every page is for one signed-in, onboarded person and works only on their own things: a
-grant comes from the address, but a project, a price and the balance never do (services.py reads them from the database again), and the
+grant comes from the address, but a price and the balance never do (services.py reads them from the database again), and the
 proofs are served only to the order's owner or to staff who may view orders, never as a public file (docs/orders.md)."""
 import uuid
 from pathlib import Path
@@ -15,7 +15,7 @@ from django.views.decorators.http import require_http_methods, require_POST, req
 from accounts.access import onboarded
 from ledger import services as ledger
 from orders import forms, services, sheet
-from orders.models import Order, OrderPart
+from orders.models import Order
 from pages.live import live
 from talk.portraits import portrait
 
@@ -26,13 +26,12 @@ PROOF_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp"}
 
 def form_for(request, item, record, cfg):
     """The order form for this grant and person: bound to the post, or empty."""
-    arguments = {"cfg": cfg, "hardware": record.hardware, "proves": not record.hardware and not record.manual, "stackable": record.stackable,
-                 "upgrades": [(option.field, int(option.field.removeprefix("up_"))) for option in record.options],
-                 "projects": [(choice.id, choice.name) for choice in record.choices]}
+    arguments = {"cfg": cfg, "proves": not record.manual, "stackable": record.stackable,
+                 "upgrades": [(option.field, int(option.field.removeprefix("up_"))) for option in record.options]}
     return forms.OrderForm(request.POST, request.FILES, **arguments) if request.method == "POST" else forms.OrderForm(**arguments)
 
 
-def order_page(request, item, hardware):
+def order_page(request, item):
     """One grant's page. Nothing is placed unless the form is valid and services.place_order accepts it (it checks everything again).
     A page already posted once (same nonce) just goes on to My orders, so a double click places one order."""
     if request.method == "POST" and services.already_placed(request.user, request.POST.get("nonce")):
@@ -49,7 +48,7 @@ def order_page(request, item, hardware):
             request.session["order_flash"] = ORDERED
             return redirect("dashboard_orders")
     nonce = form["nonce"].value() if form is not None and form.is_bound and not form["nonce"].errors else uuid.uuid4().hex
-    face = "sideeye" if record.blocked or (form is not None and form.errors) else ("clipboard" if hardware else "writing")
+    face = "sideeye" if record.blocked or (form is not None and form.errors) else "writing"
     return render(request, "pages/order.html", {"sheet": record, "form": form, "nonce": nonce, "portrait": dict(zip(("file", "alt"), portrait(face))),
                                                 "max_mb": cfg.ORDER_SCREENSHOT_MAX_MB})
 
@@ -61,19 +60,7 @@ def get_grant(request, slug):
     item = services.gettable(slug)
     if item is None:
         raise Http404
-    if item.needs_project:
-        return redirect("get_hardware", slug=slug)
-    return order_page(request, item, hardware=False)
-
-
-@onboarded
-@never_cache
-@require_http_methods(["GET", "HEAD", "POST"])
-def get_hardware(request, slug):
-    item = services.gettable(slug)
-    if item is None or not item.needs_project:
-        raise Http404
-    return order_page(request, item, hardware=True)
+    return order_page(request, item)
 
 
 @onboarded
@@ -126,13 +113,3 @@ def cart(request, pk):
     if order is None:
         raise Http404
     return serve(order.cart_screenshot)
-
-
-@login_required
-@require_safe
-def part(request, pk, part_pk):
-    order = viewable(request.user, pk)
-    found = OrderPart.objects.filter(pk=part_pk, order=order).first() if order else None
-    if found is None:
-        raise Http404
-    return serve(found.screenshot)

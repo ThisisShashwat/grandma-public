@@ -13,7 +13,7 @@ from orders import rules, services
 from orders.models import Order
 from submissions import links
 
-PARTICIPANT = ("person", "item", "for_project", "created_at", "totals", "lines_table", "product_link", "user_note", "cart_link", "parts_table")
+PARTICIPANT = ("person", "item", "created_at", "totals", "lines_table", "product_link", "user_note", "cart_link")
 DECISION = ("status", "public_note", "internal_note", "grant_ref")
 RESULT = ("reviewed_by", "reviewed_at")
 
@@ -42,7 +42,7 @@ class DecisionForm(forms.ModelForm):
 class OrderAdmin(admin.ModelAdmin):
     form = DecisionForm
     list_display = ("id", "who", "item", "status", "total_cookies", "total_value", "reference")
-    list_filter = ("status", "item", "item__needs_project")
+    list_filter = ("status", "item")
     list_select_related = ("user", "user__profile", "item")
     search_fields = ("user__username", "user__profile__display_name", "item__name", "grant_ref")
     actions = ["approve", "reject", "mark_fulfilled", "refund"]
@@ -113,10 +113,6 @@ class OrderAdmin(admin.ModelAdmin):
     def reference(self, obj):
         return obj.grant_ref or "-"
 
-    @admin.display(description="for project")
-    def for_project(self, obj):
-        return f"{obj.project.name} (project {obj.project_id})" if obj.project_id else "not a hardware grant"
-
     @admin.display(description="the price, frozen when they ordered")
     def totals(self, obj):
         return f"{obj.total_cookies:,} cookies, a grant worth ${obj.total_value:,.2f}"
@@ -136,21 +132,9 @@ class OrderAdmin(admin.ModelAdmin):
             return "none"
         return format_html('<a href="{0}" target="_blank" rel="noopener">Open the cart screenshot (private)</a>', reverse("order_cart", args=[obj.pk]))
 
-    @admin.display(description="parts")
-    def parts_table(self, obj):
-        parts = list(obj.parts.all())
-        if not parts:
-            return "none"
-        rows = ((part.name, link(part.url), part.price, shot_link(obj, part)) for part in parts)
-        return format_html("<ul>{}</ul><p>The parts come to ${}.</p>", format_html_join("", "<li>{}: {}, ${}{}</li>", rows), f"{sum(part.price for part in parts):,.2f}")
-
 
 def link(url):
     """A link a person typed, opened in a new tab: only if it still passes the link rules (the database is another door), else plain text."""
     if links.web_url_problem(url):
         return url
     return format_html('<a href="{0}" target="_blank" rel="noopener noreferrer">{0}</a>', url)
-
-
-def shot_link(order, part):
-    return format_html(', <a href="{}" target="_blank" rel="noopener">screenshot (private)</a>', reverse("order_part", args=[order.pk, part.pk])) if part.screenshot else ""

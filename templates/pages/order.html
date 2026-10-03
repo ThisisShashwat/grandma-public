@@ -15,8 +15,8 @@
 {% endblock %}
 
 {# Getting a grant (orders/views.py): the form is only the validation, every field is drawn here by hand. Grandma checks what is being bought before
-   she pays, so the page asks for the proof: a link and a cart for a plain grant, a project and every part for a hardware one. The sums at the
-   bottom are a preview worked out in the browser (static/js/pages/order.js); the server works them out again from the database. #}
+   she pays, so the page asks for the proof: a link and a cart for a plain grant. The sums at the bottom are a preview worked out in the browser
+   (static/js/pages/order.js); the server works them out again from the database. #}
 {% block main %}
 <section class="scene scene--sky submit-scene">
   <div class="wrap submit">
@@ -24,13 +24,8 @@
 
     <div class="submit-main">
       <div class="talk-bubble submit-bubble">
-        {% if sheet.blocked == "no projects" %}
-        <p>{{ sheet.name }}? That's for a hardware design I've approved, dear. You haven't got one yet.</p>
-        {% elif sheet.blocked %}
+        {% if sheet.blocked %}
         <p>Not just now, dear.</p>
-        {% elif sheet.hardware %}
-        <p>A hardware grant. Tell me which design it's for, and every part you mean to buy.</p>
-        <p>All of it, with the price. I check each one before I pay.</p>
         {% elif sheet.manual %}
         <p>That one I do by hand, dear. Tell me what you'd like and I'll see.</p>
         {% else %}
@@ -42,21 +37,14 @@
       {% if sheet.blocked %}
       <section class="order-stop" aria-labelledby="order-stop-title">
         <h1 id="order-stop-title">{{ sheet.name }}</h1>
-        {% if sheet.blocked == "no projects" %}
-        <p>I only give hardware grants for a design I've read, approved and told you about. Ship a hardware design, hear it from me, and then come back with your parts.</p>
-        <p class="order-sub">In your jar: {{ o.cookies(sheet.balance) }}.</p>
-        <p class="actions"><a class="btn" href="{{ url('project') }}">My project</a> <a class="btn btn--plain" href="{{ url('shop') }}">Back to the Pantry</a></p>
-        {% else %}
         <p>{{ sheet.blocked }}</p>
         <p class="order-sub">In your jar: {{ o.cookies(sheet.balance) }}.</p>
         <p class="actions"><a class="btn" href="{{ url('shop') }}">Back to the Pantry</a> <a class="btn btn--plain" href="{{ url('dashboard_orders') }}">My orders</a></p>
-        {% endif %}
       </section>
       {% else %}
 
-      <form class="submit-note order-note" method="post" enctype="multipart/form-data" action="{{ url('get_hardware' if sheet.hardware else 'get_grant', args=[sheet.slug]) }}"
-            data-order data-balance="{{ sheet.balance }}" data-base-cookies="{{ sheet.cookies }}" data-base-cents="{{ o.cents(sheet.value) }}"
-            {% if sheet.hardware %}data-hardware data-up-cookies="{{ sheet.up_cookies }}" data-up-cents="{{ o.cents(sheet.up_value) }}" data-up-most="{{ sheet.up_most if sheet.up_most is not none else '' }}"{% endif %}>
+      <form class="submit-note order-note" method="post" enctype="multipart/form-data" action="{{ url('get_grant', args=[sheet.slug]) }}"
+            data-order data-balance="{{ sheet.balance }}" data-base-cookies="{{ sheet.cookies }}" data-base-cents="{{ o.cents(sheet.value) }}">
         {{ csrf_input }}
         <input type="hidden" name="nonce" value="{{ nonce }}">
         <h1>{{ sheet.name }}</h1>
@@ -66,47 +54,10 @@
         {{ o.oops(form["nonce"]) }}
 
         <ul class="order-facts">
-          <li class="order-fact"><span>{{ "Costs" if not sheet.hardware else "The grant costs" }}</span><b>{{ "{:,}".format(sheet.cookies) }}</b> cookies</li>
+          <li class="order-fact"><span>Costs</span><b>{{ "{:,}".format(sheet.cookies) }}</b> cookies</li>
           <li class="order-fact"><span>Worth</span><b>{{ shopui.usd(sheet.value) }}</b> {{ "each" if sheet.stackable else "to spend" }}</li>
           <li class="order-fact"><span>In your jar</span><b>{{ "{:,}".format(sheet.balance) }}</b> {{ "cookie" if sheet.balance == 1 else "cookies" }}</li>
         </ul>
-
-        {% if sheet.hardware %}
-        <fieldset class="nf order-projects"{% if form["project"].errors %} aria-describedby="err-project"{% endif %}>
-          <legend class="nf-label">Which project is it for?</legend>
-          <ul class="order-picks">
-            {% for c in sheet.choices %}
-            <li><label class="order-pick"><input type="radio" name="project" value="{{ c.id }}"{% if form["project"].value() == c.id or sheet.choices|length == 1 %} checked{% endif %} required>
-              <b>{{ c.name }}</b><span>{{ c.where }}, design approved</span></label></li>
-            {% endfor %}
-          </ul>
-          {{ o.oops(form["project"]) }}
-          <p class="nf-hint">Only hardware projects whose design I approved and told you about. One grant for each.</p>
-        </fieldset>
-
-        <div class="nf order-parts">
-          <p class="nf-label">Every part you are buying</p>
-          <p class="nf-hint">Each one with its link and its price in dollars, tax and shipping in it. A screenshot of the page helps me, but it is up to you.</p>
-          {% for row in form.part_rows %}
-          <fieldset class="part" data-part{% if row.n > 3 %} data-extra{% endif %}>
-            <legend>Part {{ row.n }}</legend>
-            <div class="part-grid">
-              <label class="part-field"><span>What is it?</span>
-                <input class="input" name="{{ row.name.html_name }}" maxlength="80" autocomplete="off" value="{{ row.name.value() or '' }}"{{ o.invalid(row.name) }}></label>
-              <label class="part-field"><span>Link</span>
-                <input class="input" name="{{ row.url.html_name }}" type="url" inputmode="url" maxlength="300" autocomplete="off" spellcheck="false" placeholder="https://..." value="{{ row.url.value() or '' }}"{{ o.invalid(row.url) }}></label>
-              <label class="part-field part-price"><span>Price in dollars</span>
-                <input class="input" name="{{ row.price.html_name }}" inputmode="decimal" autocomplete="off" placeholder="19.99" value="{{ row.price.value() or '' }}" data-part-price{{ o.invalid(row.price) }}></label>
-              <label class="part-field"><span>Screenshot <small>(if you like)</small></span>
-                <input class="nf-file" name="{{ row.screenshot.html_name }}" type="file" accept="image/png,image/jpeg,image/webp"></label>
-            </div>
-            {{ o.oops(row.name) }}{{ o.oops(row.url) }}{{ o.oops(row.price) }}{{ o.oops(row.screenshot) }}
-          </fieldset>
-          {% endfor %}
-          <p class="part-more" hidden><button class="btn btn--plain" type="button" data-more-parts>Another part</button></p>
-        </div>
-
-        {% else %}
 
         {% if sheet.stackable and sheet.most > 1 %}
         <div class="nf">
@@ -151,16 +102,6 @@
             I wipe out whatever your camera wrote into it, such as where you were. Keep your address out of it, dear.</p>
         </div>
         {% endif %}
-        {% endif %}
-
-        {% if sheet.hardware %}
-        <div class="nf">
-          <label class="nf-label" for="cart_screenshot">A screenshot of a cart <small>(if you like)</small></label>
-          <input class="nf-file" id="cart_screenshot" name="cart_screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="shot-hint{% if form['cart_screenshot'].errors %} err-cart_screenshot{% endif %}">
-          {{ o.oops(form["cart_screenshot"]) }}
-          <p class="nf-hint" id="shot-hint">PNG, JPEG or WebP, {{ max_mb }} MB at the very most. Keep your address out of it, dear.</p>
-        </div>
-        {% endif %}
 
         <div class="nf">
           <label class="nf-label" for="user_note">Anything I should know? <small>({{ "needed with upgrades" if sheet.options else "if you like" }})</small></label>
@@ -170,10 +111,6 @@
 
         <section class="order-sums" aria-label="The sums" role="status" aria-live="polite">
           <h2>The sums</h2>
-          {% if sheet.hardware %}
-          <p class="sum"><span>Your parts come to</span> <b data-sum="parts">$0</b></p>
-          <p class="sum"><span>The grant is worth</span> <b data-sum="grant">{{ shopui.usd(sheet.value) }}</b>{% if sheet.up_name %}, so <b data-sum="upgrades">0</b> upgrades are needed{% endif %}</p>
-          {% endif %}
           <p class="sum"><span>It costs</span> <b data-sum="cookies">{{ "{:,}".format(sheet.cookies) }}</b> cookies</p>
           <p class="sum"><span>It will be worth</span> <b data-sum="value">{{ shopui.usd(sheet.value) }}</b></p>
           <p class="sum"><span>Left in your jar</span> <b data-sum="left">{{ "{:,}".format(sheet.balance - sheet.cookies) }}</b></p>
@@ -184,7 +121,7 @@
           <p class="order-promise-title" id="promise-title">Grandma checks before she pays</p>
           <ul>
             <li>Your cookies leave the jar the moment you order.</li>
-            <li>I look at the {{ "parts" if sheet.hardware else "link and the cart" }}. If it is all as you said, I pay for it with a Hack Club Bank grant.</li>
+            <li>I look at the link and the cart. If it is all as you said, I pay for it with a Hack Club Bank grant.</li>
             <li>If it isn't, I say why and every cookie comes back. Change your mind before I look, and you can take it back yourself.</li>
           </ul>
         </aside>

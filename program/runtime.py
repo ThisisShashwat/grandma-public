@@ -42,7 +42,6 @@ CONFIG = {
     "ORDER_SCREENSHOT_MAX_MB": (5, "The biggest cart or part screenshot a person may upload with an order, in megabytes.", "megabytes"),
     "ORDER_SCREENSHOT_MAX_SIDE": (6000, "The longest side of an order screenshot, in pixels. Anything bigger is refused.", "pixels"),
     "ORDER_SCREENSHOT_MAX_MEGAPIXELS": (20, "The most pixels (width times height, in millions) an order screenshot may have. Checked before it is decoded.", "megapixels"),
-    "ORDER_MAX_PARTS": (10, "The most parts one hardware order may list (and so the most part screenshots). 1 to 20.", "parts"),
 
     "SLACK_WORKSPACE_URL": ("https://hackclub.slack.com", "The address of the Slack workspace. A public profile links to this address plus /team/ and the person's Slack ID. "
                                                          "Just the address, nothing after it.", "workspace"),
@@ -64,7 +63,7 @@ FIELDSETS = (
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
-    ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS", "ORDER_MAX_PARTS")),
+    ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
@@ -82,7 +81,6 @@ FIELDS = {
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
     "pixels": ("django.forms.IntegerField", {"min_value": 500, "max_value": 10000}),
     "megapixels": ("django.forms.IntegerField", {"min_value": 1, "max_value": 40}),
-    "parts": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
     "workspace": ("pages.fields.WorkspaceField",),
     "leaderboard_size": ("django.forms.IntegerField", {"min_value": 1, "max_value": 500}),
     "tutorial_depth": ("django.forms.ChoiceField", {"choices": DEPTHS}),

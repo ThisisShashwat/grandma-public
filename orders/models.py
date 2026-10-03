@@ -5,13 +5,11 @@ written once and never edited; staff change only the status (through the service
 Layers: program, shop.models, projects.models <- rules.py (pure) <- models.py <- services.py.
 """
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
 from orders import rules
 from orders.storage import private_storage, proof_path
-from projects.models import Project
 from shop.models import ShopItem
 from submissions.validators import validate_prose, validate_web_url
 
@@ -19,8 +17,6 @@ from submissions.validators import validate_prose, validate_web_url
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="orders")
     item = models.ForeignKey(ShopItem, on_delete=models.PROTECT, related_name="orders", help_text="The base grant. Upgrades are order lines.")
-    project = models.ForeignKey(Project, on_delete=models.PROTECT, null=True, blank=True, related_name="orders",
-                                help_text="Hardware grants only: the shipped design this grant is for.")
     status = models.CharField(max_length=9, choices=rules.STATUSES, default=rules.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     nonce = models.CharField(max_length=32, editable=False, help_text="Made when the page was shown: a second post of the same page places nothing.")
@@ -30,7 +26,7 @@ class Order(models.Model):
     total_value = models.DecimalField(max_digits=10, decimal_places=2, editable=False, help_text="What the grant is worth in dollars, upgrades included, frozen.")
 
     # the proof, written once by the person
-    product_url = models.URLField(max_length=300, blank=True, validators=[validate_web_url], help_text="Link to the product. Empty for a hardware order (each part has its own).")
+    product_url = models.URLField(max_length=300, blank=True, validators=[validate_web_url], help_text="Link to the product.")
     user_note = models.TextField(max_length=600, blank=True, validators=[validate_prose])
     cart_screenshot = models.ImageField(upload_to=proof_path, storage=private_storage, max_length=100, blank=True,
                                         help_text="Private. The cart with tax and shipping, served only by the login-checked view.")
@@ -53,18 +49,10 @@ class Order(models.Model):
                                    violation_error_message="A fulfilled order needs the reference of the grant that was issued."),
             models.UniqueConstraint(fields=["user", "nonce"], name="order_one_per_page_shown",
                                     violation_error_message="That page already placed an order."),
-            models.UniqueConstraint(fields=["project", "item"], condition=Q(project__isnull=False, status__in=rules.LIVE), name="order_one_grant_per_project",
-                                    violation_error_message="That project already has a grant of that kind on the way."),
         ]
 
     def __str__(self):
         return f"Order {self.pk}: {self.item.name} for {self.user.get_username()} ({self.get_status_display().lower()})"
-
-    def clean(self):
-        if self.item_id and self.item.needs_project and self.project_id is None:
-            raise ValidationError("A hardware grant is for one project.")
-        if self.project_id and self.project.user_id != self.user_id:
-            raise ValidationError("The project must be the buyer's own.")
 
     def validate_constraints(self, exclude=None):
         """Every constraint, even for fields the admin form leaves out: otherwise it would only fail in the database, as an error page."""
@@ -99,19 +87,3 @@ class OrderLine(models.Model):
     @property
     def value(self):
         return self.quantity * self.unit_value
-
-
-class OrderPart(models.Model):
-    """Hardware only: one part the person is buying, as they typed it. The parts together may not come to more than the grant's value."""
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="parts")
-    name = models.CharField(max_length=80, validators=[validate_prose])
-    url = models.URLField(max_length=300, validators=[validate_web_url])
-    price = models.DecimalField(max_digits=7, decimal_places=2, help_text="In dollars, with tax and shipping, as the person typed it.")
-    screenshot = models.ImageField(upload_to=proof_path, storage=private_storage, max_length=100, blank=True, help_text="Private, like the cart.")
-
-    class Meta:
-        ordering = ["id"]
-        constraints = [models.CheckConstraint(condition=Q(price__gt=0), name="orderpart_price_positive")]
-
-    def __str__(self):
-        return f"{self.name} (${self.price})"

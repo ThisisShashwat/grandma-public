@@ -60,7 +60,7 @@ about {{ low if low == high else low ~ " to " ~ high }} {{ "hour" if high == 1 e
       {{ hours(p.hours_low, p.hours_high) }}
     </p>
     {% if jar is not none and p.available %}
-    <a class="btn get-btn" href="{{ url("get_hardware" if p.needs_project else "get_grant", args=[p.slug]) }}">{{ "Ask Grandma for it" if p.manual else "Get this grant" }}</a>
+    <a class="btn get-btn" href="{{ url("get_grant", args=[p.slug]) }}">{{ "Ask Grandma for it" if p.manual else "Get this grant" }}</a>
     {% endif %}
   </div>
 </article>

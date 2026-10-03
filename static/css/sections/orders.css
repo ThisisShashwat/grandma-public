@@ -1,5 +1,5 @@
 /* Getting a grant (templates/pages/order.html): Grandma's note again (submit.css gives the note, the labels, the hints and the pink checklist),
-   plus the three facts, the sums, a hardware grant's parts as small clippings, and the page for when nothing can be ordered. The home page's
+   plus the three facts, the sums, and the page for when nothing can be ordered. The home page's
    language: 4px ink borders, wobbly corners, tilts under a degree. The magnets on .order-sums and .order-stop live in core/notes.css. */
 
 .order-facts { display: flex; flex-wrap: wrap; gap: 0.9rem 1.1rem; margin: 0; padding: 0; list-style: none; }
@@ -18,29 +18,6 @@
 .order-ups label { flex: 1 1 14rem; font-size: 1.1rem; line-height: 1.25; }
 .order-ups .oops { flex-basis: 100%; }
 
-/* the project, tap to pick */
-.order-projects { min-width: 0; margin: 0; padding: 0; border: 0; }
-.order-picks { display: grid; gap: 0.7rem; margin: 0.3rem 0 0; padding: 0; list-style: none; }
-.order-pick { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 0.8rem; align-items: center; padding: 0.5rem 0.9rem; background: var(--canvas); border: 3px solid var(--ink); }
-.order-pick input { grid-row: span 2; width: 1.6rem; height: 1.6rem; margin: 0; accent-color: var(--ribbon); }
-.order-pick b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; overflow-wrap: anywhere; }
-.order-pick span { font-size: 0.95rem; font-style: italic; overflow-wrap: anywhere; }
-.order-pick:has(input:checked) { background: var(--note-blue); box-shadow: 4px 4px 0 var(--ink); }
-.order-pick:has(input:focus-visible) { outline: 4px dashed var(--ribbon); outline-offset: 3px; }
-
-/* the parts: one small white clipping each */
-.order-parts { gap: 0.9rem; }
-.order-parts > .nf-label { margin: 0; }
-.part { min-width: 0; margin: 0; padding: 0.3rem 0.9rem 0.9rem; background: var(--canvas); border: 3px solid var(--ink); }
-.part:nth-of-type(odd) { rotate: -0.3deg; }
-.part:nth-of-type(even) { rotate: 0.3deg; }
-.part legend { padding: 0 0.4rem; font-family: var(--display); font-size: 1.4rem; }
-.part-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 0.7rem 1rem; }
-.part-field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.2rem; min-width: 0; font-size: 0.95rem; }
-.part-field > span { font-weight: 700; }
-.part-field .input { font-size: 1.15rem; }
-.part .oops { margin-top: 0.6rem; }
-.part-more { margin: 0; }
 
 /* the sums, a blue sticky note */
 .order-sums { position: relative; padding: 1.7rem 1.2rem 1.1rem; background: var(--note-blue); border: 3px solid var(--ink); rotate: 0.4deg; }
