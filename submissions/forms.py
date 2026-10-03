@@ -21,7 +21,7 @@ class SubmitForm(forms.Form):
     screenshot = forms.FileField(error_messages={"required": "I need a screenshot, dear.", "empty": "That file is empty, dear.", "missing": "I need a screenshot, dear."})
     recording_url = forms.CharField(required=False, max_length=links.MAX_LENGTH)
     ai_declaration_text = forms.CharField(required=False, max_length=1000)
-    declarations = forms.MultipleChoiceField(required=False)
+    declarations = forms.MultipleChoiceField(required=False, error_messages={"invalid_choice": NOT_ALL_TICKED})
 
     def __init__(self, *args, cfg, **kwargs):
         super().__init__(*args, **kwargs)
