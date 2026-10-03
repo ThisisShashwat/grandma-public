@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
 {% endblock %}
 
-{# Someone's own project (projects/views.py project): what they said they would make, where it stands, how many days are left, the
+{# Someone's own project (projects/views.py project): what they said they would make, where it stands, the
    demands they kept and, while it is being built, the button that hands it in. Cookies and faces only: no dollars, no rates. #}
 {% block main %}
 <section class="scene scene--sky project-head">
@@ -25,20 +25,6 @@
 
 <section class="scene project-body">
   <div class="wrap">
-    {% if window %}
-    <div class="days" role="status">
-      {% if window.late %}
-      <b class="days-number">0</b>
-      <p class="days-text"><strong>days left, dear.</strong> The deadline has gone by. Hand it in as soon as you can, I'm still waiting.</p>
-      {% else %}
-      <b class="days-number">{{ window.days_left }}</b>
-      <p class="days-text"><strong>{{ "day" if window.days_left == 1 else "days" }} left.</strong>
-        {% if window.ready_in %}You can hand it in to me in {{ window.ready_in }} {{ "day" if window.ready_in == 1 else "days" }}, and I need it within {{ max_days }}.
-        {% else %}You may hand it in to me now, and I need it within {{ max_days }} days of starting.{% endif %}</p>
-      {% endif %}
-    </div>
-    {% endif %}
-
     <h2>{{ "Grandma's demand" if notes|length == 1 else "Grandma's demands" }}</h2>
     <p class="project-sub">{{ "That's the one you kept. Build around it." if notes|length == 1 else "The ones you kept. Build around all of them." }}</p>
     <ul class="hand">
@@ -46,7 +32,7 @@
     </ul>
 
     {% if project.status == "building" %}
-    <p class="project-later">When it's done, hand it in to me.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
+    <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
     <p class="actions"><a class="btn btn--big" href="{{ url('submit') }}">Ship it</a></p>
     {% elif project.status in ("in_review", "shipped") %}
     <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>

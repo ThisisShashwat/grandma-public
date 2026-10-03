@@ -54,9 +54,6 @@ label.dnote-body { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
 .project-status[data-status="approved"] { background: var(--note-blue); }
 .project-status[data-status="rejected"], .project-status[data-status="abandoned"] { background: var(--note-pink); }
 
-.days { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; margin: 0 0 3rem; padding: 0.8rem 1.4rem; max-width: 40rem; background: var(--canvas); border: var(--line) solid var(--ink); rotate: -0.6deg; }
-.days-number { font-family: var(--display); font-size: clamp(4rem, 12vw, 6rem); font-weight: 400; line-height: 1; }
-.days-text { flex: 1 1 14rem; margin: 0; font-size: 1.15rem; line-height: 1.3; }
 .project-body h2 { margin-top: 0; }
 .project-sub { margin: 0 0 1.75rem; font-size: 1.15rem; }
 .project-later { max-width: 40rem; margin: 2.5rem 0 0; font-size: 1.15rem; }

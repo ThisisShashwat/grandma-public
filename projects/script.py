@@ -39,10 +39,8 @@ DEAL = Deal(key="keep", face="note", notes=list, lines=(
 EMPTY_JAR = ("My jar is empty for that kind of project, dear, which is not your fault.", "Tell the staff in the Slack. Somebody forgot to fill it.")
 
 
-
-def ending(max_days):
-    return End(face="approved", button="Show me my project", lines=(
-        "{name}. Good. Build it.", f"You have {max_days} days at the very most, and I will be watching.", "Now off you go. And wipe your feet."))
+ENDING = End(face="approved", button="Show me my project", lines=(
+    "{name}. Good. Build it.", "Take as long as it needs, dear. Half an hour or ten days, I'm in no hurry. I will be watching.", "Now off you go. And wipe your feet."))
 
 
 # the re-deal confirmation page; {cost} and {balance} are filled with "10 cookies" and the like (conversation.cookies)

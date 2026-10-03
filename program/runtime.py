@@ -28,9 +28,6 @@ CONFIG = {
     "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing.", "redeals_free"),
     "REDEAL_COST": (10, "Cookies a re-deal costs once the free ones are used up. Whole cookies, 0 makes them all free.", "cookies"),
 
-    "PROJECT_MIN_DAYS": (10, "The earliest a project may be handed in, in days after it starts. Shown on the project page, not enforced yet.", "days"),
-    "PROJECT_MAX_DAYS": (15, "The project's deadline, in days after it starts. The page counts down to it. Not enforced yet.", "days"),
-
     "SUBMISSION_CHECKS": (submission.default_checks_json(),
                           'The boxes a person must tick before they can hand a project in, as JSON: a list of {"key": "...", "text": "..."}. '
                           "Every box has to be ticked. The key is what gets stored, so keep one stable once people have ticked it.", "checks"),
@@ -63,7 +60,6 @@ FIELDSETS = (
     ("Launch", ("LAUNCH", "FREE_ASKS")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
-    ("Projects", ("PROJECT_MIN_DAYS", "PROJECT_MAX_DAYS")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS", "ORDER_MAX_PARTS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
@@ -78,7 +74,6 @@ FIELDS = {
     "deal_size": ("django.forms.IntegerField", {"min_value": 3, "max_value": 28}),
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
-    "days": ("django.forms.IntegerField", {"min_value": 1, "max_value": 90}),
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),

@@ -49,19 +49,15 @@ def waiting_cookies(user):
     return total or 0
 
 
-def project_card(project, cfg, now):
-    window = None
+def project_card(project):
     ship = ""
     if project.status == rules.BUILDING:
         next_ship = submission_services.ship_for(project)
         ship = submission_rules.STAGE_LABELS[next_ship.stage] if next_ship.stage else ""
-        if not project.submissions.exists():           # the countdown is for the first ship; a hardware build ship has no clock yet
-            window = rules.window(project.started_at, now, cfg.PROJECT_MIN_DAYS, cfg.PROJECT_MAX_DAYS)
     action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.SHIPPED: "reading", rules.DEALING: "resume"}.get(project.status, "start")
     return records.ProjectCard(
         name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
         status=project.status, status_label=rules.LABELS[project.status], ship=ship,
-        days_left=window.days_left if window else None, ready_in=window.ready_in if window else None, late=bool(window and window.late),
         notes=tuple(notes.notes(project_services.kept_demands(project))), action=action)
 
 
@@ -121,12 +117,12 @@ def entries(user):
     return CookieEntry.objects.filter(user=user).order_by("-created_at", "-id")
 
 
-def build(user, cfg, now):
+def build(user):
     profile = profile_of(user)
     zone = zone_of(profile)
     project = project_services.active_project(user) or project_services.latest_project(user)
-    card = project_card(project, cfg, now) if project else None
-    face, line = mood.says(project.status if project else None, card.days_left if card else None, bool(card and card.late))
+    card = project_card(project) if project else None
+    face, line = mood.says(project.status if project else None)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),

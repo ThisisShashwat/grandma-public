@@ -19,9 +19,6 @@ class ProjectCard:
     status: str         # the project's status key, for the chip's colour
     status_label: str
     ship: str           # "Design ship", "Build ship" or "" (what handing in next would be, for hardware)
-    days_left: int | None   # only while building the first ship
-    ready_in: int | None
-    late: bool
     notes: tuple        # the kept demands as projects.notes.Note records
     action: str         # what the card offers: ship (the Ship it button), reading (it is with Grandma), resume (a hand is on her table), start (nothing in progress)
 

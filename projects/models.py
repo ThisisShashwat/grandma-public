@@ -82,7 +82,7 @@ class Project(models.Model):
     subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, null=True, blank=True, related_name="projects")
     status = models.CharField(max_length=10, choices=rules.STATUSES, default=rules.DEALING)
     created_at = models.DateTimeField(auto_now_add=True)
-    started_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When they confirmed their demands. The deadline counts from here.")
+    started_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When they confirmed their demands. Nothing counts down from here: a project has no time limit.")
     hand = models.JSONField(default=list, editable=False, help_text="The ids of the demands dealt. Saved on the project so a refresh never re-rolls.")
     redeals_used = models.PositiveSmallIntegerField(default=0, editable=False, help_text="Re-deals so far, free and paid.")
     demands = models.ManyToManyField(Demand, through="ProjectDemand", related_name="projects")

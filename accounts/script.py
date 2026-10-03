@@ -9,7 +9,7 @@ from talk.dialogue import AskChoice, AskText, End, Say
 OPENING = [
     Say(face="wave", lines=(
         "Oh! Somebody's here. Come in, come in, and wipe your feet.",
-        "I'm Grandma. I'll be bossing you about for the next few weeks, so I need to write a few things down.")),
+        "I'm Grandma. I'll be bossing you about for a good while, so I need to write a few things down.")),
 ]
 
 QUESTIONS = [
@@ -56,7 +56,7 @@ PART_ONE = [
         "I deal you a handful of notes and you keep one, two or three. Never zero.",
         "Don't like the hand? Ask me to deal again. The first few times are free. After that it costs cookies, because I am not a charity.")),
     Say(face="clipboard", lines=(
-        "Then you build it, dear. Ten to fifteen days, all on your own. Hackatime counts your hours while you type.",
+        "Then you build it, dear, all on your own, and nobody is timing you. Half an hour or ten days, it takes what it takes. Hackatime counts your hours while you type.",
         "Start before you've talked to me and I will know. I always know.")),
     Say(face="magnifier", lines=(
         "When it's done you hand it in to me. A reviewer checks your work and your hours, and I give my verdict.",

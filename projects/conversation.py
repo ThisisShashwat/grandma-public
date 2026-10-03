@@ -47,7 +47,7 @@ def dialogue(cfg, user):
         replace(script.ASK_SUBCATEGORY, choices=lambda answers: services.subcategory_choices(answers.get("category")),
                 when=lambda answers: bool(services.subcategory_choices(answers.get("category")))),
         deal_step(user, cfg),
-        script.ending(cfg.PROJECT_MAX_DAYS),
+        script.ENDING,
     ]
 
 

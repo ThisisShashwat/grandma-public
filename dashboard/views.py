@@ -1,13 +1,11 @@
 """The participant's dashboard (/dashboard/) and its two longer lists. For one signed-in, onboarded person, showing only their own
 data: no address carries an id. A result waiting at Grandma's sends them to her first (submissions/middleware.py)."""
 from django.shortcuts import render
-from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
 from accounts.access import onboarded
 from dashboard import summary
-from pages.live import live
 
 
 @onboarded
@@ -16,7 +14,7 @@ from pages.live import live
 def dashboard(request):
     request.session.pop("talk:collect", None)               # Grandma's send-off, if there was one, has been seen
     handed_in = request.session.pop("handed_in", False)     # the note on top after handing a project in, shown once
-    return render(request, "pages/dashboard.html", {"dash": summary.build(request.user, live(), timezone.now()), "handed_in": handed_in})
+    return render(request, "pages/dashboard.html", {"dash": summary.build(request.user), "handed_in": handed_in})
 
 
 @onboarded

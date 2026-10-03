@@ -64,18 +64,6 @@
         <p class="dash-where">{{ project.where }}{% if project.ship %} <span class="stamp stamp--ship">{{ project.ship }}</span>{% endif %}</p>
         <p class="dash-idea">{{ project.idea }}</p>
 
-        {% if project.days_left is not none %}
-        <div class="dash-days" role="status">
-          {% if project.late %}
-          <b>0</b><p><strong>days left, dear.</strong> The deadline has gone by. Hand it in as soon as you can.</p>
-          {% else %}
-          <b>{{ project.days_left }}</b>
-          <p><strong>{{ "day" if project.days_left == 1 else "days" }} left.</strong>
-            {% if project.ready_in %}You can hand it in to me in {{ project.ready_in }} {{ "day" if project.ready_in == 1 else "days" }}.{% else %}You may hand it in to me now.{% endif %}</p>
-          {% endif %}
-        </div>
-        {% endif %}
-
         <h3>{{ "Your demand" if project.notes|length == 1 else "Your demands" }}</h3>
         <ul class="minis">
           {% for n in project.notes %}
