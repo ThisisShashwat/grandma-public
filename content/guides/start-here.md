@@ -1,0 +1,34 @@
+---
+title: Start here
+order: 10
+section: Start
+summary: "Sit down, dear. Everything you do, in the order you do it."
+---
+Grandma has one rule for guests: sit down, take a cookie, read this page. It is short. She checked.
+
+## The whole thing in five steps
+
+1. **Sign up** on the [home page](/) and join the Slack. You need to be 13 to 18 (under 19).
+2. **Set up Hackatime**, so your hours count. [Here is how](/guides/hackatime-setup/).
+3. **Talk to Grandma.** Tell her what you want to build. She answers with 1 to 3 [demands](/guides/demands/): rules for how you build it, never for what.
+4. **Build it.** 10 to 15 days, on your own, one project at a time.
+5. **Submit it.** Read the [checklist](/guides/submitting/) first. A reviewer looks, and you earn cookies for your hours.
+
+Then you spend the cookies in the Pantry. [How that works](/guides/shop-and-grants/).
+
+## Two things Grandma will not forgive
+
+- **Starting before you talked to her.** The project has to be made after she gave you demands. No old projects, no "I already had this one". See the [rules](/guides/rules/).
+- **Fibbing about AI.** It must be under 30% of your total time, and you say so when you submit. See [submitting](/guides/submitting/).
+
+::: tip
+You always pick the project. Grandma only picks how. A website, a game, a robot or a 3D print: all fine.
+:::
+
+## Lost already?
+
+The [FAQ](/guides/faq/) has the short answers. If you are still stuck, ask in the Slack. Somebody there is probably less grumpy than Grandma.
+
+::: note
+Still being built: the page where you ask Grandma for your real demands, the submit form and the buy button in the Pantry. The fridge on the home page is only a demo. These guides explain how it will work.
+:::
