@@ -41,7 +41,7 @@ class DecisionForm(forms.ModelForm):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     form = DecisionForm
-    list_display = ("id", "who", "item", "status", "total_cookies", "total_value", "created_at", "reference")
+    list_display = ("id", "who", "item", "status", "total_cookies", "total_value", "reference")
     list_filter = ("status", "item", "item__needs_project")
     list_select_related = ("user", "user__profile", "item")
     search_fields = ("user__username", "user__profile__display_name", "item__name", "grant_ref")
