@@ -1,31 +1,8 @@
-/* Guides: the index, a guide page with its sidebar, and .prose (the Markdown text).
+/* Guides: a guide page with its sidebar, and .prose (the Markdown text). (There is no index page any more: /guides/ opens Start here.)
    The home page's language: 4px ink borders, tilts of at most 2 degrees, sticky notes (the red magnet on .callout is in core/notes.css).
    Every .prose rule is wrapped in :where(.prose), which has no weight, so a component class (the calculator's, the demand notes') always wins. */
 
-/* the index */
-.guides-head { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-block: clamp(1.5rem, 4vw, 3rem) 0.5rem; }
-.guides-head h1 { font-size: clamp(3rem, 9vw, 5.5rem); }
-.guides-head .lede { max-width: 30rem; font-size: clamp(1.3rem, 2.8vw, 1.8rem); line-height: 1.25; }
-.guides-fig { width: clamp(6rem, 20vw, 11rem); rotate: 2deg; }
-.g-section { margin-block: 2.5rem 3rem; }
-.g-label {
-  display: inline-block; margin: 0 0 1.25rem; padding: 0.05em 0.6em; font-size: clamp(2rem, 5vw, 3rem);
-  background: var(--paper); border: var(--line) solid var(--ink); rotate: -1.5deg;
-}
-.g-section:nth-of-type(3n+2) .g-label { background: var(--note-pink); rotate: 1deg; }
-.g-section:nth-of-type(3n+3) .g-label { background: var(--note-blue); rotate: -0.6deg; }
-.g-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 1.75rem; margin: 0; padding: 0; list-style: none; }
-.g-item { position: relative; padding: 1rem 1.15rem; background: var(--canvas); border: var(--line) solid var(--ink); }
-.g-item:nth-child(4n+1) { rotate: -1deg; } .g-item:nth-child(4n+2) { rotate: 0.8deg; } .g-item:nth-child(4n+3) { rotate: -0.5deg; } .g-item:nth-child(4n+4) { rotate: 1.2deg; }
-.g-item:hover { background: var(--paper); }
-.g-item:focus-within { outline: 4px dashed var(--ribbon); outline-offset: 4px; }
-.g-item h3 { margin: 0 0 0.3rem; font-size: 1.8rem; }
-.g-item h3 a { color: var(--ink); text-decoration: none; }
-.g-item h3 a:focus-visible { outline: 0; }
-.g-item h3 a::after { content: ""; position: absolute; inset: 0; }    /* the whole note is the link */
-.g-item p { margin: 0 0 0.5rem; font-size: 1.05rem; line-height: 1.3; }
 .g-time { display: inline-block; margin: 0 0 1rem; padding: 0.05em 0.6em; font-size: 0.9rem; font-weight: 700; line-height: 1.5; background: var(--canvas); border: 2px solid var(--ink); border-radius: var(--wobble-b); }
-.g-item .g-time { margin: 0.25rem 0 0; }
 
 /* a guide page: sidebar and article */
 .guide-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; padding-block: 1.5rem 3.5rem; }
@@ -42,7 +19,6 @@
 .g-nav li a::before { content: "- "; }
 .g-nav li a:hover { background: var(--pink); }
 .g-nav a[aria-current="page"] { background: var(--paper); border-radius: var(--wobble-a); }
-.g-nav-title a { color: var(--ink); }
 
 @media (min-width: 56rem) {
   .guide-layout { grid-template-columns: 14.5rem minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); }
@@ -108,6 +84,23 @@
 .callout--warning { background: var(--note-pink); rotate: 0.6deg; }
 .callout--note { background: var(--note-blue); rotate: -0.3deg; }
 .callout-title { margin: 0 0 0.2rem; font-family: var(--display); font-size: 1.6rem; line-height: 1; }
+
+/* ::: faq questions: an expandable <details> each, the home page's FAQ look (4px ink border, a small tilt, the question in Gochi Hand,
+   + and -). Not exclusive like the home page's: any number may be open. */
+.faq-item { margin: 1rem 0; background: var(--canvas); border: var(--line) solid var(--ink); }
+.faq-item:nth-of-type(odd) { rotate: -0.3deg; }
+.faq-item:nth-of-type(even) { rotate: 0.3deg; }
+.faq-item summary { padding: 0.6rem 1rem; font-family: var(--display); font-size: 1.5rem; line-height: 1.2; list-style: none; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::before { content: "+"; display: inline-block; width: 1.4em; }
+.faq-item[open] summary::before { content: "-"; }
+.faq-item summary:hover { background: var(--paper); }
+.faq-item summary:focus-visible { outline: 4px dashed var(--ribbon); outline-offset: 2px; }
+.faq-answer { padding: 0 1rem 0.1rem 2.4rem; overflow-wrap: anywhere; }
+.faq-answer > :last-child { margin-bottom: 1rem; }
+
+/* a Slack channel's name in the text, plain until the admin has set its address (then it is a link) */
+:where(.prose) .slack-name { padding: 0 0.15em; background: var(--paper); }
 
 /* widgets (guides/widgets.py): the calculator is always stacked here, the article column is narrower than the home page's */
 .widget { margin: 2rem 0; }

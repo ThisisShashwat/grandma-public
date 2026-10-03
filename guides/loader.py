@@ -12,6 +12,7 @@ from pathlib import Path
 import frontmatter
 import nh3
 from markdown_it import MarkdownIt
+from markdown_it.common.utils import escapeHtml
 from mdit_py_plugins.anchors import anchors_plugin
 from mdit_py_plugins.container import container_plugin
 from pygments import highlight as pygments_highlight
@@ -25,16 +26,16 @@ CALLOUTS = ("tip", "warning", "note")
 
 # What the sanitizer lets through. Everything else is stripped: scripts and styles with their content, event handlers,
 # inline styles, unknown tags and attributes, and every URL scheme except these three.
-TAGS = {"a", "b", "blockquote", "br", "code", "del", "div", "em", "h1", "h2", "h3", "h4", "hr", "i", "img", "kbd", "li", "ol",
-        "p", "pre", "s", "span", "strong", "sub", "sup", "table", "tbody", "td", "th", "thead", "tr", "ul"}
+TAGS = {"a", "b", "blockquote", "br", "code", "del", "details", "div", "em", "h1", "h2", "h3", "h4", "hr", "i", "img", "kbd", "li", "ol",
+        "p", "pre", "s", "span", "strong", "sub", "summary", "table", "tbody", "td", "th", "thead", "tr", "ul"}
 ATTRIBUTES = {
     "a": {"href", "title", "target"},
     "img": {"src", "alt", "title", "width", "height", "loading"},
     "div": {"data-widget"},
-    "span": {"class"}, "pre": {"class"}, "code": {"class"},      # the Pygments highlighter writes these
+    "span": {"class", "data-slack"}, "pre": {"class"}, "code": {"class"},   # the Pygments highlighter writes the classes; data-slack is a channel placeholder (widgets.py)
     "h1": {"id"}, "h2": {"id"}, "h3": {"id"}, "h4": {"id"},      # the anchors plugin writes these
 }
-CLASSES ={"div": {"callout", *(f"callout--{name}" for name in CALLOUTS)}, "p": {"callout-title"}}
+CLASSES = {"div": {"callout", *(f"callout--{name}" for name in CALLOUTS), "faq-answer"}, "p": {"callout-title"}, "details": {"faq-item"}}
 SCHEMES = {"http", "https", "mailto"}
 
 
@@ -78,6 +79,15 @@ def _callout(name):
     return render
 
 
+def _faq(self, tokens, idx, options, env):
+    """`::: faq Question text` ... `:::` is one expandable question (a <details>, closed, not exclusive: any number may be open).
+    The question is plain text from the line itself, escaped here; the answer in between is ordinary Markdown."""
+    if tokens[idx].nesting == -1:
+        return "</div></details>\n"
+    question = tokens[idx].info.strip().removeprefix("faq").strip()
+    return f'<details class="faq-item"><summary>{escapeHtml(question)}</summary><div class="faq-answer">\n'
+
+
 def _link_open(self, tokens, idx, options, env):
     """Links to other sites open in a new tab (nh3 adds rel="noopener noreferrer" to every link)."""
     if tokens[idx].attrGet("href").startswith("http"):
@@ -86,12 +96,13 @@ def _link_open(self, tokens, idx, options, env):
 
 
 def _markdown():
-    """GitHub-flavoured Markdown (tables, strikethrough), heading ids, ::: tip / warning / note callouts, highlighted code.
+    """GitHub-flavoured Markdown (tables, strikethrough), heading ids, ::: tip / warning / note callouts, ::: faq questions, highlighted code.
     Bare URLs are not turned into links (that needs linkify-it-py): write [text](url) or <url>."""
     md = MarkdownIt("gfm-like", {"linkify": False, "highlight": _highlight})
     md.use(anchors_plugin, min_level=2, max_level=4)
     for name in CALLOUTS:
         md.use(container_plugin, name=name, render=_callout(name))
+    md.use(container_plugin, name="faq", render=_faq)
     md.add_render_rule("link_open", _link_open)
     return md
 
