@@ -80,3 +80,4 @@ class Summary:
     history_total: int
     orders: tuple           # the latest few, OrderRow records
     orders_total: int
+    other_projects: tuple = ()

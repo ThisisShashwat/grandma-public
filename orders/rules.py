@@ -106,7 +106,7 @@ def afford_problem(balance, cookies):
 
 def hardware_problem(*, hardware, owner_matches, design_approved, design_claimed, project_status, held_by_project):
     """Whether a hardware project may have a grant: it is the person's own, a hardware project, its design ship was approved AND
-    the person has heard it from Grandma, they are at the build (project status `building`), and the project has no grant already
+    the person has heard it from Grandma, they are waiting for parts (project status `awaiting_build`), and the project has no grant already
     (rejected, refunded and cancelled ones do not count). The build may be shipped here, elsewhere or not at all: nothing waits for it."""
     if not owner_matches:
         return "That isn't your project, dear."
@@ -114,8 +114,8 @@ def hardware_problem(*, hardware, owner_matches, design_approved, design_claimed
         return "That one isn't a hardware project, dear. These grants are for things you build."
     if not design_approved or not design_claimed:
         return "I haven't approved a design for that one yet, dear. Ship the design first."
-    if project_status != "building":
-        return "That project isn't at the building stage, dear."
+    if project_status != "awaiting_build":
+        return "That project isn't waiting for parts, dear."
     if held_by_project:
         return "That project already has a grant on the way, dear. One each."
     return ""

@@ -58,3 +58,18 @@ label.dnote-body { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
 .project-sub { margin: 0 0 1.75rem; font-size: 1.15rem; }
 .project-later { max-width: 40rem; margin: 2.5rem 0 0; font-size: 1.15rem; }
 .project-body .actions { margin-top: 2rem; }
+
+/* My other projects section */
+.project-others-section { border-top: var(--line) solid var(--ink); padding-block: 2.5rem 3.5rem; }
+.project-others-section h2 { margin-top: 0; }
+.other-projects-list { display: grid; gap: 1.25rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
+.other-project-card { padding: 1.2rem 1.4rem; background: var(--canvas); border: 3px solid var(--ink); }
+.other-project-card:nth-child(4n+1) { rotate: -0.8deg; }
+.other-project-card:nth-child(4n+2) { rotate: 0.6deg; }
+.other-project-card:nth-child(4n+3) { rotate: -0.4deg; }
+.other-project-card:nth-child(4n+4) { rotate: 0.9deg; }
+.other-project-main { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
+.other-project-name { margin: 0; font-family: var(--display); font-size: 1.8rem; font-weight: 400; line-height: 1.1; overflow-wrap: anywhere; }
+.other-project-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.2rem; margin-top: 1rem; }
+.other-project-actions form { margin: 0; }
+

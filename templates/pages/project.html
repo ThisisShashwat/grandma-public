@@ -2,15 +2,17 @@
 {% import "macros/art.html" as art %}
 {% import "macros/notes.html" as hand %}
 
-{% block title %}{{ project.name }}{% endblock %}
+{% block title %}{{ project.name if project else "My project" }}{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
+<link rel="stylesheet" href="{{ static('css/sections/dashboard.css') }}">
 {% endblock %}
 
-{# Someone's own project (projects/views.py project): what they said they would make, where it stands, the
-   demands they kept and, while it is being built, the button that hands it in. Cookies and faces only: no dollars, no rates. #}
+{# Someone's own project (projects/views.py project): their working project if one exists,
+   else an empty state. Below, always, their other projects. Cookies and faces only: no dollars, no rates. #}
 {% block main %}
+{% if project %}
 <section class="scene scene--sky project-head">
   <div class="wrap split">
     <div>
@@ -34,21 +36,52 @@
     {% if project.status == "building" %}
     <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
     <p class="actions"><a class="btn btn--big" href="{{ url('submit') }}">Ship it</a></p>
-    {% if can_finish %}
-    <p class="project-later">Not planning a build ship, dear? It's optional: it can come to me, go to somebody else's program, or go nowhere at all. If you're finished, tell me and I'll close the books, so you can start another.</p>
-    <form class="actions" method="post" action="{{ url('finish_project') }}">
-      {{ csrf_input }}
-      <button class="btn" type="submit">I am done with this project</button>
-    </form>
-    {% endif %}
     {% elif project.status in ("in_review", "shipped") %}
     <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>
-    {% elif closed %}
-    <p class="project-later">You told me you're done, dear, so I've closed the books on this one. No build ship, no fuss.</p>
-    {% endif %}
-    {% if can_start_another %}
-    <p class="actions"><a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a></p>
     {% endif %}
   </div>
 </section>
+{% else %}
+<section class="scene scene--sky project-head">
+  <div class="wrap split">
+    <div>
+      <h1>No project under way</h1>
+      <p class="lede">You don't have a project on the go right now.</p>
+      <p class="actions"><a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a></p>
+    </div>
+    {{ art.fig("grandma-wave.png", "Grandma waving hello", "aside-fig project-fig") }}
+  </div>
+</section>
+{% endif %}
+
+{% if others %}
+<section class="scene project-others-section">
+  <div class="wrap">
+    <h2>My other projects</h2>
+    <ul class="other-projects-list">
+      {% for op in others %}
+      <li class="other-project-card">
+        <div class="other-project-main">
+          <h3 class="other-project-name">{{ op.name }}</h3>
+          <span class="stamp" data-status="{{ op.status }}">{{ op.status_label }}</span>
+        </div>
+        {% if op.can_ship_build or op.can_finish %}
+        <div class="other-project-actions">
+          {% if op.can_ship_build %}
+          <a class="btn" href="{{ url('submit_build', args=[op.id]) }}">Ship the real build</a>
+          {% endif %}
+          {% if op.can_finish %}
+          <form method="post" action="{{ url('finish_project', args=[op.id]) }}">
+            {{ csrf_input }}
+            <button class="btn" type="submit">I am done with this project</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}
 {% endblock %}

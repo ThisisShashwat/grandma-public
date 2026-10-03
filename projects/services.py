@@ -15,15 +15,36 @@ from ledger import services as ledger
 from program import draw
 from projects import rules
 from projects.models import Category, Demand, Project, ProjectDemand, Subcategory
+from projects.records import ProjectRow
 
 NOT_ON_THE_TABLE = "That isn't on my table, dear. Pick one, two or three of the notes I dealt you."
 NOT_DEALING = "There's nothing to keep, dear. You don't have a hand of mine on the go."
 ALREADY_STARTED = "You've already started, dear. I'm not letting you swap now."
 
 
-def active_project(user):
-    """The one project this person has in progress (dealing, building, shipped or in review), or None."""
-    return Project.objects.filter(user=user, status__in=rules.ACTIVE_STATUSES).select_related("category", "subcategory").first()
+def working_project(user):
+    """The one project this person is currently working on (dealing or building), or None."""
+    return Project.objects.filter(user=user, status__in=rules.WORKING_STATUSES).select_related("category", "subcategory").first()
+
+
+def other_projects(user, statuses=None, limit=30):
+    """The person's projects that are not their working project, newest first, one query with select_related("category")."""
+    qs = Project.objects.filter(user=user).exclude(status__in=rules.WORKING_STATUSES)
+    if statuses is not None:
+        qs = qs.filter(status__in=statuses)
+    qs = qs.select_related("category").order_by("-id")[:limit]
+    return [
+        ProjectRow(
+            id=p.id,
+            name=p.name,
+            status=p.status,
+            status_label=rules.LABELS.get(p.status, p.status),
+            hardware=p.category.kind == Category.Kind.HARDWARE,
+            can_ship_build=p.status == rules.AWAITING_BUILD,
+            can_finish=p.status == rules.AWAITING_BUILD,
+        )
+        for p in qs
+    ]
 
 
 def dealing_project(user):
@@ -95,19 +116,18 @@ def closed_without_build(project):
 
 
 @transaction.atomic
-def finish(user):
-    """The "I am done with this project" button, for a hardware project that sits in `building` after its design ship was approved and
-    collected: the build ship is optional (it may go to this program, another one, or nowhere), and only one project can be active at
-    a time, so such a person must be able to close the project without one. It becomes `approved`, the status that frees the person to
-    start another. Asking again changes nothing. Returns the person's current project, or None when there is nothing to finish."""
+def finish(user, pk):
+    """The "I am done with this project" button, for a hardware project that sits in `awaiting_build` after its design ship was
+    approved and collected: the build ship is optional (it may go to this program, another one, or nowhere). It becomes `approved`.
+    Asking again on an already approved own hardware project is idempotent.
+    Returns the project, or None when there is nothing to finish."""
     lock_person(user)
-    current = active_project(user) or latest_project(user)
-    if current is None:
+    project = Project.objects.select_for_update().filter(user=user, pk=pk).first()
+    if project is None:
         return None
-    project = Project.objects.select_for_update().get(pk=current.pk)
-    if not design_collected(project) or project.status not in (rules.BUILDING, rules.APPROVED):
+    if not design_collected(project) or project.status not in (rules.AWAITING_BUILD, rules.APPROVED):
         return None
-    if project.status == rules.BUILDING:
+    if project.status == rules.AWAITING_BUILD:
         project.status = rules.APPROVED
         project.save(update_fields=["status"])
     return project
@@ -118,7 +138,7 @@ def start(user, *, idea, name, category, subcategory, size, rng):
     """Make the person's project and deal its first hand. Called when they have answered Grandma's four questions, and only
     then. A person with a project in progress gets that one back (a double click or a second tab starts nothing new)."""
     lock_person(user)
-    existing = active_project(user)
+    existing = working_project(user)
     if existing:
         return existing
     project = Project(user=user, idea=idea, name=name, category=category, subcategory=subcategory,
@@ -154,7 +174,7 @@ def keep(user, ids, now):
     """Confirm the notes the person keeps: one to three of the hand that was dealt, nothing else. The project becomes
     `building` and its clock starts. Asking again with the same notes is harmless; with other notes it is refused."""
     lock_person(user)
-    project = locked_project(user, *rules.ACTIVE_STATUSES)
+    project = locked_project(user, *rules.WORKING_STATUSES)
     try:
         kept = {int(i) for i in ids}
     except (TypeError, ValueError):

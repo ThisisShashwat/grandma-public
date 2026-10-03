@@ -39,16 +39,25 @@ def waiting(user):
 
 
 @transaction.atomic
-def submit(user, *, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
-    """Hand in the person's project in building. The stage is decided here, never by the person. The project becomes `in_review`.
-    ValidationError (a sentence for the person) when there is nothing to hand in. One at a time: a second click finds the project
-    already in review."""
+def submit(user, *, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text, project_id=None):
+    """Hand in the person's project in building (or awaiting_build when project_id is given). The stage is decided here,
+    never by the person. The project becomes `in_review`. ValidationError (a sentence for the person) when there is nothing to hand in.
+    One at a time: a second click finds the project already in review."""
     project_services.lock_person(user)
-    locked = project_services.locked_project(user, project_rules.BUILDING)
-    if locked is None:
-        raise ValidationError(NOTHING_TO_SHIP)
-    project = Project.objects.select_related("category").get(pk=locked.pk)
-    ship = ship_for(project)
+    if project_id is None:
+        locked = project_services.locked_project(user, project_rules.BUILDING)
+        if locked is None:
+            raise ValidationError(NOTHING_TO_SHIP)
+        project = Project.objects.select_related("category").get(pk=locked.pk)
+        ship = ship_for(project)
+    else:
+        locked = Project.objects.select_for_update().filter(user=user, pk=project_id, status=project_rules.AWAITING_BUILD).first()
+        if locked is None:
+            raise ValidationError(NOTHING_TO_SHIP)
+        project = Project.objects.select_related("category").get(pk=locked.pk)
+        ship = ship_for(project)
+        if ship.stage != rules.BUILD:
+            raise ValidationError(NOTHING_TO_SHIP)
     if ship.problem:
         raise ValidationError(ship.problem)
     submission = Submission(project=project, stage=ship.stage, repo_url=repo_url, playable_url=playable_url, description=description,
@@ -100,7 +109,7 @@ def claim(user, submission_id, *, now=None):
     """Grandma hands over the result of a review, once. Approved: the cookies go on the ledger under the key `submission:{id}`
     (nothing is written for 0 cookies) and `claimed_at` is set in the same transaction, so a double click or a reload credits once.
     The project becomes approved or rejected, which frees the person for another one, except a hardware design that was approved:
-    that project goes back to building, for its build ship. Only the person's own submission, only a reviewed one. Returns the
+    that project becomes awaiting_build, waiting for its build ship. Only the person's own submission, only a reviewed one. Returns the
     submission, None if there is nothing of theirs to collect."""
     project_services.lock_person(user)
     submission = Submission.objects.select_for_update().filter(pk=submission_id, project__user=user, status__in=rules.REVIEWED).first()
@@ -124,4 +133,4 @@ def after_claim(submission):
     """The project's status once the person has heard the result."""
     if submission.status == rules.REJECTED:
         return project_rules.REJECTED
-    return project_rules.BUILDING if submission.stage == rules.DESIGN else project_rules.APPROVED
+    return project_rules.AWAITING_BUILD if submission.stage == rules.DESIGN else project_rules.APPROVED

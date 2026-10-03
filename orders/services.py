@@ -73,8 +73,8 @@ def project_problem(user, project, item):
 
 
 def eligible_projects(user, item):
-    """The person's own hardware projects that may have this grant now: a design approved and collected, at the build, none yet."""
-    mine = Project.objects.filter(user=user, category__kind=Category.Kind.HARDWARE, status=project_rules.BUILDING).select_related("category", "subcategory")
+    """The person's own hardware projects that may have this grant now: a design approved and collected, waiting for parts, none yet."""
+    mine = Project.objects.filter(user=user, category__kind=Category.Kind.HARDWARE, status=project_rules.AWAITING_BUILD).select_related("category", "subcategory")
     return [project for project in mine if not project_problem(user, project, item)]
 
 

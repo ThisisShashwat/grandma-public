@@ -72,24 +72,36 @@ def confirmation(request, offer):
 @never_cache
 @require_safe
 def project(request):
-    """The person's own project: the one in progress, else their latest. Nobody has anything to show before they have talked to
-    Grandma, and a hand that is still on the table goes back to the conversation."""
-    mine = services.active_project(request.user) or services.latest_project(request.user)
-    if mine is None or mine.status == rules.DEALING:
+    """The person's own project: the working project if they have one, else an empty state when other projects exist.
+    Nobody has anything to show before they have talked to Grandma, and a hand that is still on the table goes back to the conversation."""
+    working = services.working_project(request.user)
+    if working is not None and working.status == rules.DEALING:
+        return redirect("grandma")
+    others = services.other_projects(request.user, limit=30)
+    if working is None and not others:
         return redirect("grandma")
     request.session.pop("talk:grandma", None)          # the send-off has been seen
-    return render(request, "pages/project.html", {
-        "project": mine, "status": rules.LABELS[mine.status], "hardware": mine.category.kind == "hardware",
-        "notes": notes.notes(services.kept_demands(mine)), "can_start_another": not mine.active,
-        "can_finish": mine.status == rules.BUILDING and services.design_collected(mine), "closed": services.closed_without_build(mine)})
+    context = {"others": others}
+    if working is not None:
+        context.update({
+            "project": working, "status": rules.LABELS[working.status], "hardware": working.category.kind == "hardware",
+            "notes": notes.notes(services.kept_demands(working)), "can_start_another": False})
+    else:
+        context.update({
+            "project": None, "can_start_another": True})
+    return render(request, "pages/project.html", context)
 
 
 @onboarded
 @never_cache
 @require_POST
-def finish(request):
-    """"I am done with this project": closes the person's own hardware project without a build ship. No id in the address, so only
-    their own project is ever touched; anything else (software, a design not yet through, nothing to close) is a 404."""
-    if services.finish(request.user) is None:
+def finish(request, pk):
+    """"I am done with this project": closes the person's own hardware project without a build ship.
+    Only their own awaiting_build project is closed; anything else is a 404."""
+    try:
+        pk_int = int(pk)
+    except (TypeError, ValueError):
+        raise Http404
+    if services.finish(request.user, pk_int) is None:
         raise Http404
     return redirect("project")

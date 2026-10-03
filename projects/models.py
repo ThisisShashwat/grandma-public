@@ -80,7 +80,7 @@ class Project(models.Model):
     idea = models.CharField(max_length=200, validators=[validate_idea], help_text="What they said they would make.")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="projects")
     subcategory = models.ForeignKey(Subcategory, on_delete=models.PROTECT, null=True, blank=True, related_name="projects")
-    status = models.CharField(max_length=10, choices=rules.STATUSES, default=rules.DEALING)
+    status = models.CharField(max_length=20, choices=rules.STATUSES, default=rules.DEALING)
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When they confirmed their demands. Nothing counts down from here: a project has no time limit.")
     hand = models.JSONField(default=list, editable=False, help_text="The ids of the demands dealt. Saved on the project so a refresh never re-rolls.")
@@ -90,7 +90,7 @@ class Project(models.Model):
     class Meta:
         ordering = ["-created_at", "-id"]
         constraints = [
-            models.UniqueConstraint(fields=["user"], condition=Q(status__in=rules.ACTIVE_STATUSES), name="one_active_project_per_user",
+            models.UniqueConstraint(fields=["user"], condition=Q(status__in=rules.WORKING_STATUSES), name="one_working_project_per_user",
                                     violation_error_message="That person already has a project in progress. Abandon it first."),
             models.CheckConstraint(condition=Q(status__in=[rules.DEALING, rules.ABANDONED]) | Q(started_at__isnull=False),
                                    name="project_started_unless_dealing_or_abandoned",

@@ -1,7 +1,7 @@
 """/submit/ (a person hands their project to Grandma) and /grandma/collect/ (she hands the result back). Both are for one signed-in,
 onboarded person and touch only their own project: no address carries a project or submission id, so there is nothing to guess."""
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -11,6 +11,7 @@ from accounts.access import onboarded
 from pages.live import live
 from projects import rules as project_rules
 from projects import services as project_services
+from projects.models import Category, Project
 from submissions import handover, rules, script, services
 from submissions.forms import SubmitForm
 from talk import flow
@@ -50,6 +51,40 @@ def submit(request):
         "hardware": ship.stage is not None, "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
 
 
+@onboarded
+@never_cache
+@require_http_methods(["GET", "HEAD", "POST"])
+def submit_build(request, pk):
+    """Grandma's note for the build ship of a hardware project waiting for parts.
+    Only an own awaiting_build hardware project can be handed in; anything else is a 404."""
+    try:
+        pk_int = int(pk)
+    except (TypeError, ValueError):
+        raise Http404
+    project = Project.objects.filter(user=request.user, pk=pk_int).select_related("category").first()
+    if project is None or project.status != project_rules.AWAITING_BUILD or project.category.kind != Category.Kind.HARDWARE:
+        raise Http404
+    ship = services.ship_for(project)
+    if ship.stage != rules.BUILD or ship.problem:
+        raise Http404
+    if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
+        return HttpResponseBadRequest("Too many files.")
+    cfg = live()
+    kind = project.category.kind
+    form = SubmitForm(request.POST, request.FILES, cfg=cfg, kind=kind) if request.method == "POST" else SubmitForm(cfg=cfg, kind=kind)
+    if request.method == "POST" and form.is_valid():
+        try:
+            services.submit(request.user, project_id=project.pk, **form.cleaned_data)
+        except ValidationError as error:
+            form.add_error(None, error)
+        else:
+            request.session["handed_in"] = True
+            return redirect("dashboard")
+    return render(request, "pages/submit.html", {
+        "form": form, "checks": form.checks, "project_name": project.name, "stage": rules.STAGE_LABELS[ship.stage] if ship.stage else "",
+        "hardware": True, "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
+
+
 def not_now(request, problem=""):
     """Grandma says why there is nothing to hand in: no project yet, or it is already with her, or finished."""
     latest = project_services.latest_project(request.user)
@@ -57,10 +92,15 @@ def not_now(request, problem=""):
         return redirect("grandma")
     if problem:
         lines, face, then, button = (problem,), "sideeye", reverse("project"), "Back to my project"
-    elif latest.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
-        lines, face, then, button = script.STILL_READING, "magnifier", reverse("dashboard"), "To my dashboard"
     else:
-        lines, face, then, button = script.NOTHING_TO_HAND_IN, "clipboard", reverse("grandma"), "Talk to Grandma"
+        working = project_services.working_project(request.user)
+        has_in_review = Project.objects.filter(user=request.user, status__in=(project_rules.IN_REVIEW, project_rules.SHIPPED)).exists()
+        if working is None and (latest.status in (project_rules.IN_REVIEW, project_rules.SHIPPED) or has_in_review):
+            lines, face, then, button = script.STILL_READING, "magnifier", reverse("grandma"), "Talk to Grandma about a new one"
+        elif latest.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
+            lines, face, then, button = script.STILL_READING, "magnifier", reverse("dashboard"), "To my dashboard"
+        else:
+            lines, face, then, button = script.NOTHING_TO_HAND_IN, "clipboard", reverse("grandma"), "Talk to Grandma"
     return flow.page(request, title="Hand it in", kind="end", face=face, then=then, lines=lines, step=End(button=button))
 
 

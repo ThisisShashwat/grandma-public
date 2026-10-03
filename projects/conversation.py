@@ -64,7 +64,7 @@ class Store(SessionStore):
     def load(self, request):
         state = super().load(request)
         person = {"display_name": profile_of(request.user).display_name}    # always fresh from the Profile, so her lines can use it
-        project = services.active_project(request.user)
+        project = services.working_project(request.user)
         if project is None:                       # nothing dealt yet: questions in progress (a stale finished place starts over)
             return State(state.position, state.answers | person) if state.position < self.deal_at else State(0, person)
         answers = {"idea": project.idea, "name": project.name} | state.answers | person
@@ -86,5 +86,5 @@ class Store(SessionStore):
 def sent_away(request, store):
     """Someone with a project under way (confirmed, not still dealing) does not talk to Grandma again: they go to their project,
     except in the session that has just confirmed, which still gets her send-off."""
-    project = services.active_project(request.user)
+    project = services.working_project(request.user)
     return project is not None and project.status != rules.DEALING and store.load(request).position < store.end_at

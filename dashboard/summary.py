@@ -120,15 +120,17 @@ def entries(user):
 def build(user):
     profile = profile_of(user)
     zone = zone_of(profile)
-    project = project_services.active_project(user) or project_services.latest_project(user)
+    project = project_services.working_project(user) or project_services.latest_project(user)
     card = project_card(project) if project else None
     face, line = mood.says(project.status if project else None)
+    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.AWAITING_BUILD), limit=5)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),
         submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
         history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count(),
-        orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count())
+        orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count(),
+        other_projects=tuple(other_list))
 
 
 def paged(queryset, number, make):

@@ -51,6 +51,21 @@
           <p class="dash-line">{{ dash.says.line }}</p>
         </div>
       </section>
+
+      {% if dash.other_projects %}
+      <section class="dash-note" aria-labelledby="dash-others">
+        <h2 id="dash-others">My other projects</h2>
+        <ul class="dash-other-list">
+          {% for op in dash.other_projects %}
+          <li class="dash-other-row">
+            <span class="dash-other-name">{{ op.name }}</span>
+            <span class="stamp" data-status="{{ op.status }}">{{ op.status_label }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="dash-small"><a href="{{ url('project') }}">All my projects</a></p>
+      </section>
+      {% endif %}
     </div>
   </div>
 </section>
