@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "pages",
     "accounts",
     "ledger",
+    "projects",
     "shop",
     "guides",
 ]
