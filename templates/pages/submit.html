@@ -27,7 +27,7 @@
       <form class="submit-note" method="post" enctype="multipart/form-data" action="{{ url('submit') }}">
         {{ csrf_input }}
         <h1>Hand it to Grandma</h1>
-        <p class="submit-for"><b>{{ project_name }}</b>{% if stage %} <span class="submit-stage">{{ stage }}</span>{% endif %}</p>
+        <p class="submit-for"><b>{{ project_name }}</b></p>
         {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
         {% if form.errors %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
 
@@ -53,7 +53,7 @@
           <input class="input" id="playable_url" name="playable_url" type="url" inputmode="url" maxlength="300" required autocomplete="off" spellcheck="false"
                  placeholder="https://your-project.example.com" value="{{ form['playable_url'].value() or '' }}"{% if form['playable_url'].errors %} aria-invalid="true" aria-describedby="err-playable_url"{% endif %}>
           {{ oops("playable_url") }}
-          <p class="nf-hint">{% if hardware %}A page anyone can open that shows it working: photos, a video, a viewer for your design.{% else %}A link anyone can open and use.{% endif %}
+          <p class="nf-hint">A link anyone can open and use.
             Not on a host that falls asleep when nobody visits{% if sleepers %}, like {{ sleepers|join(", ") }}{% endif %}.</p>
         </div>
 
