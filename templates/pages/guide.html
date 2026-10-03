@@ -48,7 +48,7 @@
     <div class="prose">{{ body|safe }}</div>
 
     {% if guide.source %}
-    <p class="g-credit">Adapted from {% if guide.source.startswith("http") %}<a href="{{ guide.source }}" target="_blank" rel="noopener">{{ guide.source }}</a>{% else %}{{ guide.source }}{% endif %}, licensed {{ guide.license }}. The credits page has the details.</p>
+    <p class="g-credit">Adapted from {% if guide.source.startswith("http") %}<a href="{{ guide.source }}" target="_blank" rel="noopener">{{ guide.source }}</a>{% else %}{{ guide.source }}{% endif %}, licensed {{ guide.license }}.</p>
     {% endif %}
 
     <nav class="g-pager" aria-label="More guides">

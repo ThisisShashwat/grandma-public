@@ -1,13 +1,17 @@
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_safe
+
+from pages.context import program_links
+from pages.live import live
 
 from . import loader, widgets
 
 
 @require_safe
 def index(request):
-    return render(request, "pages/guides.html", {"sections": loader.sections(loader.all_guides())})
+    """There is no list of all guides: Guides opens the first page (Start here), the sidebar has the rest."""
+    return redirect("guide", slug=loader.all_guides()[0].slug)
 
 
 @require_safe
@@ -18,6 +22,6 @@ def page(request, slug):
         raise Http404
     previous, following = loader.neighbours(guides, slug)
     return render(request, "pages/guide.html", {
-        "guide": guide, "body": widgets.expand(guide.html), "sections": loader.sections(guides),
+        "guide": guide, "body": widgets.expand(guide.html, program_links(live())), "sections": loader.sections(guides),
         "previous": previous, "following": following,
     })

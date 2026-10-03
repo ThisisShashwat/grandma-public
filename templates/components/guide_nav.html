@@ -1,9 +1,9 @@
-{# The sidebar: every guide, by section. On a phone it is a closed <details>; on a wide screen the CSS shows the list and hides the summary.
+{# The sidebar: every guide, by section (there is no page that lists them all: /guides/ opens the first guide). On a phone it is a closed <details>; on a wide screen the CSS shows the list and hides the summary.
    Needs `sections` and the current `guide`. #}
 <details class="g-nav">
   <summary>All guides</summary>
   <nav aria-label="Guides">
-    <p class="g-nav-title"><a href="{{ url('guides') }}">All guides</a></p>
+    <p class="g-nav-title">Grandma's guides</p>
     {% for name, items in sections %}
     <p class="g-nav-head">{{ name }}</p>
     <ul>
