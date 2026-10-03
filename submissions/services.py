@@ -10,7 +10,7 @@ from audit import services as audit
 from ledger import services as ledger
 from projects import rules as project_rules
 from projects import services as project_services
-from projects.models import Category, Project
+from projects.models import Project
 from submissions import rules
 from submissions.models import Submission
 
@@ -29,8 +29,7 @@ def shipping_project(user):
 
 def ship_for(project):
     """What this project may hand in next (rules.next_ship) given what it has handed in so far."""
-    shipped = [(s.stage, s.status, s.claimed_at is not None) for s in project.submissions.all()]
-    return rules.next_ship(project.category.kind == Category.Kind.HARDWARE, shipped)
+    return rules.next_ship(project.submissions.exists())
 
 
 def waiting(user):
@@ -40,28 +39,19 @@ def waiting(user):
 
 
 @transaction.atomic
-def submit(user, *, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text, project_id=None):
-    """Hand in the person's project in building (or awaiting_build when project_id is given). The stage is decided here,
-    never by the person. The project becomes `in_review`. ValidationError (a sentence for the person) when there is nothing to hand in.
+def submit(user, *, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
+    """Hand in the person's project in building. The project becomes `in_review`.
+    ValidationError (a sentence for the person) when there is nothing to hand in.
     One at a time: a second click finds the project already in review."""
     project_services.lock_person(user)
-    if project_id is None:
-        locked = project_services.locked_project(user, project_rules.BUILDING)
-        if locked is None:
-            raise ValidationError(NOTHING_TO_SHIP)
-        project = Project.objects.select_related("category").get(pk=locked.pk)
-        ship = ship_for(project)
-    else:
-        locked = Project.objects.select_for_update().filter(user=user, pk=project_id, status=project_rules.AWAITING_BUILD).first()
-        if locked is None:
-            raise ValidationError(NOTHING_TO_SHIP)
-        project = Project.objects.select_related("category").get(pk=locked.pk)
-        ship = ship_for(project)
-        if ship.stage != rules.BUILD:
-            raise ValidationError(NOTHING_TO_SHIP)
+    locked = project_services.locked_project(user, project_rules.BUILDING)
+    if locked is None:
+        raise ValidationError(NOTHING_TO_SHIP)
+    project = Project.objects.select_related("category").get(pk=locked.pk)
+    ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)
-    submission = Submission(project=project, stage=ship.stage, repo_url=repo_url, playable_url=playable_url, description=description,
+    submission = Submission(project=project, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text)
     submission.full_clean()
     submission.save()
@@ -75,7 +65,6 @@ def submit(user, *, repo_url, playable_url, description, screenshot, recording_u
         details={
             "project": project.id,
             "project_name": project.name,
-            "stage": submission.stage or "",
             "category": project.category_id,
             "subcategory": project.subcategory_id,
             "kept": [d.id for d in project_services.kept_demands(project)],
@@ -142,8 +131,7 @@ def review(submission, *, by, now=None):
 def claim(user, submission_id, *, now=None):
     """Grandma hands over the result of a review, once. Approved: the cookies go on the ledger under the key `submission:{id}`
     (nothing is written for 0 cookies) and `claimed_at` is set in the same transaction, so a double click or a reload credits once.
-    The project becomes approved or rejected, which frees the person for another one, except a hardware design that was approved:
-    that project becomes awaiting_build, waiting for its build ship. Only the person's own submission, only a reviewed one. Returns the
+    The project becomes approved or rejected, which frees the person for another one. Only the person's own submission, only a reviewed one. Returns the
     submission, None if there is nothing of theirs to collect."""
     project_services.lock_person(user)
     submission = Submission.objects.select_for_update().filter(pk=submission_id, project__user=user, status__in=rules.REVIEWED).first()
@@ -154,7 +142,7 @@ def claim(user, submission_id, *, now=None):
     project = Project.objects.select_for_update().get(pk=submission.project_id)
     if submission.cookies_awarded:
         ledger.credit(user, submission.cookies_awarded, key=f"submission:{submission.pk}",
-                      reason=f"Grandma paid for {project.name}" + (f" ({rules.STAGE_LABELS[submission.stage].lower()})" if submission.stage else ""))
+                      reason=f"Grandma paid for {project.name}")
     submission.claimed_at = now or timezone.now()
     submission.save(update_fields=["claimed_at"])
     if project.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
@@ -177,4 +165,4 @@ def after_claim(submission):
     """The project's status once the person has heard the result."""
     if submission.status == rules.REJECTED:
         return project_rules.REJECTED
-    return project_rules.AWAITING_BUILD if submission.stage == rules.DESIGN else project_rules.APPROVED
+    return project_rules.APPROVED

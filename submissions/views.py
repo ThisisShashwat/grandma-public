@@ -1,7 +1,7 @@
 """/submit/ (a person hands their project to Grandma) and /grandma/collect/ (she hands the result back). Both are for one signed-in,
 onboarded person and touch only their own project: no address carries a project or submission id, so there is nothing to guess."""
 from django.core.exceptions import ValidationError
-from django.http import Http404, HttpResponseBadRequest
+from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -11,8 +11,8 @@ from accounts.access import onboarded
 from pages.live import live
 from projects import rules as project_rules
 from projects import services as project_services
-from projects.models import Category, Project
-from submissions import handover, rules, script, services
+from projects.models import Project
+from submissions import handover, script, services
 from submissions.forms import SubmitForm
 from talk import flow
 from talk.dialogue import End
@@ -25,8 +25,8 @@ MAX_FILES = 3           # the note takes one screenshot; the site-wide limit is 
 @never_cache
 @require_http_methods(["GET", "HEAD", "POST"])
 def submit(request):
-    """Grandma's note. Only a project being built can be handed in (the stage, for hardware, is decided here and never by the
-    person); anything else gets her saying why. A hand-in that works goes to the dashboard."""
+    """Grandma's note. Only a project being built can be handed in; anything else gets her saying why.
+    A hand-in that works goes to the dashboard."""
     if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
         return HttpResponseBadRequest("Too many files.")
     project = services.shipping_project(request.user)
@@ -36,8 +36,7 @@ def submit(request):
     if ship.problem:
         return not_now(request, ship.problem)
     cfg = live()
-    kind = project.category.kind
-    form = SubmitForm(request.POST, request.FILES, cfg=cfg, kind=kind) if request.method == "POST" else SubmitForm(cfg=cfg, kind=kind)
+    form = SubmitForm(request.POST, request.FILES, cfg=cfg) if request.method == "POST" else SubmitForm(cfg=cfg)
     if request.method == "POST" and form.is_valid():
         try:
             services.submit(request.user, **form.cleaned_data)
@@ -47,42 +46,8 @@ def submit(request):
             request.session["handed_in"] = True
             return redirect("dashboard")
     return render(request, "pages/submit.html", {
-        "form": form, "checks": form.checks, "project_name": project.name, "stage": rules.STAGE_LABELS[ship.stage] if ship.stage else "",
-        "hardware": ship.stage is not None, "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
-
-
-@onboarded
-@never_cache
-@require_http_methods(["GET", "HEAD", "POST"])
-def submit_build(request, pk):
-    """Grandma's note for the build ship of a hardware project waiting for parts.
-    Only an own awaiting_build hardware project can be handed in; anything else is a 404."""
-    try:
-        pk_int = int(pk)
-    except (TypeError, ValueError):
-        raise Http404
-    project = Project.objects.filter(user=request.user, pk=pk_int).select_related("category").first()
-    if project is None or project.status != project_rules.AWAITING_BUILD or project.category.kind != Category.Kind.HARDWARE:
-        raise Http404
-    ship = services.ship_for(project)
-    if ship.stage != rules.BUILD or ship.problem:
-        raise Http404
-    if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
-        return HttpResponseBadRequest("Too many files.")
-    cfg = live()
-    kind = project.category.kind
-    form = SubmitForm(request.POST, request.FILES, cfg=cfg, kind=kind) if request.method == "POST" else SubmitForm(cfg=cfg, kind=kind)
-    if request.method == "POST" and form.is_valid():
-        try:
-            services.submit(request.user, project_id=project.pk, **form.cleaned_data)
-        except ValidationError as error:
-            form.add_error(None, error)
-        else:
-            request.session["handed_in"] = True
-            return redirect("dashboard")
-    return render(request, "pages/submit.html", {
-        "form": form, "checks": form.checks, "project_name": project.name, "stage": rules.STAGE_LABELS[ship.stage] if ship.stage else "",
-        "hardware": True, "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
+        "form": form, "checks": form.checks, "project_name": project.name,
+        "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
 
 
 def not_now(request, problem=""):

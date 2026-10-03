@@ -7,10 +7,10 @@ from django.utils.html import format_html, format_html_join
 
 from program.content.demands import LEVELS
 from projects import services as project_services
-from submissions import rules, services
+from submissions import services
 from submissions.models import Submission
 
-PARTICIPANT = ("project", "owner", "stage_label", "submitted_at", "hackatime_project", "repo_link", "playable_link", "description", "screenshot_preview",
+PARTICIPANT = ("project", "owner", "submitted_at", "hackatime_project", "repo_link", "playable_link", "description", "screenshot_preview",
                "recording_link", "ticked", "ai_declaration_text", "kept_notes")
 REVIEW = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note")
 RESULT = ("cookies_preview", "reviewed_by", "reviewed_at", "cookies_awarded", "claimed_at")
@@ -18,8 +18,8 @@ RESULT = ("cookies_preview", "reviewed_by", "reviewed_at", "cookies_awarded", "c
 
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ("project", "owner", "stage_label", "status", "submitted_at", "cookies_awarded", "collected")
-    list_filter = ("status", "stage", "project__category")
+    list_display = ("project", "owner", "status", "submitted_at", "cookies_awarded", "collected")
+    list_filter = ("status", "project__category")
     list_select_related = ("project", "project__user", "reviewed_by")
     search_fields = ("project__name", "project__user__username")
     fieldsets = (
@@ -56,10 +56,6 @@ class SubmissionAdmin(admin.ModelAdmin):
     @admin.display(description="person", ordering="project__user__username")
     def owner(self, obj):
         return obj.project.user.get_username()
-
-    @admin.display(description="ship")
-    def stage_label(self, obj):
-        return rules.STAGE_LABELS[obj.stage]
 
     @admin.display(description="collected", boolean=True)
     def collected(self, obj):

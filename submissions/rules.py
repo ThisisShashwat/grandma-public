@@ -12,32 +12,18 @@ STATUSES = ((SUBMITTED, "Handed in"), (APPROVED, "Approved"), (REJECTED, "Reject
 LABELS = dict(STATUSES)
 REVIEWED = (APPROVED, REJECTED)        # a reviewer has decided; the person has not necessarily heard yet
 
-DESIGN, BUILD = "design", "build"      # hardware has two ships. A software submission has no stage at all: it has exactly one ship
-STAGES = ((DESIGN, "Design ship"), (BUILD, "Build ship"))
-STAGE_LABELS = dict(STAGES) | {None: "Ship"}
-
 #: The most hours a reviewer can approve in one go. A typo guard (a stray extra zero is hundreds of cookies), not a payout rule:
 #: the calculator's slider ends at 60. Raise it here if a real project ever needs more.
 MAX_HOURS = Decimal(100)
 
 
 class Ship(NamedTuple):
-    stage: str | None     # the stage the next submission would be: None for software, "design" or "build" for hardware
-    problem: str          # why there can be no next submission, or "" when there can
+    problem: str = ""     # why there can be no next submission, or "" when there can
 
 
-def next_ship(hardware, shipped):
-    """What a project may hand in next. `shipped` is what it has handed in so far, as (stage, status, claimed) rows. Software has
-    one ship. Hardware has a design ship, and a build ship only once the design was approved AND the person has heard it from Grandma."""
-    if not hardware:
-        return Ship(None, "" if not shipped else "You have already handed this one in.")
-    done = {stage: (status, claimed) for stage, status, claimed in shipped}
-    if DESIGN not in done:
-        return Ship(DESIGN, "")
-    status, claimed = done[DESIGN]
-    if status != APPROVED or not claimed:
-        return Ship(None, "Your design is not through yet.")
-    return Ship(BUILD, "") if BUILD not in done else Ship(None, "You have already handed in the build.")
+def next_ship(shipped):
+    """What a project may hand in next. A project has exactly one ship."""
+    return Ship("You have already handed this one in." if shipped else "")
 
 
 def award(status, tiers, hours, quality, ribbon, ribbon_holder=False):

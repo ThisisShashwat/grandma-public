@@ -11,7 +11,6 @@ from talk.dialogue import End, Say
 class Outcome:
     approved: bool
     ribbon: bool
-    design: bool       # a hardware design ship: approved means the build ship is next
     cookies: int
     has_note: bool
     mood: str          # the face of her mood, from the payout scale (rules.mood)
@@ -32,7 +31,7 @@ def approved(outcome):
     pays = outcome.cookies > 0
     hand_over = Say(face="hug", button="Take the cookies" if pays else "Right, then",
                     lines=("Here, {display_name}. {cookies}.", "Count them. I'll know if you don't.") if pays else ("No cookies for this one, dear.", "But it's through, and I'm not taking back what I said."))
-    next_up = "Now build the real thing and hand that in too." if outcome.design else "Come back and show me the next one."
+    next_up = "Come back and show me the next one."
     thanks = "Into your jar they go." if pays and not outcome.ribbon else "Well done, dear."
     return [*ribbon, hand_over, End(face="overjoyed" if outcome.ribbon else "approved", button="To my dashboard", lines=(thanks, next_up))]
 

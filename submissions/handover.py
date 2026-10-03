@@ -17,13 +17,13 @@ SESSION = "collect"
 
 #: The pages that matter, by URL name: a person with a result waiting at Grandma's is sent to her before any of them
 #: (submissions/middleware.py), on every visit, until they have collected it.
-PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "grandma", "submit", "submit_build", "project_edit", "project_demands")
+PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "grandma", "submit", "project_edit", "project_demands")
 
 
 def outcome(submission):
     approved = submission.status == rules.APPROVED
     mood = rules.mood(services.tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon) if approved else "sideeye"
-    return script.Outcome(approved=approved, ribbon=approved and submission.ribbon, design=submission.stage == rules.DESIGN,
+    return script.Outcome(approved=approved, ribbon=approved and submission.ribbon,
                           cookies=submission.cookies_awarded or 0, has_note=bool(submission.public_note.strip()), mood=mood)
 
 

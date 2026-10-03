@@ -1,7 +1,6 @@
 """What a person hands in to Grandma, and what a reviewer decided about it.
 
-A Submission belongs to a project. Software has exactly one ship (stage is empty). Hardware has a design ship and then a build
-ship, one of each at most, the build only after the design was approved and the person has heard it from Grandma. The participant
+A Submission belongs to a project. A project has exactly one ship. The participant
 fields are written once, when they hand it in, and never edited. The reviewer fields are set in the admin (docs/submissions.md) and
 frozen once the person has collected the result. Layers: program <- rules.py, links.py <- models.py <- services.py.
 """
@@ -9,11 +8,10 @@ import uuid
 from pathlib import Path
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
-from projects.models import Category, Project
+from projects.models import Project
 from submissions import rules
 from submissions.images import FORMATS
 from submissions.validators import validate_prose, validate_repo_url, validate_web_url
@@ -29,8 +27,6 @@ def screenshot_path(instance, filename):
 
 class Submission(models.Model):
     project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="submissions")
-    stage = models.CharField(max_length=6, choices=rules.STAGES, null=True, blank=True,
-                             help_text="Hardware only: the design ship, then the build ship. Empty for software, which has one ship.")
     status = models.CharField(max_length=9, choices=rules.STATUSES, default=rules.SUBMITTED)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
@@ -63,10 +59,7 @@ class Submission(models.Model):
         ordering = ["-submitted_at", "-id"]
         constraints = [
             models.CheckConstraint(condition=Q(status__in=[s for s, _ in rules.STATUSES]), name="submission_status_is_known"),
-            models.CheckConstraint(condition=Q(stage__isnull=True) | Q(stage__in=[rules.DESIGN, rules.BUILD]), name="submission_stage_is_known"),
-            models.UniqueConstraint(fields=["project", "stage"], name="submission_one_per_project_and_stage",
-                                    violation_error_message="That project has already handed in that ship."),
-            models.UniqueConstraint(fields=["project"], condition=Q(stage__isnull=True), name="submission_software_has_one_ship",
+            models.UniqueConstraint(fields=["project"], name="submission_one_per_project",
                                     violation_error_message="That project has already handed in its one ship."),
             models.CheckConstraint(condition=Q(claimed_at__isnull=True) | Q(status__in=rules.REVIEWED), name="submission_claimed_only_after_review"),
             models.CheckConstraint(condition=~Q(status=rules.APPROVED) | Q(approved_hours__isnull=False), name="submission_approved_has_hours",
@@ -76,7 +69,7 @@ class Submission(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.project.name}, {rules.STAGE_LABELS[self.stage].lower()} ({self.get_status_display().lower()})"
+        return f"{self.project.name} ({self.get_status_display().lower()})"
 
     @property
     def reviewed(self):
@@ -85,11 +78,6 @@ class Submission(models.Model):
     @property
     def claimed(self):
         return self.claimed_at is not None
-
-    def clean(self):
-        """A software project's ship has no stage, a hardware project's has one."""
-        if self.project_id and (self.stage is None) == (self.project.category.kind == Category.Kind.HARDWARE):
-            raise ValidationError("Hardware ships are a design or a build; software has one ship and no stage.")
 
     def validate_constraints(self, exclude=None):
         """Check every constraint even for fields a form leaves out (the admin shows most of them read only): a constraint over a

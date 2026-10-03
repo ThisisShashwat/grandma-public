@@ -23,9 +23,8 @@ class SubmitForm(forms.Form):
     ai_declaration_text = forms.CharField(required=False, max_length=1000)
     declarations = forms.MultipleChoiceField(required=False, error_messages={"invalid_choice": NOT_ALL_TICKED})
 
-    def __init__(self, *args, cfg, kind=None, **kwargs):
-        """The boxes shown, all of which must be ticked, are the checks from the settings.
-        `kind` is accepted and ignored until part B simplifies the views."""
+    def __init__(self, *args, cfg, **kwargs):
+        """The boxes shown, all of which must be ticked, are the checks from the settings."""
         super().__init__(*args, **kwargs)
         self.checks = submission.checks(cfg.SUBMISSION_CHECKS)
         self.blocked_hosts = submission.hosts(cfg.BLOCKED_HOSTS)
