@@ -16,7 +16,7 @@
 
       <form class="login-form" method="post">
         {{ csrf_input }}
-        <input type="hidden" name="{{ redirect_field_name }}" value="{{ next }}">
+        <input type="hidden" name="next" value="{{ next }}">
         <label for="{{ form.username.id_for_label }}">Username</label>
         {{ form.username }}
         <label for="{{ form.password.id_for_label }}">Password</label>
