@@ -41,7 +41,7 @@ class DecisionForm(forms.ModelForm):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     form = DecisionForm
-    list_display = ("id", "person", "item", "status", "total_cookies", "total_value", "created_at", "reference")
+    list_display = ("id", "who", "item", "status", "total_cookies", "total_value", "created_at", "reference")
     list_filter = ("status", "item", "item__needs_project")
     list_select_related = ("user", "user__profile", "item")
     search_fields = ("user__username", "user__profile__display_name", "item__name", "grant_ref")
@@ -97,6 +97,12 @@ class OrderAdmin(admin.ModelAdmin):
         self.move(request, queryset, lambda order: services.refund(order.pk, by=request.user), "refunded")
 
     # the list and the read only parts of the form
+
+    @admin.display(description="person", ordering="user__username")
+    def who(self, obj):
+        """The short form for the list (the detail page has the Slack ID, which is how staff reach someone)."""
+        profile = getattr(obj.user, "profile", None)
+        return f"{obj.user.get_username()} ({(profile and profile.display_name) or 'no name'})"
 
     @admin.display(description="person", ordering="user__username")
     def person(self, obj):
