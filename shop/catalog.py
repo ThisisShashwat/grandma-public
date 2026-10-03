@@ -21,7 +21,6 @@ BLURBS = {        # Grandma's line under each shelf, keyed by ShopItem.Category.
     "fun": "Things you want, not things you need. Grandma allows some.",
     "joke": "Grandma does these by hand. Do not ask how, and do not ask why.",
 }
-HARDWARE_BLURB = "Each one is for a hardware design you shipped to Grandma. Pick the project, list every part, and she checks them all, dear."
 
 
 @dataclass(frozen=True)
@@ -42,7 +41,6 @@ class Product:
     category: str
     kind: str                       # the label: "Card grant" or "By hand"
     manual: bool
-    needs_project: bool             # a hardware grant: bought for one shipped design, with every part listed
     stackable: bool
     max_per_user: int | None        # 1 for anything non-stackable, None = no limit
     stock_left: int | None          # None = unlimited
@@ -65,7 +63,6 @@ class Shelf:
 @dataclass(frozen=True)
 class Catalog:
     shelves: tuple[Shelf, ...]
-    hardware: Shelf | None          # the separate Hardware section: every item that needs a project, apart from the shelves
 
 
 def _upgrade(item):
@@ -77,7 +74,7 @@ def _product(item):
     low, high = payout.hours_range(item.effective_cookies)
     return Product(
         slug=item.slug, name=item.name, tagline=item.tagline, description=item.description, art=item.art,
-        category=item.category, kind=item.get_kind_display(), manual=not grant, needs_project=item.needs_project, stackable=item.stackable,
+        category=item.category, kind=item.get_kind_display(), manual=not grant, stackable=item.stackable,
         max_per_user=item.max_per_user if item.stackable else 1, stock_left=item.stock, available=item.stock != 0,
         cookies=item.effective_cookies, value_usd=item.usd_value if grant else None, hours_low=low, hours_high=high,
         upgrades=tuple(_upgrade(up) for up in item.live_upgrades),
@@ -89,13 +86,9 @@ def _shelves(products):
     return tuple(Shelf(*shelf) for shelf in shelves if shelf[3])
 
 
-def _hardware(products):
-    return Shelf("hardware-grants", "Hardware grants", HARDWARE_BLURB, tuple(products)) if products else None
-
-
 def build():
     """The whole public shop. The only function the views call."""
     upgrades = Prefetch("upgrades", ShopItem.objects.filter(active=True), to_attr="live_upgrades")
     items = ShopItem.objects.filter(active=True, base_item__isnull=True).prefetch_related(upgrades)
     products = [_product(item) for item in items]
-    return Catalog(shelves=_shelves([p for p in products if not p.needs_project]), hardware=_hardware([p for p in products if p.needs_project]))
+    return Catalog(shelves=_shelves(products))

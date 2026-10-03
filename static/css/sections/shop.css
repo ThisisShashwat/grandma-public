@@ -77,7 +77,3 @@
 
 /* the way to get a grant: only for a signed-in, onboarded person (orders/) */
 .get-btn { margin-top: 0.3rem; font-size: 1.4rem; }
-
-/* the separate Hardware section: grants for a shipped design, on its own pink scene */
-.pantry-hardware .shelf-label { background: var(--note-blue); rotate: -1deg; }
-.pantry-hardware .howto { margin-bottom: 2.75rem; }
