@@ -23,7 +23,7 @@
 <section class="scene dash-body">
   <div class="wrap dash-single">
     {% if paged.rows %}
-    <ul class="slips">{% for o in paged.rows %}{{ dd.order(o) }}{% endfor %}</ul>
+    <ul class="slips">{% for o in paged.rows %}{{ dd.order(o, csrf_input) }}{% endfor %}</ul>
     {{ dd.pager(paged, url('dashboard_orders')) }}
     {% else %}
     <p class="dash-empty">Nothing ordered yet, dear. Have a look in <a href="{{ url('shop') }}">the Pantry</a>.</p>

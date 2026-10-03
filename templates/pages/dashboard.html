@@ -135,7 +135,7 @@
     <section class="dash-orders" aria-labelledby="dash-orders">
       <h2 id="dash-orders">My orders</h2>
       {% if dash.orders %}
-      <ul class="slips">{% for o in dash.orders %}{{ dd.order(o) }}{% endfor %}</ul>
+      <ul class="slips">{% for o in dash.orders %}{{ dd.order(o, csrf_input) }}{% endfor %}</ul>
       {% if dash.orders_total > dash.orders|length %}<p><a href="{{ url('dashboard_orders') }}">All {{ dash.orders_total }} of them</a></p>{% else %}<p><a href="{{ url('dashboard_orders') }}">My orders</a></p>{% endif %}
       {% else %}
       <p>Nothing ordered yet, dear. Have a look in <a href="{{ url('shop') }}">the Pantry</a>.</p>
