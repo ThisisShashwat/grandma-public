@@ -23,11 +23,12 @@ CONFIG = {
     "LINK_CONTACT": ("", "How to reach the organizer, for example mailto:you@example.com.", "link"),
 
     "DEAL_SIZE": (6, "How many notes Grandma deals in total when someone talks to her. They keep 1 to 3 of them, "
-                     "that part is fixed. Used by Talk to Grandma, which is not built yet.", "deal_size"),
-    "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing. "
-                        "Used by Talk to Grandma, which is not built yet.", "redeals_free"),
-    "REDEAL_COST": (10, "Cookies a re-deal costs once the free ones are used up. Whole cookies. "
-                        "Used by Talk to Grandma, which is not built yet.", "cookies"),
+                     "that part is fixed. A category with fewer notes than this simply deals what it has.", "deal_size"),
+    "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing.", "redeals_free"),
+    "REDEAL_COST": (10, "Cookies a re-deal costs once the free ones are used up. Whole cookies, 0 makes them all free.", "cookies"),
+
+    "PROJECT_MIN_DAYS": (10, "The earliest a project may be handed in, in days after it starts. Shown on the project page, not enforced yet.", "days"),
+    "PROJECT_MAX_DAYS": (15, "The project's deadline, in days after it starts. The page counts down to it. Not enforced yet.", "days"),
 
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
@@ -40,6 +41,7 @@ FIELDSETS = (
     ("Launch", ("LAUNCH", "FREE_ASKS")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
+    ("Projects", ("PROJECT_MIN_DAYS", "PROJECT_MAX_DAYS")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 
@@ -51,5 +53,6 @@ FIELDS = {
     "deal_size": ("django.forms.IntegerField", {"min_value": 3, "max_value": 28}),
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
+    "days": ("django.forms.IntegerField", {"min_value": 1, "max_value": 90}),
     "tutorial_depth": ("django.forms.ChoiceField", {"choices": DEPTHS}),
 }
