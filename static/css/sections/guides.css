@@ -1,0 +1,130 @@
+/* Guides: the index, a guide page with its sidebar, and .prose (the Markdown text).
+   The home page's language: 4px ink borders, tilts of at most 2 degrees, sticky notes (the red magnet on .callout is in core/notes.css).
+   Every .prose rule is wrapped in :where(.prose), which has no weight, so a component class (the calculator's, the demand notes') always wins. */
+
+/* the index */
+.guides-head { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding-block: clamp(1.5rem, 4vw, 3rem) 0.5rem; }
+.guides-head h1 { font-size: clamp(3rem, 9vw, 5.5rem); }
+.guides-head .lede { max-width: 30rem; font-size: clamp(1.3rem, 2.8vw, 1.8rem); line-height: 1.25; }
+.guides-fig { width: clamp(6rem, 20vw, 11rem); rotate: 2deg; }
+.g-section { margin-block: 2.5rem 3rem; }
+.g-label {
+  display: inline-block; margin: 0 0 1.25rem; padding: 0.05em 0.6em; font-size: clamp(2rem, 5vw, 3rem);
+  background: var(--paper); border: var(--line) solid var(--ink); rotate: -1.5deg;
+}
+.g-section:nth-of-type(3n+2) .g-label { background: var(--note-pink); rotate: 1deg; }
+.g-section:nth-of-type(3n+3) .g-label { background: var(--note-blue); rotate: -0.6deg; }
+.g-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 1.75rem; margin: 0; padding: 0; list-style: none; }
+.g-item { position: relative; padding: 1rem 1.15rem; background: var(--canvas); border: var(--line) solid var(--ink); }
+.g-item:nth-child(4n+1) { rotate: -1deg; } .g-item:nth-child(4n+2) { rotate: 0.8deg; } .g-item:nth-child(4n+3) { rotate: -0.5deg; } .g-item:nth-child(4n+4) { rotate: 1.2deg; }
+.g-item:hover { background: var(--paper); }
+.g-item:focus-within { outline: 4px dashed var(--ribbon); outline-offset: 4px; }
+.g-item h3 { margin: 0 0 0.3rem; font-size: 1.8rem; }
+.g-item h3 a { color: var(--ink); text-decoration: none; }
+.g-item h3 a:focus-visible { outline: 0; }
+.g-item h3 a::after { content: ""; position: absolute; inset: 0; }    /* the whole note is the link */
+.g-item p { margin: 0 0 0.5rem; font-size: 1.05rem; line-height: 1.3; }
+.g-time { display: inline-block; margin: 0 0 1rem; padding: 0.05em 0.6em; font-size: 0.9rem; font-weight: 700; line-height: 1.5; background: var(--canvas); border: 2px solid var(--ink); border-radius: var(--wobble-b); }
+.g-item .g-time { margin: 0.25rem 0 0; }
+
+/* a guide page: sidebar and article */
+.guide-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; padding-block: 1.5rem 3.5rem; }
+.g-nav { background: var(--canvas); border: 3px solid var(--ink); }
+.g-nav summary { padding: 0.5rem 1rem; font-family: var(--display); font-size: 1.5rem; list-style: none; }
+.g-nav summary::-webkit-details-marker { display: none; }
+.g-nav summary::before { content: "+"; display: inline-block; width: 1.4em; }
+.g-nav[open] summary::before { content: "-"; }
+.g-nav nav { padding: 0 1rem 1rem; }
+.g-nav p { margin: 0.9rem 0 0.2rem; font-family: var(--display); font-size: 1.35rem; line-height: 1.1; }
+.g-nav-title { display: none; }
+.g-nav ul { margin: 0; padding: 0; list-style: none; }
+.g-nav li a { display: block; padding: 0.1rem 0.5rem; font-family: var(--display); font-size: 1.25rem; line-height: 1.2; color: var(--ink); text-decoration: none; }
+.g-nav li a::before { content: "- "; }
+.g-nav li a:hover { background: var(--pink); }
+.g-nav a[aria-current="page"] { background: var(--paper); border-radius: var(--wobble-a); }
+.g-nav-title a { color: var(--ink); }
+
+@media (min-width: 56rem) {
+  .guide-layout { grid-template-columns: 14.5rem minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); }
+  .g-side { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
+  .g-nav { rotate: -0.5deg; }
+  /* the details element is always open here, without JavaScript: its content is shown even when it is closed */
+  @supports selector(::details-content) {
+    .g-nav::details-content { content-visibility: visible; }
+    .g-nav summary { display: none; }
+    .g-nav-title { display: block; margin-top: 0.6rem; }
+  }
+}
+
+.crumbs ol { display: flex; flex-wrap: wrap; gap: 0.2rem 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; font-size: 0.95rem; }
+.crumbs li + li::before { content: "/"; margin-right: 0.5rem; }
+.crumbs a { color: var(--ink); }
+.g-article h1 { margin-bottom: 0.2em; font-size: clamp(2.6rem, 7vw, 4.5rem); rotate: -1deg; }
+.g-summary { max-width: 36rem; margin-bottom: 1.5rem; font-size: 1.3rem; line-height: 1.3; }
+.g-toc { margin: 0 0 2rem; padding: 0.9rem 1.25rem 1rem; background: var(--note-blue); border: 3px solid var(--ink); rotate: -0.4deg; }
+.g-toc b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.5rem; }
+.g-toc ol { margin: 0.3rem 0 0; padding-left: 1.4rem; font-size: 1.05rem; }
+.g-toc li.sub { margin-left: 1.2rem; font-size: 0.95em; }
+.g-toc a { color: var(--ink); }
+.g-credit { margin-top: 2.5rem; padding-top: 1rem; border-top: 3px dashed var(--ink); font-size: 0.95rem; }
+.g-pager { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 3rem; }
+.g-pager .btn { max-width: 100%; font-size: 1.4rem; text-align: left; overflow-wrap: anywhere; }
+.g-pager small { display: block; font-family: var(--body); font-size: 0.8rem; }
+.g-next { margin-left: auto; text-align: right !important; }
+
+/* .prose: the Markdown text */
+:where(.prose) > :first-child { margin-top: 0; }
+:where(.prose) p { margin: 0 0 1em; }
+:where(.prose) h2 { width: fit-content; margin: 2.2em 0 0.5em; font-size: clamp(2rem, 4.5vw, 2.8rem); box-shadow: inset 0 -0.3em 0 var(--paper); }
+:where(.prose) h3 { margin: 1.8em 0 0.4em; font-size: 1.8rem; }
+:where(.prose) h4 { margin: 1.5em 0 0.3em; font-size: 1.1em; }
+:where(.prose) :is(h2, h3, h4) { scroll-margin-top: 1rem; }
+:where(.prose) a { color: var(--ribbon); text-decoration: underline 3px; text-underline-offset: 3px; }
+:where(.prose) a:hover { background: var(--paper); }
+:where(.prose) :is(ul, ol) { margin: 0 0 1em; padding-left: 1.5rem; }
+:where(.prose) li { margin-block: 0.3em; }
+:where(.prose) ul > li::marker { content: "- "; font-family: var(--display); }
+:where(.prose) ol > li::marker { font-family: var(--display); font-size: 1.2em; }
+:where(.prose) hr { margin: 2rem 0; border: 0; border-top: var(--line) dashed var(--ink); }
+:where(.prose) blockquote { margin: 1.5rem 0; padding: 0.9rem 1.25rem 0.4rem; background: var(--canvas); border: 3px solid var(--ink); border-left: 1rem solid var(--lilac); rotate: 0.4deg; font-style: italic; }
+:where(.prose img:not(.widget img)) { display: block; max-width: 100%; height: auto; margin: 1.25rem auto; border: var(--line) solid var(--ink); }
+:where(.prose) table { display: block; max-width: 100%; margin: 1.25rem 0; overflow-x: auto; border-collapse: collapse; font-size: 1rem; }
+:where(.prose) :is(th, td) { padding: 0.45rem 0.8rem; border: 3px solid var(--ink); text-align: left; vertical-align: top; }
+:where(.prose) th { background: var(--paper); font-family: var(--display); font-weight: 400; font-size: 1.2rem; }
+:where(.prose) code { padding: 0.05em 0.35em; background: var(--note-blue); border: 2px solid var(--ink); border-radius: var(--wobble-b); font: 0.9em/1.2 Consolas, "Courier New", monospace; overflow-wrap: anywhere; }
+:where(.prose) pre { margin: 1.25rem 0; padding: 1rem 1.2rem; overflow-x: auto; background: var(--canvas); border: var(--line) solid var(--ink); font-size: 0.95rem; line-height: 1.4; }
+:where(.prose) pre code { padding: 0; background: none; border: 0; border-radius: 0; font-size: 1em; overflow-wrap: normal; }
+:where(.prose) kbd { padding: 0.05em 0.4em; background: var(--canvas); border: 2px solid var(--ink); border-radius: 4px; font: 0.9em Consolas, monospace; }
+
+/* code colors (Pygments class names), from the site's palette */
+.highlight [class^="k"] { color: var(--ribbon); font-weight: 700; }
+.highlight [class^="s"] { color: #b3141b; }
+.highlight [class^="c"] { color: #555; font-style: italic; }
+.highlight [class^="m"] { color: #7b3f98; }
+.highlight .nf, .highlight .nc, .highlight .nd { color: #1d6b34; }
+
+/* callouts: ::: tip, ::: warning and ::: note are sticky notes */
+.callout { position: relative; margin: 1.9rem 0 1.5rem; padding: 1.2rem 1.25rem 0.6rem; background: var(--paper); border: 3px solid var(--ink); rotate: -0.6deg; font-size: 1.05rem; line-height: 1.35; }
+.callout--warning { background: var(--note-pink); rotate: 0.6deg; }
+.callout--note { background: var(--note-blue); rotate: -0.3deg; }
+.callout-title { margin: 0 0 0.2rem; font-family: var(--display); font-size: 1.6rem; line-height: 1; }
+
+/* widgets (guides/widgets.py): the calculator is always stacked here, the article column is narrower than the home page's */
+.widget { margin: 2rem 0; }
+.widget--payout-calculator { padding: 1.25rem; background: var(--sky); border: var(--line) solid var(--ink); }
+.widget .pay { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+.widget .pay-face { max-width: 15rem; }
+.widget .bubble::before, .widget .bubble::after { left: 2.5rem; top: -22px; border: 14px solid transparent; border-bottom: 22px solid var(--ink); border-top: 0; }
+.widget .bubble::after { top: -15px; border-bottom-color: var(--canvas); }
+
+.demand-tier h3 { margin: 2rem 0 0.8rem; }
+.demand-tier h3 span { font-size: 0.7em; }
+.demand-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.demand { margin: 0; padding: 0.8rem 1rem 0.9rem; background: var(--paper); border: 3px solid var(--ink); font-size: 1rem; line-height: 1.3; }
+.demand[data-tier="1"] { background: var(--note-blue); }
+.demand[data-tier="3"] { background: var(--note-pink); }
+.demand:nth-child(odd) { rotate: -0.4deg; } .demand:nth-child(even) { rotate: 0.4deg; }
+.demand b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.05; }
+.demand i { display: block; margin: 0.2rem 0 0.5rem; }
+.demand p { margin: 0 0 0.4rem; }
+.demand small { display: block; font-size: 0.85rem; font-weight: 700; }
