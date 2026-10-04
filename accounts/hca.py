@@ -4,17 +4,18 @@ rests on and the reasons for each choice: docs/research/hackatime-and-hca.md.
 WRITTEN DISABLED, for the owner to review before he enables it: nothing here runs unless the HCA_LOGIN admin setting is on AND HCA_CLIENT_ID and
 HCA_CLIENT_SECRET are in the environment (`enabled`), and the library is only set up the first time it is needed.
 
-It NEVER creates an account (the owner has not decided: research section 6). The first Hack Club sign-in only LINKS to an account staff already
-made, matched by the Slack ID, and refuses anyone else (`identify`). Two rules keep that safe, because the Slack ID in a Profile may have been typed
-by the person at onboarding and was never checked: only an account with NO usable password is ever linked by Slack ID (staff make participant
-accounts for Hack Club sign-in with an unusable password; an account that has a password can still sign in with it), and a staff or superuser
-account is never signed in through Hack Club at all, linked or not. Hack Club is asked for three things (openid, slack_id, verification_status)
-and we keep two: the stable `sub` id and the time of the last check. The tokens and the id token are read in memory and dropped: never stored,
-never logged, never put in the session.
+A first Hack Club sign-in CREATES an account with an unusable password (never staff, never superuser) and attaches its Slack ID to the Profile.
+The gate (ysws_eligible is True) is checked at first login only: returning participants are never polled or re-checked, so aging out mid-program
+does not lock them out. A returning sign-in finds the account by `hca_sub` and signs in. Staff or superuser accounts are never signed in through
+Hack Club. Hack Club is asked for three scopes (openid, slack_id, verification_status) and we keep two fields: the stable `sub` id and the time
+of the last sign-in. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
 """
+import hashlib
+
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
-from django.db import transaction
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
 from django.urls import reverse
 from django.utils import timezone
 
@@ -74,50 +75,76 @@ def userinfo_of(request):
 
 
 def check(userinfo, require_eligible):
-    """Whether this sign-in may go on: (True, None) or (False, reason) with reason one of pending, not_eligible, not_verified, no_slack_id.
-    Required eligibility means a verified identity that Hack Club says may join (ysws_eligible is true). The Slack ID is always needed: it is
-    how the account is found."""
-    if require_eligible:
-        status = userinfo.get("verification_status")
-        if status == "pending":
-            return False, "pending"
-        if status == "ineligible":
-            return False, "not_eligible"
-        if status != "verified":
-            return False, "not_verified"
-        if userinfo.get("ysws_eligible") is not True:
-            return False, "not_eligible"
+    """Whether a first sign-in may proceed: (True, None) or (False, reason) with reason in not_eligible, no_slack_id.
+    If require_eligible is on, ysws_eligible must be True (verification_status is not checked). The Slack ID must
+    be a valid member ID string."""
+    if require_eligible and userinfo.get("ysws_eligible") is not True:
+        return False, "not_eligible"
     slack_id = userinfo.get("slack_id")
     if not isinstance(slack_id, str) or not is_member_id(slack_id):
         return False, "no_slack_id"
     return True, None
 
 
-def may_sign_in(user, linking):
-    """Active, never staff or superuser (the admin is not opened with a Slack ID), and a first link only to an account with no usable password
-    (an unchecked Slack ID typed by somebody who has a password must not hand them the real owner's Hack Club sign-in)."""
-    if not user.is_active or user.is_staff or user.is_superuser:
-        return False
-    return not (linking and user.has_usable_password())
+def may_sign_in(user):
+    """Active, never staff or superuser (the admin is not opened with Hack Club)."""
+    return bool(user.is_active and not user.is_staff and not user.is_superuser)
 
 
-def identify(userinfo):
-    """The Profile to sign in, or None to refuse. Matched by the stored `sub`; otherwise by the Slack ID (exactly, and only when it is shaped
-    like one), and then the `sub` is LINKED to that Profile for good. Refused: no match, `may_sign_in` saying no (an inactive, staff or superuser
-    user, or a first link to an account that has a usable password), a Profile already linked to another `sub`. On success it stamps the check
-    time and writes the audit entry in the same transaction, with the Profile row locked."""
-    sub, slack_id = userinfo.get("sub"), userinfo.get("slack_id")
-    if not isinstance(sub, str) or not 0 < len(sub) <= SUB_MAX_LENGTH:
-        return None
-    with transaction.atomic():
-        profiles = Profile.objects.select_for_update().select_related("user")
-        profile = profiles.filter(hca_sub=sub).first()
-        linking = profile is None
-        if linking and isinstance(slack_id, str) and is_member_id(slack_id):
-            profile = profiles.filter(slack_id=slack_id).first()
-        if profile is None or not may_sign_in(profile.user, linking) or (linking and profile.hca_sub):
-            return None
-        profile.hca_sub, profile.hca_checked_at = sub, timezone.now()
-        profile.save(update_fields=["hca_sub", "hca_checked_at"])
-        audit.record("accounts.hca_login", actor=profile.user, subject=profile.user, target=profile, details={"linked": linking})
+def username_for(sub):
+    """Deterministic username derived from sub and nothing else."""
+    return "hca_" + hashlib.sha256(sub.encode()).hexdigest()[:32]
+
+
+def sign_in(profile):
+    """Sign in a returning person: check they may sign in, update the check time, and record the login."""
+    if not may_sign_in(profile.user):
+        return None, "no_account"
+    profile.hca_checked_at = timezone.now()
+    profile.save(update_fields=["hca_checked_at"])
+    audit.record("accounts.hca_login", actor=profile.user, subject=profile.user, target=profile, details={"created": False})
+    return profile, None
+
+
+def create(sub, slack_id):
+    """Create a user and profile for a first-time Hack Club sign-in, and record the login."""
+    # create_user without a password creates an account with an unusable password on purpose.
+    user = get_user_model().objects.create_user(username=username_for(sub))
+    profile = Profile.objects.create(
+        user=user,
+        hca_sub=sub,
+        slack_id=slack_id,
+        hca_checked_at=timezone.now(),
+    )
+    audit.record("accounts.hca_login", actor=user, subject=user, target=profile, details={"created": True})
     return profile
+
+
+def identify(userinfo, require_eligible):
+    """The Profile to sign in or create, or (None, reason).
+    Returns (Profile, None) on success, (None, reason) otherwise where reason is one of
+    not_eligible, no_slack_id, no_account.
+    Invalid or missing sub gives (None, 'no_account')."""
+    sub = userinfo.get("sub")
+    if not isinstance(sub, str) or not 0 < len(sub) <= SUB_MAX_LENGTH:
+        return None, "no_account"
+
+    with transaction.atomic():
+        profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
+        if profile is not None:
+            return sign_in(profile)
+
+        ok, reason = check(userinfo, require_eligible)
+        if not ok:
+            return None, reason
+
+        slack_id = userinfo.get("slack_id")
+        try:
+            with transaction.atomic():
+                profile = create(sub, slack_id)
+                return profile, None
+        except IntegrityError:
+            profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
+            if profile is not None:
+                return sign_in(profile)
+            return None, "no_account"

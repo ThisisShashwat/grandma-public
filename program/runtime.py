@@ -59,11 +59,10 @@ CONFIG = {
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
                                    "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
 
-    "HCA_LOGIN": (False, "Show a Sign in with Hack Club button on the sign-in page and let people sign in that way. It needs the three environment values "
-                         "(HCA_CLIENT_ID, HCA_CLIENT_SECRET, HCA_ISSUER; the id and secret are never set here). It only links to an account you already made, "
-                         "matched by the person's Slack ID: it never makes one."),
-    "HCA_REQUIRE_ELIGIBLE": (True, "A Hack Club sign-in must come from a verified identity that Hack Club says is eligible (verification status verified and ysws_eligible true). "
-                                   "Off lets in anyone whose Slack ID matches an account."),
+    "HCA_LOGIN": (False, "Shows the button and lets people sign in; the first sign-in makes their account, which stays outside the beta until staff give it access. "
+                         "Needs the three environment values (HCA_CLIENT_ID, HCA_CLIENT_SECRET, HCA_ISSUER; the id and secret are never set here)."),
+    "HCA_REQUIRE_ELIGIBLE": (True, "A person's first Hack Club sign-in must have ysws_eligible true or no account is made; later sign-ins are never re-checked. "
+                                   "Off lets in anyone with a valid Slack ID on their first sign-in."),
     "HACKATIME_ENABLED": (False, "Make the Hackatime step of onboarding real and mandatory: people connect their Hackatime account and cannot go on until they have. "
                                  "It needs the environment values (HACKATIME_CLIENT_ID, HACKATIME_CLIENT_SECRET, HACKATIME_BASE_URL; the id and secret are never set here). "
                                  "While it is on, a person whose connection fails (wrong credentials, a wrong redirect address, Hackatime down, no Hackatime account) cannot finish onboarding: "

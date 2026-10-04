@@ -53,7 +53,8 @@ def welcome(request):
     if profile.onboarded_at and not store.load(request).position:
         return redirect("home")
     cfg = live()
-    return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected), store=store, finish=partial(onboarding.finish, cfg),
+    return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id)),
+                    store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("home"), title="Welcome")
 
 
@@ -100,9 +101,9 @@ def login_hackclub(request):
 @never_cache
 @require_GET
 def login_hackclub_callback(request):
-    """Where Hack Club sends the person back. The library checks the state, the code and the id token; then the eligibility rules, then the
-    account (docs/accounts.md). Nothing is created: an unknown person is refused. The Django login uses the named backend (Axes guards passwords
-    only, and two backends are configured). No token is kept."""
+    """Where Hack Club sends the person back. The library checks the state, the code and the id token; then hca.identify
+    signs in a returning person or creates an account on first login. The Django login uses the named backend (Axes guards
+    passwords only, and two backends are configured). No token is kept."""
     cfg = live()
     if not hca.enabled(cfg):
         raise Http404
@@ -111,14 +112,10 @@ def login_hackclub_callback(request):
     if userinfo is None:
         log.warning("hack club sign-in failed")
         return hackclub_refused(request, "failed")
-    ok, reason = hca.check(userinfo, cfg.HCA_REQUIRE_ELIGIBLE)
-    if not ok:
+    profile, reason = hca.identify(userinfo, cfg.HCA_REQUIRE_ELIGIBLE)
+    if reason is not None:
         log.warning("hack club sign-in refused: %s", reason)
         return hackclub_refused(request, reason)
-    profile = hca.identify(userinfo)
-    if profile is None:
-        log.warning("hack club sign-in refused: no_account")
-        return hackclub_refused(request, "no_account")
     login(request, profile.user, backend="django.contrib.auth.backends.ModelBackend")
     return redirect(target or landing(profile.user))
 

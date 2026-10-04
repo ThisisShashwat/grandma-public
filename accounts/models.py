@@ -29,9 +29,9 @@ class Profile(models.Model):
                                          help_text="The id of the Hackatime account they connected, so one Hackatime account backs only one account here. Only the connect callback "
                                                    "sets it. Nothing else about them is kept from Hackatime, and no token.")
     hca_sub = models.CharField("Hack Club Auth ID", max_length=100, null=True, blank=True, unique=True, editable=False,
-                               help_text="The stable id Hack Club Auth gives this person (its sub claim). Only the Hack Club sign-in sets it (accounts/hca.py), the first time, "
-                                         "by matching the Slack ID. Nothing else about them is kept from Hack Club.")
-    hca_checked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="The last time they signed in with Hack Club and passed its checks.")
+                               help_text="The stable id Hack Club Auth gives this person (its sub claim). The first Hack Club sign-in makes the account and sets it "
+                                         "(accounts/hca.py). Nothing else about them is kept from Hack Club.")
+    hca_checked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="The last time they signed in with Hack Club.")
     beta_access = models.BooleanField(default=False, help_text="May use the participant pages while the BETA_MODE setting is on. Staff never need it. "
                                                                "New profiles start without it; the migration gave it to everyone who was here before.")
 
