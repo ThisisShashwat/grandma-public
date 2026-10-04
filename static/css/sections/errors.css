@@ -1,0 +1,27 @@
+/* Error pages (components/error.html): Grandma, her speech bubble, a yellow sticky note with the status (each 0 is her cookie),
+   a pink hint, a way home. Loaded on its own by the standalone 500 page too, after the core files. */
+.error-scene { min-height: 68vh; display: grid; align-content: center; }
+.error-alone .error-scene { min-height: 100vh; border-top: 0; }   /* the standalone page has no header or footer around it */
+
+.error-fig { width: clamp(11rem, 36vw, 21rem); justify-self: center; }
+.error-talk { display: grid; justify-items: start; gap: 1.5rem; }
+
+.error-bubble { padding: 1rem clamp(1rem, 3vw, 1.75rem); font-family: var(--display); font-size: clamp(1.6rem, 3.6vw, 2.2rem); line-height: 1.2; }
+.error-bubble p { margin: 0; }
+
+.error-note {
+  position: relative; width: min(100%, 21rem); padding: 1.6rem 1.25rem 1.1rem; text-align: center;
+  background: var(--paper); border: 3px solid var(--ink); rotate: -1.2deg;
+}
+.error-code { margin: 0; font-family: var(--display); font-size: clamp(4.5rem, 16vw, 7rem); line-height: 0.95; }
+.error-code img { height: 0.72em; width: auto; margin-inline: 0.03em; vertical-align: -0.02em; }
+.error-note h1 { margin: 0.1em 0 0; font-size: clamp(1.9rem, 5vw, 2.4rem); rotate: 0deg; }
+
+.error-hint { max-width: 24rem; rotate: 0.8deg; }
+.scene--blush .error-hint { background: var(--note-blue); }   /* the pink note would vanish on the pink scene */
+.error-talk .actions { margin: 0; }
+.error-talk .btn { font-size: 1.4rem; }
+
+@media (max-width: 800px) {   /* stacked: Grandma on top, the bubble's tail points up at her */
+  .error-fig { justify-self: start; margin-left: 1rem; }
+}

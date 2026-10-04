@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{# Every error page but the 500 (pages/views.py error_page): the normal header and footer around Grandma's note. #}
+
+{% block title %}{{ e.label }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/errors.css') }}">
+{% endblock %}
+
+{% block head %}
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block main %}
+{% include "components/error.html" %}
+{% endblock %}

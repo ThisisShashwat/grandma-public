@@ -1,0 +1,22 @@
+<!doctype html>
+{# The standalone error page: the 500, and the fallback for any other error page that cannot render the full one. It does NOT extend base.html
+   on purpose: base reads the admin settings and the session from the database through the context processor, and the database is often
+   what broke. pages/views.py renders this one without a request, so no context processor runs. Plain /static paths, no scripts. #}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ e.label }}</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Gochi+Hand&display=swap">
+  {% for name in ["tokens", "base", "art", "buttons", "layout", "notes"] %}
+  <link rel="stylesheet" href="/static/css/core/{{ name }}.css">
+  {% endfor %}
+  <link rel="stylesheet" href="/static/css/sections/errors.css">
+</head>
+<body class="error-alone">
+  <main>
+    {% include "components/error.html" %}
+  </main>
+</body>
+</html>

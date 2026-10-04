@@ -53,6 +53,9 @@ CONFIG = {
                                       "Off (the default) puts noindex, nofollow on them: the pages stay open to anyone with the link, but they are not found by searching, "
                                       "because the people on them are 13 to 18."),
 
+    "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
+                                   "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
+
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
     "TUTORIAL_FOR_SOME": ("second", "What someone who has shipped a project or two sees.", "tutorial_depth"),
@@ -67,6 +70,7 @@ FIELDSETS = (
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
+    ("Notifications", ("SLACK_NOTIFICATIONS",)),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 

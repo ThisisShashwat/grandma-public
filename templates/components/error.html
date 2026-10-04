@@ -1,0 +1,24 @@
+{# Grandma's error page: her face, her line in a speech bubble, a yellow sticky note with the status (every 0 is her cookie), a pink hint
+   when there is one, the way home. Shared by pages/error.html and the standalone pages/error_plain.html. Nothing in it comes from the request. #}
+{% import "macros/art.html" as art %}
+<section class="scene scene--{{ e.scene }} error-scene">
+  <div class="wrap split">
+    {{ art.fig(e.face, e.alt, "aside-fig error-fig") }}
+    <div class="error-talk">
+      <div class="talk-bubble error-bubble"><p>{{ e.line }}</p></div>
+      <div class="error-note">
+        <p class="error-code"><span class="sr">{{ e.code }}</span><span aria-hidden="true">{% for digit in e.code %}{% if digit == "0" %}{{ art.img("cookie.png", "") }}{% else %}{{ digit }}{% endif %}{% endfor %}</span></p>
+        <h1>{{ e.label }}</h1>
+      </div>
+      {% if e.hint %}
+      <p class="oops error-hint">{{ e.hint }}</p>
+      {% endif %}
+      <p class="actions">
+        <a class="btn" href="{{ url('home') }}">Back to the kitchen</a>
+        {% if e.guides %}
+        <a class="btn btn--plain" href="{{ url('guides') }}">Look in the guides</a>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+</section>

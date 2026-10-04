@@ -17,3 +17,9 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)    # an empty list unless DEBUG is on
+
+# Grandma's error pages (pages/views.py). 405 and the CSRF failure have no handler setting here: pages/middleware.py and CSRF_FAILURE_VIEW.
+handler400 = "pages.views.bad_request"
+handler403 = "pages.views.permission_denied"
+handler404 = "pages.views.not_found"
+handler500 = "pages.views.server_error"

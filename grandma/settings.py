@@ -17,6 +17,8 @@ DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
+SITE_URL = env("SITE_URL", default="http://localhost:8000")      # the public address, for links in messages sent outside a request (submissions/notices.py)
+SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's Slack bot (accounts/slack.py). A secret: environment only, never the admin or the database
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -48,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "submissions.middleware.CollectFirst",     # a result waiting at Grandma's goes before the pages that matter (docs/submissions.md)
+    "pages.middleware.method_not_allowed_page",    # a plain 405 gets Grandma's page (after the session and auth, so the header knows who is here)
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",          # last: turns a lockout into the themed 429 page
 ]
@@ -137,6 +140,7 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_FAILURE_VIEW = "pages.views.csrf_failure"      # Grandma's "stale slip" page (HTTP 403)
 
 # Production security: on whenever DEBUG is off, each one can be overridden from the environment.
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)

@@ -60,6 +60,11 @@ def review_problem(status, public_note, number, max_rounds, was=""):
     return ""
 
 
+def newly_asked_for_changes(was, status):
+    """Whether saving `status` over `was` is the moment changes get asked for: not a row that already has them, not any other decision."""
+    return status == CHANGES_REQUESTED and was != CHANGES_REQUESTED
+
+
 def award(status, tiers, hours, quality, ribbon, ribbon_holder=False):
     """The cookies a review is worth, a whole number: the payout formula for an approved submission, nothing for anything else.
     `tiers` are the tiers of the demands the person kept; `ribbon_holder` is whether they already held a Blue Ribbon from an earlier

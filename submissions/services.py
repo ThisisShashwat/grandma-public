@@ -2,6 +2,8 @@
 database. Every change takes the same locks as projects and the ledger, in the same order: the person's Profile row first, then the
 rows being changed, so two clicks on the same button cannot both win (SQLite is in IMMEDIATE mode, settings.py; on Postgres the row
 locks do the work). The cookie handover writes the ledger only through ledger.services, under the key `submission:{id}`."""
+from functools import partial
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -11,7 +13,7 @@ from ledger import services as ledger
 from projects import rules as project_rules
 from projects import services as project_services
 from projects.models import Project
-from submissions import rules
+from submissions import notices, rules
 from submissions.models import Submission
 
 NOTHING_TO_SHIP = "You have nothing to hand in right now, dear. Only a project you are building."
@@ -126,7 +128,8 @@ def review(submission, *, by, max_rounds, now=None):
     the person has been handed the result: the check is made under a lock on the row, so a form opened before the handover cannot
     change it. ValidationError (a sentence for the reviewer, rules.review_problem) for changes requested without a note, or newly asked
     for on the last round (`max_rounds` is the MAX_ROUNDS setting; a row that already has changes requested is not asked again);
-    nothing is saved then."""
+    nothing is saved then. When changes are newly asked for, the Slack notice is registered to go out only once the transaction has
+    committed (notices.tell_changes_requested: switched off by default, and it never raises)."""
     current = Submission.objects.select_for_update().select_related("project__user").get(pk=submission.pk)
     if current.claimed_at is not None:
         raise AlreadyCollected
@@ -154,6 +157,8 @@ def review(submission, *, by, max_rounds, now=None):
             "cookies_awarded": submission.cookies_awarded or 0,
         },
     )
+    if rules.newly_asked_for_changes(current.status, submission.status):
+        transaction.on_commit(partial(notices.tell_changes_requested, submission.pk))
     return submission
 
 
