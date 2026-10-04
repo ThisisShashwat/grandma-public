@@ -19,6 +19,7 @@ from django.urls import reverse
 from accounts.models import Profile
 from accounts.validators import SLACK_ID
 from ledger import services as ledger
+from program import duration
 from program.content.demands import LEVELS, TIERS
 from projects import rules as project_rules
 from projects.models import Project, ProjectDemand
@@ -90,6 +91,8 @@ class Ship:
     screenshot: str
     links: tuple
     note: str           # Grandma's note: only once the maker has collected the result
+    tracked: str = ""
+    approved: str = ""
 
 
 @dataclass(frozen=True)
@@ -227,11 +230,15 @@ def demand(row):
 def ship(row):
     """One ship as a stranger sees it. Grandma's note is only read once the maker has collected the result."""
     status = ship_status(row)
-    note = row["public_note"].strip() if row["claimed_at"] is not None else ""
+    collected = row["claimed_at"] is not None
+    note = row["public_note"].strip() if collected else ""
+    tracked = duration.text(row["tracked_seconds"]) if collected and row.get("tracked_seconds") is not None else ""
+    approved = duration.of_hours(row["approved_hours"]) if collected and row["status"] == submission_rules.APPROVED and row.get("approved_hours") is not None else ""
     return Ship(
         round=row["round"], status=status, status_label=rules.LABELS[status], ribbon=status == rules.RIBBON,
         description=row["description"], screenshot=picture(row["screenshot"]), note=note,
-        links=external("Try it", row["playable_url"]) + external("The code", row["repo_url"]) + external("Recording", row["recording_url"]))
+        links=external("Try it", row["playable_url"]) + external("The code", row["repo_url"]) + external("Recording", row["recording_url"]),
+        tracked=tracked, approved=approved)
 
 
 def project_page(pk, cfg):
@@ -243,7 +250,7 @@ def project_page(pk, cfg):
     if project is None:
         return None
     rows = list(visible.filter(project_id=pk).values(
-        "round", "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note").order_by("-round", "-id"))
+        "round", "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note", "tracked_seconds", "approved_hours").order_by("-round", "-id"))
     if not rows:
         return None
     top = rows[0]

@@ -9,6 +9,7 @@ claims it, whatever the session says."""
 from django.urls import reverse
 
 from accounts.services import profile_of
+from program import duration
 from projects.conversation import cookies
 from submissions import rules, script, services
 from submissions.models import Submission
@@ -25,9 +26,12 @@ PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "
 def outcome(submission, max_rounds):
     approved = submission.status == rules.APPROVED
     mood = rules.mood(services.tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon) if approved else "sideeye"
+    tracked = duration.text(submission.tracked_seconds) if submission.tracked_seconds is not None else ""
+    reduced = bool(approved and submission.tracked_seconds is not None and submission.approved_hours is not None and (submission.approved_hours * 3600 < submission.tracked_seconds))
     return script.Outcome(approved=approved, ribbon=approved and submission.ribbon,
                           cookies=submission.cookies_awarded or 0, has_note=bool(submission.public_note.strip()), mood=mood,
-                          changes=submission.status == rules.CHANGES_REQUESTED, goes_left=max_rounds - submission.round)
+                          changes=submission.status == rules.CHANGES_REQUESTED, goes_left=max_rounds - submission.round,
+                          tracked=tracked, reduced=reduced)
 
 
 def dialogue(cfg, submission):
@@ -42,7 +46,17 @@ def then(submission):
 
 def answers(submission):
     """What her lines quote: the person's name, the project's name, the reviewer's note and the amount. Always fresh from the database."""
-    return {"submission": str(submission.pk), "display_name": profile_of(submission.project.user).display_name, "name": submission.project.name, "note": submission.public_note.strip(), "cookies": cookies(submission.cookies_awarded or 0)}
+    tracked = duration.text(submission.tracked_seconds) if submission.tracked_seconds is not None else ""
+    approved = duration.of_hours(submission.approved_hours) if submission.status == rules.APPROVED and submission.approved_hours is not None else ""
+    return {
+        "submission": str(submission.pk),
+        "display_name": profile_of(submission.project.user).display_name,
+        "name": submission.project.name,
+        "note": submission.public_note.strip(),
+        "cookies": cookies(submission.cookies_awarded or 0),
+        "tracked": tracked,
+        "approved": approved,
+    }
 
 
 def current(request):

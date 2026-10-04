@@ -35,6 +35,8 @@ class SubmissionRow:
     cookies: int | None     # what she handed over: only once collected and approved
     ribbon: bool            # only once collected
     note: str               # the public note: only once collected
+    tracked: str = ""
+    approved: str = ""
 
 
 @dataclass(frozen=True)

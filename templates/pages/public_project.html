@@ -37,6 +37,9 @@
       {% if s.screenshot %}<img class="pub-ship-shot" src="{{ s.screenshot }}" alt="Screenshot of {{ page.name }}" loading="lazy">{% endif %}
       <p class="pub-text">{{ s.description }}</p>
       {% if s.links %}<p class="actions">{% for link in s.links %}{{ pub.out(link) }}{% endfor %}</p>{% endif %}
+      {% if s.tracked or s.approved %}
+      <p class="pub-text">{% if s.tracked %}Hackatime tracked {{ s.tracked }}.{% endif %}{% if s.tracked and s.approved %} {% endif %}{% if s.approved %}Approved {{ s.approved }}.{% endif %}</p>
+      {% endif %}
       {% if s.note %}
       <div class="pub-note">
         <p class="pub-note-label">Grandma's note</p>

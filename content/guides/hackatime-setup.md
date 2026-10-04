@@ -19,5 +19,5 @@ Hackatime is made and maintained by Hack Club, so its own docs are the place to 
 :::
 
 ::: note
-This site does not read your Hackatime hours yet. How your hours reach the review is not decided.
+After Grandma has handed over a result, you see how much Hackatime tracked and how many hours the reviewer approved, and so does everyone who opens your project page; if the reviewer approves less, the note says why.
 :::

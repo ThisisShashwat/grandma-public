@@ -29,7 +29,7 @@ The most important ones come first.
 ## Hours are not paid word for word
 
 ::: warning
-A reviewer may reduce your hours if they look inflated. Grandma can only prove what she can verify, and Hackatime is not proof of work. Honest hours, a repository that shows the work, and a project that matches the number are your best friends.
+A reviewer may reduce your hours if they look inflated. Grandma can only prove what she can verify, and Hackatime is not proof of work. Honest hours, a repository that shows the work, and a project that matches the number are your best friends. After Grandma has handed over a result, you see how much Hackatime tracked and how many hours the reviewer approved, and so does everyone who opens your project page; if the reviewer approves less, the note says why.
 :::
 
 ## After you submit

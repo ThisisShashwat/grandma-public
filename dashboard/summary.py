@@ -14,6 +14,7 @@ from ledger import services as ledger
 from ledger.models import CookieEntry
 from orders import rules as order_rules
 from orders.models import Order
+from program import duration
 from projects import notes, rules, services as project_services
 from shop.models import ShopItem
 from submissions import rules as submission_rules
@@ -67,10 +68,13 @@ def submission_row(submission, zone):
     else:
         status, label = submission.status, submission_rules.LABELS[submission.status]
     approved = collected and submission.status == submission_rules.APPROVED
+    tracked = duration.text(submission.tracked_seconds) if collected and submission.tracked_seconds is not None else ""
+    approved_text = duration.of_hours(submission.approved_hours) if approved and submission.approved_hours is not None else ""
     return records.SubmissionRow(
         project=submission.project.name, round=submission.round, rounds=submission.rounds, when=day(submission.submitted_at, zone), status=status,
         status_label=label, cookies=submission.cookies_awarded if approved else None, ribbon=approved and submission.ribbon,
-        note=submission.public_note.strip() if collected else "")
+        note=submission.public_note.strip() if collected else "",
+        tracked=tracked, approved=approved_text)
 
 
 def cookie_row(entry, zone):

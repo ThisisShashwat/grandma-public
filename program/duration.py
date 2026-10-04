@@ -22,3 +22,15 @@ def text(seconds):
         parts.append(f"{minutes} minute" if minutes == 1 else f"{minutes} minutes")
 
     return " ".join(parts) if parts else "0 minutes"
+
+
+def of_hours(hours):
+    """Format a Decimal, int or float number of hours into plain words. None or negative gives '0 minutes'."""
+    if hours is None or isinstance(hours, bool):
+        return "0 minutes"
+    try:
+        if hours <= 0:
+            return "0 minutes"
+        return text(int(hours * 3600))
+    except (TypeError, ValueError):
+        return "0 minutes"

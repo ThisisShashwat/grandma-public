@@ -1,7 +1,7 @@
 """What Grandma says when she hands over the result of a review. Text and steps only; the wiring (the person's place in it, what
-happens when it is over) is submissions/handover.py. Original wording in her voice: cookies and her mood only, never hours,
-dollars or rates. {display_name} is the person's name, {name} the project's name, {note} what the reviewer wrote for the person, {cookies} "405 cookies":
-they are filled from the answers, so a note with braces or markup in it is plain text, never part of a template."""
+happens when it is over) is submissions/handover.py. Original wording in her voice: tracked time and approved hours, cookies and her
+mood, never dollars or rates. {display_name} is the person's name, {name} the project's name, {note} what the reviewer wrote for the person, {cookies} "405 cookies",
+{tracked} and {approved} durations in plain words: they are filled from the answers, so a note with braces or markup in it is plain text, never part of a template."""
 from dataclasses import dataclass
 
 from talk.dialogue import End, Say
@@ -16,6 +16,8 @@ class Outcome:
     mood: str          # the face of her mood, from the payout scale (rules.mood)
     changes: bool = False      # the reviewer asked for changes: nothing paid, and the person can fix it and hand it in again
     goes_left: int = 0         # hand-ins still allowed after this round (MAX_ROUNDS minus the round): 1 or less means the next one is the last go
+    tracked: str = ""
+    reduced: bool = False
 
 
 def conversation(outcome):
@@ -32,12 +34,17 @@ def conversation(outcome):
 def approved(outcome):
     ribbon = [Say(face="ribbon", celebrate=True, lines=(
         "Wait. Wait, wait, wait.", "That is a Blue Ribbon, dear. I don't give those out.", "Well. I do. But very rarely. Hold still while I pin it on you."))] if outcome.ribbon else []
+    if outcome.tracked:
+        counted_lines = ("Hackatime counted {tracked}. I approved {approved}.", "I took some off, dear. The reviewer's note says why.") if outcome.reduced else ("Hackatime counted {tracked}. I approved {approved}.",)
+    else:
+        counted_lines = ("I approved {approved}.",)
+    counted = Say(face="writing", lines=counted_lines)
     pays = outcome.cookies > 0
     hand_over = Say(face="hug", button="Take the cookies" if pays else "Right, then",
                     lines=("Here, {display_name}. {cookies}.", "Count them. I'll know if you don't.") if pays else ("No cookies for this one, dear.", "But it's through, and I'm not taking back what I said."))
     next_up = "Come back and show me the next one."
     thanks = "Into your jar they go." if pays and not outcome.ribbon else "Well done, dear."
-    return [*ribbon, hand_over, End(face="overjoyed" if outcome.ribbon else "approved", button="To my dashboard", lines=(thanks, next_up))]
+    return [counted, *ribbon, hand_over, End(face="overjoyed" if outcome.ribbon else "approved", button="To my dashboard", lines=(thanks, next_up))]
 
 
 def rejected():
