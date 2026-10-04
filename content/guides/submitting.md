@@ -34,9 +34,23 @@ A reviewer may reduce your hours if they look inflated. Grandma can only prove w
 
 ## After you submit
 
-Once you hand a project in, nothing about it can be changed.
+Once you hand a project in, nothing you handed in can be changed.
 
 The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. Grandma tells you each result herself, one at a time, the next time you visit.
+
+A reviewer looks at your project and says one of three things:
+
+- **Approved.** You collect your cookies from Grandma.
+- **Changes requested.** The reviewer writes what to change. No cookies yet, because only the round that gets approved pays. Grandma reads you the note and you collect it from her like any result.
+- **Turned down for good.** Rare, for cheating or spam. The project is finished.
+
+### Fixing a project
+
+A project with changes requested shows on your dashboard with a Fix it button, and with the note. Press it, change the project, and hand it in again: that is the next round, with its own hand-in note. The note starts filled in from your last round, but the screenshot has to be added again and the boxes ticked again.
+
+You can fix it whenever you like, there is no clock, and you can do it while you are building a new project. A project usually gets at most 3 rounds, and Grandma tells you how many goes are left. On the last one the reviewer can only say yes or no.
+
+The note about what to change is public, like everything else about a project. Once you have collected it from Grandma, anybody with the link to your project page can read it.
 
 ## The link to try it
 

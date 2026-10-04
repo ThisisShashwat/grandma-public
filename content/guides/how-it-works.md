@@ -22,11 +22,13 @@ As long as it takes: half an hour or ten days, on your own. There is no time lim
 
 ## 4. You submit
 
-One project, one ship. The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. [The checklist](/guides/submitting/).
+One ship per round. The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. [The checklist](/guides/submitting/).
 
-## 5. You earn cookies
+## 5. You earn cookies, or you fix it
 
 Cookies are what you get for hours you shipped. Spicier demands and a project Grandma loves make each hour worth more. Grandma tells you each result herself, one at a time, the next time you visit. [The payouts](/guides/payouts/) page has a calculator to play with.
+
+Not every project is approved the first time. A reviewer who is not happy asks for changes and writes what to change. Grandma reads it to you, no cookies are paid for that round, and you fix the project whenever you like and hand it in again. A project usually gets at most 3 rounds, and only the round that is approved pays. [The rules](/guides/rules/) have the details.
 
 ## 6. You spend them, or you go again
 

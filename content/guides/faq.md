@@ -64,8 +64,17 @@ As long as it takes. Half an hour or ten days, nobody is timing you. The program
 :::
 
 ::: faq Can I ship the same project twice?
-No. One project, one ship, however much you polish it afterwards. See the [rules](/guides/rules/).
+Only to fix it after a reviewer asked for changes, and that is a new round, not a second helping. One ship per round, and only the approved round pays cookies. Polishing a project nobody asked you to change does not get you another ship. See the [rules](/guides/rules/).
 :::
+
+::: faq Can I work on a new project while I fix an old one?
+Yes. A project with changes requested does not count as the one in the works, so you can fix it whenever you like, even while you are building something new. Only a project you are talking to Grandma about or building counts as in the works.
+:::
+
+::: faq How many times can I send a project back?
+A project usually gets at most 3 rounds, and the first hand-in is round one. Grandma tells you how many goes you have left. On the last round the reviewer can only say yes or no, so make it a good one.
+:::
+
 ::: faq Can one project count in two programs?
 Not the same work and hours. Time that another program already counted does not count here. Make something new for Grandma.
 :::
@@ -99,7 +108,7 @@ After a reviewer has checked your project and your hours. Grandma tells you each
 ## AI
 
 ::: faq Is it fine if AI wrote most of it?
-No. AI may take under 30% of your total time, and you must be able to explain every part of what you hand in. A project from one prompt, with no debugging, no shaping and no learning, will be turned down.
+No. AI may take under 30% of your total time, and you must be able to explain every part of what you hand in. A project from one prompt, with no debugging, no shaping and no learning, will not be approved.
 :::
 
 ::: faq Do I have to say how I used AI?
@@ -128,8 +137,8 @@ No. A still PNG, JPEG or WebP of the real project, not a mock-up.
 A public repository and a README that says what it is and how to run it, yes. A licence is a nice idea, not a must. Commit as you go: one giant commit for a big project makes a reviewer suspicious.
 :::
 
-::: faq What if my project is turned down?
-Grandma tells you why when you next visit, in her own words. That project is finished. You do not have to wait for review to start another project anyway: the moment you hand one in, you can start the next.
+::: faq What if my project is not approved?
+Usually the reviewer asks for changes and writes what to fix. Grandma reads it to you the next time you visit, no cookies are paid for that round, and you fix the project and hand it in again. Only a round that is approved pays. In rare cases, like cheating or spam, a project is turned down for good. You never have to wait: the moment you hand one in, you can start the next.
 :::
 
 ## Shop and grants
@@ -153,7 +162,11 @@ Use the Sign up button on the home page. Accounts are made by hand, so if yours 
 :::
 
 ::: faq Who can see my projects?
-Everybody. Your display name, your Slack ID, your projects and what you hand in are public. Your region and time zone are not. Put nothing in a project that you would not put on a wall.
+Everybody. Your display name, your Slack ID, your projects, what you hand in and what a reviewer asked you to change are public. Your region and time zone are not. Put nothing in a project that you would not put on a wall.
+:::
+
+::: faq Who can read the changes a reviewer asked for?
+Anybody with the link to your project page, once you have collected the result from Grandma. Like everything else about a project, the note is public. Until you collect it, strangers only see that the project is in review.
 :::
 
 ::: faq Where do I ask more questions?
