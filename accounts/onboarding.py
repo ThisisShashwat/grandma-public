@@ -27,19 +27,14 @@ def asks_to_skip(cfg):
     return lambda answers: offers_skip(cfg.TUTORIAL_ENABLED, depth_for(answers.get("expertise"), cfg))
 
 
-def with_slack_step(step, slack_known):
-    """The Slack ID question and, right after it, Grandma telling a person whose ID is already known (from Hack Club) that it goes on their public page. Exactly
-    one of the two is played; both stay in the list because the stored place is an index."""
-    if getattr(step, "key", None) != "slack_id":
-        return [step]
-    return [replace(step, when=lambda answers: not slack_known), replace(script.SLACK_KNOWN, when=lambda answers: slack_known)]
-
-
 def dialogue(cfg, hackatime_connected=False, slack_known=False):
     """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, and whether their Slack ID is already known."""
-    questions = [step for question in script.QUESTIONS for step in with_slack_step(question, slack_known)]
+    questions = [
+        replace(step, when=lambda answers: not slack_known) if getattr(step, "key", None) == "slack_id" else step
+        for step in script.QUESTIONS
+    ]
     return [
-        *script.OPENING, *questions, script.hackatime_step(hackatime.enabled(cfg), hackatime_connected),
+        *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(hackatime.enabled(cfg), hackatime_connected),
         replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
         *(replace(step, when=plays(1, cfg)) for step in script.PART_ONE),
         *(replace(step, when=plays(2, cfg)) for step in script.PART_TWO),

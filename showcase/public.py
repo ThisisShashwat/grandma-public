@@ -8,7 +8,6 @@ whether the whole world may know it. Layers: showcase/rules.py (pure) <- this fi
 """
 from collections import defaultdict
 from dataclasses import dataclass
-from urllib.parse import urlsplit
 
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
@@ -17,7 +16,6 @@ from django.db.models import Exists, OuterRef
 from django.urls import reverse
 
 from accounts.models import Profile
-from accounts.validators import SLACK_ID
 from ledger import services as ledger
 from program import duration
 from program.content.demands import LEVELS, TIERS
@@ -59,8 +57,6 @@ class Card:
 class ProfilePage:
     name: str
     path: str
-    slack_id: str
-    slack_url: str      # "" when it cannot be built safely
     projects: int
     ribbons: int
     cards: tuple
@@ -174,14 +170,6 @@ def where(category, subcategory):
     return category + (f", {subcategory}" if subcategory else "")
 
 
-def slack_url(workspace, slack_id):
-    """The link that opens a person in Slack, or "" if either part is not what it should be (a Slack ID is [UW] and capitals and
-    digits, the workspace an http or https address)."""
-    if not SLACK_ID.fullmatch(slack_id) or urlsplit(workspace).scheme not in ("http", "https"):
-        return ""
-    return f"{workspace.rstrip('/')}/team/{slack_id}"
-
-
 def external(label, url):
     """A link a stranger may follow: only a plain http or https one that passes the same rules as the hand-in form."""
     return (Link(label, url),) if url and not links.web_url_problem(url) else ()
@@ -207,7 +195,7 @@ def paged(page):
 
 def profile_page(pk, number, cfg):
     """A person's page, or None when there is nobody to show (unknown, not onboarded, switched off). `number` is the ?page= text."""
-    person = people().filter(user_id=pk).values("user_id", "display_name", "slack_id").first()
+    person = people().filter(user_id=pk).values("user_id", "display_name").first()
     if person is None:
         return None
     visible = ships(cfg.SHOW_REJECTED_PUBLICLY)
@@ -218,7 +206,7 @@ def profile_page(pk, number, cfg):
         by_project[row["project_id"]].append(row)
     name = person["display_name"]
     return ProfilePage(
-        name=name, path=profile_path(pk, name), slack_id=person["slack_id"], slack_url=slack_url(cfg.SLACK_WORKSPACE_URL, person["slack_id"]),
+        name=name, path=profile_path(pk, name),
         projects=page.paginator.count, ribbons=shown.filter(Exists(ribboned(visible).filter(project=OuterRef("pk")))).count(),
         cards=tuple(filter(None, (card(p, by_project[p["id"]], name, pk) for p in page))), paged=paged(page))
 

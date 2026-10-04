@@ -48,8 +48,6 @@ CONFIG = {
     "ORDER_SCREENSHOT_MAX_SIDE": (6000, "The longest side of an order screenshot, in pixels. Anything bigger is refused.", "pixels"),
     "ORDER_SCREENSHOT_MAX_MEGAPIXELS": (20, "The most pixels (width times height, in millions) an order screenshot may have. Checked before it is decoded.", "megapixels"),
 
-    "SLACK_WORKSPACE_URL": ("https://hackclub.slack.com", "The address of the Slack workspace. A public profile links to this address plus /team/ and the person's Slack ID. "
-                                                         "Just the address, nothing after it.", "workspace"),
     "SHOW_REJECTED_PUBLICLY": (True, "Show rejected projects on the public profile and project pages (only after the person has heard the result). Off hides them."),
     "LEADERBOARD_SIZE": (50, "How many people the cookie board lists, the most cookies earned all time first.", "leaderboard_size"),
     "PUBLIC_PAGES_INDEXABLE": (False, "Let search engines list the public profiles, project pages, Blue Ribbon wall and cookie board. "
@@ -86,7 +84,7 @@ FIELDSETS = (
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
-    ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
+    ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Notifications", ("SLACK_NOTIFICATIONS",)),
     ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),

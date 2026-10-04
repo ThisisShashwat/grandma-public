@@ -1,4 +1,4 @@
-"""What Grandma says during onboarding. Text and steps only: the questions, the Hackatime step and the two tutorial parts.
+"""What Grandma says during onboarding. Text and steps only: the opening, the software-only rule, the questions, the Hackatime step and the two tutorial parts.
 Who sees which part is decided in accounts/onboarding.py; how a step is built is talk/dialogue.py."""
 from django.urls import reverse
 
@@ -12,6 +12,10 @@ OPENING = [
         "Oh! Somebody's here. Come in, come in, and wipe your feet.",
         "I'm Grandma. I'll be bossing you about for a good while, so I need to write a few things down.")),
 ]
+
+SOFTWARE_ONLY = Say(face="finger", lines=(
+    "One rule before we start, dear: software only.",
+    "Websites, apps, games, tools, bots, anything made of code. Nothing you have to plug in or solder."))
 
 QUESTIONS = [
     AskText(key="display_name", face="writing", label="Your name", validators=(validate_display_name,), max_length=30, button="That's me",
@@ -33,10 +37,6 @@ QUESTIONS = [
         "How much of this have you done before?", "Be honest. I can tell.")),
 ]
 
-# Played instead of the Slack ID question for somebody Hack Club already told us about (accounts/onboarding.py): the ID is public on their page, so they are told.
-SLACK_KNOWN = Say(face="magnifier", lines=(
-    "Hack Club already told me your Slack ID, {display_name}, so I won't ask.",
-    "It goes on my wall next to your name, so people can find you in the Slack. That is how my wall works, dear."))
 
 def hackatime_step(enabled=False, connected=False):
     """The Hackatime step (accounts/hackatime.py). Switched off (the default) it is a greyed-out button that lets people carry on, because nobody could

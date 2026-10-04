@@ -6,9 +6,6 @@
 .pub-fig { width: min(100%, 12rem); justify-self: center; }
 .pub-lede { max-width: 32rem; margin: 0 0 0.8rem; font-size: clamp(1.3rem, 2.8vw, 1.8rem); line-height: 1.25; overflow-wrap: anywhere; }
 .pub-count { margin: 0 0 0.8rem; font-family: var(--display); font-size: clamp(1.6rem, 4vw, 2.1rem); line-height: 1.1; }
-.pub-slack { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin: 0; }
-.pub-slack b { font-family: var(--display); font-size: 1.4rem; font-weight: 400; overflow-wrap: anywhere; }
-.pub-slack .btn { font-size: 1.3rem; }
 .pub-body h2 { margin: 0 0 1rem; font-size: clamp(2rem, 5vw, 2.8rem); }
 .pub-body h2 .pub-stamp { vertical-align: middle; }
 
