@@ -9,6 +9,7 @@
      [data-pay="hours"]          <input type="range">
      [data-pay="hours-out"]      shows the hours
      [data-pay="total"]          shows the cookies
+     [data-pay="form"]           the <form>, whose submit is cancelled
      [data-pay="say"]            Grandma's one-liner
      [data-pay="huge"]           lights up by itself at 20 hours and up
      [data-pay="quality"] and [data-pay="ribbon"]    toggle buttons (aria-pressed)
@@ -92,6 +93,7 @@ export function mount(rootEl, { pay, faces, tiers, levels, reduceMotion, gsap: g
     });
   });
   hoursEl.addEventListener("input", () => update());
+  one("form")?.addEventListener("submit", (e) => e.preventDefault());     // Enter in the slider must not send the form (no inline handler: the CSP forbids it)
 
   paintSlots();
   update(true);

@@ -14,7 +14,11 @@ EXTENSIONS = {f".{extension}" for extension, _ in FORMATS.values()}
 
 
 class PrivateStorage(FileSystemStorage):
-    """A file system storage rooted at settings.PRIVATE_MEDIA_ROOT (read every time, so tests can move it) that cannot make a URL."""
+    """A file system storage rooted at settings.PRIVATE_MEDIA_ROOT (read every time, so tests can move it) that cannot make a URL. Files are
+    readable by the site's own user only (0o600, folders 0o700): the web server must not read them, only the login-checked view does."""
+
+    file_permissions_mode = 0o600
+    directory_permissions_mode = 0o700
 
     @property
     def base_location(self):

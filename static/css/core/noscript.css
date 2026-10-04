@@ -1,0 +1,2 @@
+/* Linked from a <noscript> in base.html (an inline <style> would need a CSP exception). Without JavaScript nothing removes the placeholder boxes. */
+.ph::before { display: none; }

@@ -19,7 +19,7 @@
   {% endfor %}
   {% block styles %}{% endblock %}
   {% block head %}{% endblock %}
-  <noscript><style>.ph::before { display: none; }</style></noscript>
+  <noscript><link rel="stylesheet" href="{{ static('css/core/noscript.css') }}"></noscript>
 
   {# Libraries: exact versions plus integrity hashes, so a hacked CDN cannot swap the file.
      If one refuses to load, check the console for an "integrity" error. Bumping a version means regenerating its hash

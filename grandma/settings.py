@@ -2,8 +2,11 @@
 `.env` file (copy `.env.example`). With DEBUG off the security settings switch on by themselves."""
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.csp import CSP
 
 from program import runtime
 
@@ -14,9 +17,13 @@ environ.Env.read_env(BASE_DIR / ".env")        # real environment variables win 
 
 SECRET_KEY = env("SECRET_KEY")                  # required: no default on purpose
 DEBUG = env.bool("DEBUG", default=False)
+if not DEBUG and SECRET_KEY.startswith("dev-only"):      # the key in .env.example is public: a server must never run on it
+    raise ImproperlyConfigured("SECRET_KEY is the public development key from .env.example. Make a long random one (the command is in .env.example) before turning DEBUG off.")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
+if not ADMIN_URL.endswith("/") or ADMIN_URL.startswith("/"):
+    raise ImproperlyConfigured("ADMIN_URL must end with a slash and must not start with one, like admin/ or a-long-secret-word/.")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")      # the public address, for links in messages sent outside a request (submissions/notices.py)
 SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's Slack bot (accounts/slack.py). A secret: environment only, never the admin or the database
 HCA_CLIENT_ID = env("HCA_CLIENT_ID", default="")                 # Sign in with Hack Club (accounts/hca.py). The id and the secret: environment only, never the admin or the database
@@ -49,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "audit.middleware.RequestId",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -84,6 +92,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.template.context_processors.csp",      # the admin's one inline <style> carries this nonce
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
@@ -137,6 +146,9 @@ AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", default=5)
 AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_MINUTES", default=30))
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False    # a failed try while locked must not restart the cool-off, or a stranger could keep a name locked for good
+TRUSTED_PROXY_COUNT = env.int("AXES_PROXY_COUNT", default=0)    # 0: the address is REMOTE_ADDR and X-Forwarded-For is ignored. N: N trusted reverse proxies stand in front (accounts/clientip.py)
+AXES_CLIENT_IP_CALLABLE = "accounts.clientip.client_ip"
 AXES_DISABLE_ACCESS_LOG = True                     # do not keep a log of every successful sign-in (IP addresses of minors): only failures are kept, to count them
 AXES_LOCKOUT_TEMPLATE = "pages/locked.html"        # answered with HTTP 429
 
@@ -157,3 +169,44 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", defa
 SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
 if env.bool("BEHIND_PROXY", default=False):     # set when a reverse proxy terminates HTTPS and sets X-Forwarded-Proto
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Content Security Policy (Django's own, django.middleware.csp): what a page may load and run. Enforced; CSP_REPORT_ONLY=True in the
+# environment only reports to the browser console, to look before blocking. Scripts: our own files and the libraries in templates/base.html,
+# each by its exact address (a bare host would allow any npm package on that CDN; tests/test_csp.py pins this list to the template). No inline
+# script or handler exists and eval is never allowed. style-src-attr lets the style="--x: 36" attributes (custom properties) through and
+# nothing else inline except one hashed <style> (below). form-action also names the Hackatime host: Chrome applies it to the redirect after a form POST, and the hours check
+# posts, then goes to Hackatime. Sign in with Hack Club and the Hackatime connect are plain links, so they need nothing here.
+CSP_REPORT_ONLY = env.bool("CSP_REPORT_ONLY", default=False)
+CSP_SCRIPTS = [f"https://cdn.jsdelivr.net/npm/{file}" for file in (
+    "gsap@3.15.0/dist/gsap.min.js", "gsap@3.15.0/dist/ScrollTrigger.min.js", "gsap@3.15.0/dist/Draggable.min.js",
+    "rough-notation@0.5.1/lib/rough-notation.iife.js", "canvas-confetti@1.9.4/dist/confetti.browser.js")]
+ROUGH_NOTATION_STYLE = "'sha256-a2IHEXu1qFG5AB5vTDZCiFizZFFc0ZNcwdq6s6vt3Og='"      # the one <style> rough-notation 0.5.1 adds itself (the draw-in keyframes): without it the marks stay invisible
+_hackatime = urlsplit(HACKATIME_BASE_URL)
+CSP_POLICY = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF, *CSP_SCRIPTS],
+    "style-src": [CSP.SELF, CSP.NONCE, ROUGH_NOTATION_STYLE, "https://fonts.googleapis.com"],
+    "style-src-attr": [CSP.UNSAFE_INLINE],
+    "img-src": [CSP.SELF, "data:"],
+    "font-src": [CSP.SELF, "https://fonts.gstatic.com"],
+    "connect-src": [CSP.SELF],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "frame-ancestors": [CSP.NONE],
+    "form-action": [CSP.SELF, f"{_hackatime.scheme}://{_hackatime.netloc}"],
+}
+SECURE_CSP = {} if CSP_REPORT_ONLY else CSP_POLICY
+SECURE_CSP_REPORT_ONLY = CSP_POLICY if CSP_REPORT_ONLY else {}
+
+# Errors go to stderr (the server's log), also with DEBUG off, where Django would otherwise log nothing. Messages only (the path and the
+# traceback): never a request body, a header or a form value.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"short": {"format": "{asctime} {levelname} {name}: {message}", "style": "{"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "short"}},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
+}

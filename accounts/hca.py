@@ -5,7 +5,10 @@ WRITTEN DISABLED, for the owner to review before he enables it: nothing here run
 HCA_CLIENT_SECRET are in the environment (`enabled`), and the library is only set up the first time it is needed.
 
 It NEVER creates an account (the owner has not decided: research section 6). The first Hack Club sign-in only LINKS to an account staff already
-made, matched by the Slack ID, and refuses anyone else (`identify`). Hack Club is asked for three things (openid, slack_id, verification_status)
+made, matched by the Slack ID, and refuses anyone else (`identify`). Two rules keep that safe, because the Slack ID in a Profile may have been typed
+by the person at onboarding and was never checked: only an account with NO usable password is ever linked by Slack ID (staff make participant
+accounts for Hack Club sign-in with an unusable password; an account that has a password can still sign in with it), and a staff or superuser
+account is never signed in through Hack Club at all, linked or not. Hack Club is asked for three things (openid, slack_id, verification_status)
 and we keep two: the stable `sub` id and the time of the last check. The tokens and the id token are read in memory and dropped: never stored,
 never logged, never put in the session.
 """
@@ -81,10 +84,19 @@ def check(userinfo, require_eligible):
     return True, None
 
 
+def may_sign_in(user, linking):
+    """Active, never staff or superuser (the admin is not opened with a Slack ID), and a first link only to an account with no usable password
+    (an unchecked Slack ID typed by somebody who has a password must not hand them the real owner's Hack Club sign-in)."""
+    if not user.is_active or user.is_staff or user.is_superuser:
+        return False
+    return not (linking and user.has_usable_password())
+
+
 def identify(userinfo):
     """The Profile to sign in, or None to refuse. Matched by the stored `sub`; otherwise by the Slack ID (exactly, and only when it is shaped
-    like one), and then the `sub` is LINKED to that Profile for good. Refused: no match, an inactive user, a Profile already linked to another
-    `sub`. On success it stamps the check time and writes the audit entry in the same transaction, with the Profile row locked."""
+    like one), and then the `sub` is LINKED to that Profile for good. Refused: no match, `may_sign_in` saying no (an inactive, staff or superuser
+    user, or a first link to an account that has a usable password), a Profile already linked to another `sub`. On success it stamps the check
+    time and writes the audit entry in the same transaction, with the Profile row locked."""
     sub, slack_id = userinfo.get("sub"), userinfo.get("slack_id")
     if not isinstance(sub, str) or not 0 < len(sub) <= SUB_MAX_LENGTH:
         return None
@@ -94,7 +106,7 @@ def identify(userinfo):
         linking = profile is None
         if linking and isinstance(slack_id, str) and is_member_id(slack_id):
             profile = profiles.filter(slack_id=slack_id).first()
-        if profile is None or not profile.user.is_active or (linking and profile.hca_sub):
+        if profile is None or not may_sign_in(profile.user, linking) or (linking and profile.hca_sub):
             return None
         profile.hca_sub, profile.hca_checked_at = sub, timezone.now()
         profile.save(update_fields=["hca_sub", "hca_checked_at"])
