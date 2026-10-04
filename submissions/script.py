@@ -15,7 +15,7 @@ class Outcome:
     has_note: bool
     mood: str          # the face of her mood, from the payout scale (rules.mood)
     changes: bool = False      # the reviewer asked for changes: nothing paid, and the person can fix it and hand it in again
-    goes_left: int = 0         # hand-ins still allowed after this round (MAX_ROUNDS minus the round): 1 means the next one is the last go
+    goes_left: int = 0         # hand-ins still allowed after this round (MAX_ROUNDS minus the round): 1 or less means the next one is the last go
 
 
 def conversation(outcome):
@@ -54,11 +54,10 @@ def changes(outcome):
 
 
 def goes_left_line(goes_left):
+    """Asked for changes, there is always a next go (a lowered MAX_ROUNDS cannot take it back), so there is never "no goes left"."""
     if goes_left > 1:
         return f"You have {goes_left} goes left."
-    if goes_left == 1:
-        return "The next one is your last go. After that I say yes or no, and nothing in between."
-    return "There are no goes left, dear. That was the last one."
+    return "The next one is your last go. After that I say yes or no, and nothing in between."
 
 
 # /submit/ when there is nothing to hand in (submissions/views.py not_now)

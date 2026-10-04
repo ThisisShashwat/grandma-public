@@ -29,7 +29,7 @@ STARTS_FROM = ("repo_url", "playable_url", "description", "recording_url", "ai_d
 def submit(request, pk=None):
     """Grandma's note. Without an id only a project being built can be handed in; with none being built, the person's only project with
     changes requested sends them to its page, anything else gets her saying why. With the id of the person's own project that has
-    changes requested, the next round of it, the form starting from the last round's words.
+    changes requested, the next round of it, the form starting from the last round's words (one already with Grandma gets her saying so).
     A hand-in that works goes to the dashboard."""
     if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
         return HttpResponseBadRequest("Too many files.")
@@ -37,10 +37,10 @@ def submit(request, pk=None):
     project = services.shipping_project(request.user) if pk is None else services.fixing_project(request.user, pk)
     if project is None:
         if pk is not None:
-            raise Http404
+            return just_handed_in(request, pk)
         sole = services.sole_fixing_project(request.user)
         return redirect("submit_fix", pk=sole.pk) if sole else not_now(request)
-    ship = services.ship_for(project, cfg.MAX_ROUNDS)
+    ship = services.ship_for(project)
     if ship.problem:
         return not_now(request, ship.problem) if pk is None else turned_back(request, ship.problem)
     if request.method == "POST":
@@ -49,14 +49,14 @@ def submit(request, pk=None):
         form = SubmitForm(cfg=cfg, initial=starts_from(project) if pk else None)
     if request.method == "POST" and form.is_valid():
         try:
-            services.submit(request.user, max_rounds=cfg.MAX_ROUNDS, project_id=pk, **form.cleaned_data)
+            services.submit(request.user, project_id=pk, **form.cleaned_data)
         except ValidationError as error:
             form.add_error(None, error)
         else:
             request.session["handed_in"] = True
             return redirect("dashboard")
     return render(request, "pages/submit.html", {
-        "form": form, "checks": form.checks, "project_name": project.name, "action": request.path, "round": ship.number if pk else 0, "max_rounds": cfg.MAX_ROUNDS,
+        "form": form, "checks": form.checks, "project_name": project.name, "action": request.path, "round": ship.number if pk else 0, "max_rounds": max(cfg.MAX_ROUNDS, ship.number),
         "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
 
 
@@ -64,6 +64,14 @@ def starts_from(project):
     """The last round's description, links and AI text, as the form's starting values (the screenshot and the ticks are never carried over)."""
     last = services.latest_round(project)
     return {field: getattr(last, field) for field in STARTS_FROM} if last else None
+
+
+def just_handed_in(request, pk):
+    """The fix page of a project the person owns that is already with Grandma (a double click, a second tab): her saying so. Any other id, a
+    404."""
+    if not Project.objects.filter(pk=pk, user=request.user, status__in=(project_rules.IN_REVIEW, project_rules.SHIPPED)).exists():
+        raise Http404
+    return flow.page(request, title="Hand it in", kind="end", face="magnifier", then=reverse("dashboard"), lines=script.STILL_READING, step=End(button="To my dashboard"))
 
 
 def turned_back(request, problem):

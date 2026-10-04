@@ -32,7 +32,7 @@ class ReviewForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         if "status" in cleaned and "public_note" in cleaned:
-            problem = rules.review_problem(cleaned["status"], cleaned["public_note"], self.instance.round, self.max_rounds)
+            problem = rules.review_problem(cleaned["status"], cleaned["public_note"], self.instance.round, self.max_rounds, was=self.initial.get("status", ""))
             if problem:
                 raise ValidationError(problem)
         return cleaned

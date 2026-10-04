@@ -43,9 +43,9 @@ def latest_round(project):
     return project.submissions.order_by("-round", "-id").first()
 
 
-def ship_for(project, max_rounds):
+def ship_for(project):
     """What this project may hand in next (rules.next_round) given the rounds it has handed in so far."""
-    return rules.next_round(list(project.submissions.values_list("round", "status")), max_rounds)
+    return rules.next_round(list(project.submissions.values_list("round", "status")))
 
 
 def locked_to_hand_in(user, project_id):
@@ -62,9 +62,9 @@ def waiting(user):
 
 
 @transaction.atomic
-def submit(user, *, max_rounds, project_id=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
+def submit(user, *, project_id=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
     """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
-    changes requested, as the next round (`max_rounds` is the MAX_ROUNDS setting). The project becomes `in_review`.
+    changes requested, as the next round (a reviewer already granted it, whatever MAX_ROUNDS says now). The project becomes `in_review`.
     ValidationError (a sentence for the person) when there is nothing to hand in or no round left.
     One at a time: a second click finds the project already in review."""
     project_services.lock_person(user)
@@ -72,7 +72,7 @@ def submit(user, *, max_rounds, project_id=None, repo_url, playable_url, descrip
     if locked is None:
         raise ValidationError(NOTHING_TO_SHIP)
     project = Project.objects.get(pk=locked.pk)
-    ship = ship_for(project, max_rounds)
+    ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
@@ -124,15 +124,16 @@ def review(submission, *, by, max_rounds, now=None):
     """Save the reviewer's decision, which is already on `submission` (the admin form put it there). Stamps who and when and works
     out the cookies, then saves only the review fields. Put back to `submitted`, the stamps are cleared. AlreadyCollected once
     the person has been handed the result: the check is made under a lock on the row, so a form opened before the handover cannot
-    change it. ValidationError (a sentence for the reviewer, rules.review_problem) for changes requested without a note or on the last
-    round (`max_rounds` is the MAX_ROUNDS setting); nothing is saved then."""
+    change it. ValidationError (a sentence for the reviewer, rules.review_problem) for changes requested without a note, or newly asked
+    for on the last round (`max_rounds` is the MAX_ROUNDS setting; a row that already has changes requested is not asked again);
+    nothing is saved then."""
     current = Submission.objects.select_for_update().select_related("project__user").get(pk=submission.pk)
     if current.claimed_at is not None:
         raise AlreadyCollected
     changed = any(getattr(current, f) != getattr(submission, f) for f in ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note"))
     if not changed and current.reviewed_at is not None:
         return submission
-    problem = rules.review_problem(submission.status, submission.public_note, current.round, max_rounds)
+    problem = rules.review_problem(submission.status, submission.public_note, current.round, max_rounds, was=current.status)
     if problem:
         raise ValidationError(problem)
     if submission.status == rules.SUBMITTED:

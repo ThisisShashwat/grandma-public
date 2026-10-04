@@ -30,10 +30,11 @@ class Ship(NamedTuple):
     problem: str = ""     # why there can be no next submission, or "" when there can
 
 
-def next_round(handed_in, max_rounds):
+def next_round(handed_in):
     """What a project may hand in next. `handed_in` is a (round, status) pair for every round it has handed in so far. Nothing yet: round 1.
-    After a round with changes requested: the next round, while there are rounds left. A round still with Grandma, or an approved or
-    rejected one, means there is nothing to hand in."""
+    After a round with changes requested: the next round, always: a reviewer already granted it, even if the MAX_ROUNDS setting was
+    lowered since (the cap is checked when changes are asked for, review_problem); only the hard ceiling MAX_ROUND_LIMIT stops it.
+    A round still with Grandma, or an approved or rejected one, means there is nothing to hand in."""
     if not handed_in:
         return Ship(number=1)
     last_round, last_status = max(handed_in)
@@ -41,19 +42,20 @@ def next_round(handed_in, max_rounds):
         return Ship(problem=STILL_READING)
     if last_status != CHANGES_REQUESTED:
         return Ship(problem=ALREADY_FINAL)
-    if last_round >= max_rounds:
-        return Ship(problem=f"That was round {last_round} of {max_rounds}, dear, and I give no more than that. It stays as it is.")
+    if last_round >= MAX_ROUND_LIMIT:
+        return Ship(problem=f"That was round {last_round} of {MAX_ROUND_LIMIT}, dear, and I give no more than that. It stays as it is.")
     return Ship(number=last_round + 1)
 
 
-def review_problem(status, public_note, number, max_rounds):
+def review_problem(status, public_note, number, max_rounds, was=""):
     """Why a reviewer may not save this decision for round `number`, or "". Asking for changes needs a note to tell the person what to
-    change, and is not possible on the last round: there is no next round to fix it in."""
+    change, and is not possible on the last round: there is no next round to fix it in. `was` is the status the row has now: a row that
+    already has changes requested is not asked again (the cap may have been lowered since), so its cap is not checked, only the note."""
     if status != CHANGES_REQUESTED:
         return ""
     if not public_note.strip():
         return "Asking for changes needs a public note that says what to change. Grandma reads it to the person."
-    if number >= max_rounds:
+    if was != CHANGES_REQUESTED and number >= max_rounds:
         return f"This is round {number} of {max_rounds}, the last round: there is no next round to fix it in. Approve it or reject it."
     return ""
 
