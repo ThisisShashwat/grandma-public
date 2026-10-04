@@ -85,8 +85,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "submissions.middleware.CollectFirst",     # a result waiting at Grandma's goes before the pages that matter (docs/submissions.md)
-    "pages.middleware.method_not_allowed_page",    # a plain 405 gets Grandma's page (after the session and auth, so the header knows who is here)
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "pages.middleware.method_not_allowed_page",    # a plain 405 gets Grandma's page (after the session and auth, so the header knows who is here)
     "axes.middleware.AxesMiddleware",          # last: turns a lockout into the themed 429 page
 ]
 

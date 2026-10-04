@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.cache import add_never_cache_headers
+from django.views.decorators.http import require_safe
 
 from program.content.errors import ERRORS
 
@@ -12,6 +13,7 @@ log = logging.getLogger(__name__)
 LAST_RESORT = "<!doctype html><title>Something went wrong</title><p>Something went wrong, dear. Please go back and try again.</p>"
 
 
+@require_safe
 def home(request):
     return render(request, "pages/home.html")
 
