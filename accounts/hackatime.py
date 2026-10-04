@@ -253,9 +253,9 @@ def read(profile, path, params=None):
     Rules, with no retry loop:
     - no token (token_of is None) raises Reconnect;
     - a network error, a non-2xx status other than 401, a body that is not JSON or not a dict raises Unreadable;
-    - a 401 means the token was rejected: make ONE probe GET api/v1/authenticated/me with the same token:
-      if that probe succeeds (2xx) the account is banned or similar, so raise Unreadable and keep the token;
-      otherwise call drop_token(profile) and raise Reconnect."""
+    - a 401 means the token may have been rejected: make ONE probe GET api/v1/authenticated/me with the same token:
+      only when the probe itself answers 401 is the token dead, so call drop_token(profile) and raise Reconnect;
+      any other outcome of the probe (2xx: the account is banned or similar, an exception, 429, 5xx, anything else) raises Unreadable and keeps the token."""
     token = token_of(profile)
     if token is None:
         raise Reconnect
@@ -267,11 +267,10 @@ def read(profile, path, params=None):
     status = getattr(response, "status_code", None)
     if status == 401:
         try:
-            probe = client().get("api/v1/authenticated/me", token=token)
-            probe_ok = 200 <= getattr(probe, "status_code", 0) < 300
+            probe = getattr(client().get("api/v1/authenticated/me", token=token), "status_code", None)
         except Exception:
-            probe_ok = False
-        if probe_ok:
+            probe = None
+        if probe != 401:
             raise Unreadable
         drop_token(profile)
         raise Reconnect
