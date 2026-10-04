@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.views.decorators.debug import sensitive_variables
 
 from accounts import hackatime
 from accounts.models import Profile
@@ -38,6 +39,7 @@ def unlink_hca(profile, *, by):
     return True
 
 
+@sensitive_variables()
 def unlink_hackatime(profile, *, by):
     """Staff clear a person's Hackatime link (the wrong account, or one that was banned): the id, the connected flag
     and the stored token, so they can connect again. Recorded, with no details. Revokes the old token best effort

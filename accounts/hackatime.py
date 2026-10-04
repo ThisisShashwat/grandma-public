@@ -118,7 +118,7 @@ def revoke(token):
         pass
 
 
-@sensitive_variables("access_token")
+@sensitive_variables()
 def seal(access_token):
     """Encrypt the access token with MultiFernet using settings.HACKATIME_TOKEN_KEYS.
     The first key encrypts. Raises TokenUnreadable if no keys are configured or encryption fails."""
@@ -135,7 +135,7 @@ def seal(access_token):
         raise TokenUnreadable from None
 
 
-@sensitive_variables("plain", "ciphertext")
+@sensitive_variables()
 def unseal(ciphertext):
     """Decrypt the ciphertext into the plain access token string using settings.HACKATIME_TOKEN_KEYS.
     Raises TokenUnreadable for an empty value, a bad token, or no matching key.
@@ -157,7 +157,7 @@ def unseal(ciphertext):
         raise TokenUnreadable from None
 
 
-@sensitive_variables("plain")
+@sensitive_variables()
 def token_of(profile):
     """{"access_token": <plain>, "token_type": "Bearer"} ready for Authlib's client().get(..., token=...),
     or None when the profile has no token or it is unreadable."""
@@ -170,6 +170,7 @@ def token_of(profile):
         return None
 
 
+@sensitive_variables()
 def discard(sealed):
     """Best effort and never raising: unseal and revoke it (used when a token was handed over but not kept)."""
     try:
