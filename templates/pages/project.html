@@ -80,7 +80,12 @@
           <h3 class="other-project-name">{{ op.name }}</h3>
           <span class="stamp" data-status="{{ op.status }}">{{ op.status_label }}</span>
         </div>
-        {% if op.status == "changes_requested" %}<div class="other-project-actions"><a class="btn btn--plain" href="{{ url('submit_fix', args=[op.id]) }}">Fix it</a></div>{% endif %}
+        {% if op.status not in ("abandoned", "dealing", "building") %}
+        <div class="other-project-actions">
+          {% if op.status == "changes_requested" %}<a class="btn btn--plain" href="{{ url('submit_fix', args=[op.id]) }}">Fix it</a>{% endif %}
+          <a class="btn btn--plain" href="{{ url('public_project_bare', args=[op.id]) }}">Public page</a>
+        </div>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>

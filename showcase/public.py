@@ -186,6 +186,8 @@ def external(label, url):
 
 def card(project, rows, maker, maker_id):
     """One project as a card. `rows` are its visible ships, the latest round first; top gives the status, the ribbon shows if any ship earned one."""
+    if not rows:
+        return None
     top = rows[0]
     status = ship_status(top)
     return Card(
@@ -215,7 +217,7 @@ def profile_page(pk, number, cfg):
     return ProfilePage(
         name=name, path=profile_path(pk, name), slack_id=person["slack_id"], slack_url=slack_url(cfg.SLACK_WORKSPACE_URL, person["slack_id"]),
         projects=page.paginator.count, ribbons=shown.filter(Exists(ribboned(visible).filter(project=OuterRef("pk")))).count(),
-        cards=tuple(card(p, by_project[p["id"]], name, pk) for p in page), paged=paged(page))
+        cards=tuple(filter(None, (card(p, by_project[p["id"]], name, pk) for p in page))), paged=paged(page))
 
 
 def demand(row):
@@ -242,6 +244,8 @@ def project_page(pk, cfg):
         return None
     rows = list(visible.filter(project_id=pk).values(
         "round", "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note").order_by("-round", "-id"))
+    if not rows:
+        return None
     top = rows[0]
     status = ship_status(top)
     face, line = rules.SAYS[status]

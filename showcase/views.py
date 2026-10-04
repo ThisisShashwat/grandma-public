@@ -1,5 +1,6 @@
 """The public pages: a person (/u/), a project (/p/), the Blue Ribbon wall (/ribbons/) and the cookie board (/leaderboard/). No login,
 GET and HEAD only, and the same page for everyone: nothing here looks at who is asking. Templates get showcase/public.py's records only."""
+from django.conf import settings
 from django.http import Http404, HttpResponsePermanentRedirect
 from django.shortcuts import render
 from django.views.decorators.http import require_safe
@@ -39,7 +40,7 @@ def project(request, pk, slug=None):
     page = public.project_page(pk, cfg)
     if page is None:
         raise Http404
-    return canonical(request, page) or show(request, "pages/public_project.html", cfg, page=page, share_url=request.build_absolute_uri(page.path))
+    return canonical(request, page) or show(request, "pages/public_project.html", cfg, page=page, share_url=settings.SITE_URL.rstrip("/") + page.path)
 
 
 @require_safe

@@ -116,14 +116,14 @@ def build(user):
     project = project_services.working_project(user) or project_services.latest_project(user)
     card = project_card(project) if project else None
     face, line = mood.says(project.status if project else None)
-    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.CHANGES_REQUESTED), limit=5)
+    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.CHANGES_REQUESTED), limit=6)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),
         submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
         history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count(),
         orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count(),
-        other_projects=tuple(row for row in other_list if not (card and row.id == card.id)))
+        other_projects=tuple(row for row in other_list if not (card and row.id == card.id))[:5])
 
 
 def paged(queryset, number, make):

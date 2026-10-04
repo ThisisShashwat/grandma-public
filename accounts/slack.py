@@ -3,9 +3,9 @@ until the owner sets SLACK_BOT_TOKEN in the environment and switches SLACK_NOTIF
 
 Slack API facts, checked 2026-10-04 against https://docs.slack.dev/reference/methods/chat.postMessage (and /apis/web-api/rate-limits):
   - POST https://slack.com/api/chat.postMessage, JSON body, `Authorization: Bearer <token>`, Content-Type application/json.
-  - A bot token (xoxb-) with the scope `chat:write` is enough. `channel` set to the person's member ID (U... or W...) opens the direct
-    message if it is not open yet: no `conversations.open` call and no `im:write` scope are needed. The person must be in the workspace
-    the app is installed in.
+  - A bot token (xoxb-) with the scope `chat:write` is enough. A member ID passed as `channel` (U... or W...) posts to the person's
+    App Home messages tab of the bot. This needs the Messages tab enabled in the Slack app; if it returns `messages_tab_disabled`,
+    the send returns False. This was not tried with a real token. The person must be in the workspace the app is installed in.
   - Slack answers HTTP 200 even when it refuses: the body is {"ok": true, ...} or {"ok": false, "error": "..."}. Only a real rate limit
     is HTTP 429 with a Retry-After header. chat.postMessage has a special limit (about 1 message a second per channel, plus a workspace
     limit): one message per review is far below it, so a refusal is simply a failed send, never retried.

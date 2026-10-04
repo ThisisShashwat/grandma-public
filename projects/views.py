@@ -2,6 +2,7 @@
 onboarded person and shows only their own project: no URL carries a project id, so there is nothing to guess (no IDOR)."""
 import random
 
+from django.conf import settings
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -113,7 +114,7 @@ def share_url(request, project):
     used because the server redirects /p/<id>/ to the canonical slug itself."""
     if project.status in NOT_PUBLIC:
         return ""
-    return request.build_absolute_uri(reverse("public_project_bare", kwargs={"pk": project.pk}))
+    return settings.SITE_URL.rstrip("/") + reverse("public_project_bare", kwargs={"pk": project.pk})
 
 
 @onboarded
