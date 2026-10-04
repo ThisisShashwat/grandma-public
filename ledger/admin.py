@@ -21,6 +21,8 @@ class AdjustmentForm(forms.ModelForm):
         if user and amount is not None:
             if amount == 0:
                 raise ValidationError("An adjustment of nothing is not an adjustment.")
+            if problem := rules.adjustment_problem(amount):
+                raise ValidationError(problem)
             if rules.overdraws(services.balance(user), amount):
                 raise ValidationError(f"That would take {user} below zero cookies (they have {services.balance(user)}).")
         return data

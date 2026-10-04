@@ -44,7 +44,7 @@
       {% else %}
 
       <form class="submit-note order-note" method="post" enctype="multipart/form-data" action="{{ url('get_grant', args=[sheet.slug]) }}"
-            data-order data-balance="{{ sheet.balance }}" data-base-cookies="{{ sheet.cookies }}" data-base-cents="{{ o.cents(sheet.value) }}">
+            data-order data-balance="{{ sheet.balance }}" data-base-cookies="{{ sheet.cookies }}"{% if sheet.value is not none %} data-base-cents="{{ o.cents(sheet.value) }}"{% endif %}>
         {{ csrf_input }}
         <input type="hidden" name="nonce" value="{{ nonce }}">
         <h1>{{ sheet.name }}</h1>
@@ -55,7 +55,7 @@
 
         <ul class="order-facts">
           <li class="order-fact"><span>Costs</span><b>{{ "{:,}".format(sheet.cookies) }}</b> cookies</li>
-          <li class="order-fact"><span>Worth</span><b>{{ shopui.usd(sheet.value) }}</b> {{ "each" if sheet.stackable else "to spend" }}</li>
+          {% if sheet.value is not none %}<li class="order-fact"><span>Worth</span><b>{{ shopui.usd(sheet.value) }}</b> {{ "each" if sheet.stackable else "to spend" }}</li>{% endif %}
           <li class="order-fact"><span>In your jar</span><b>{{ "{:,}".format(sheet.balance) }}</b> {{ "cookie" if sheet.balance == 1 else "cookies" }}</li>
         </ul>
 
@@ -64,7 +64,7 @@
           <label class="nf-label" for="quantity">How many?</label>
           <input class="input nf-num" id="quantity" name="quantity" type="number" inputmode="numeric" min="1" max="{{ sheet.most }}" value="{{ form['quantity'].value() or 1 }}" data-quantity{{ o.invalid(form["quantity"]) }}>
           {{ o.oops(form["quantity"]) }}
-          <p class="nf-hint">Up to {{ sheet.most }} in one go{% if sheet.held %}, and you already hold {{ sheet.held }}{% endif %}. Each is worth {{ shopui.usd(sheet.value) }}.</p>
+          <p class="nf-hint">Up to {{ sheet.most }} in one go{% if sheet.held %}, and you already hold {{ sheet.held }}{% endif %}.{% if sheet.value is not none %} Each is worth {{ shopui.usd(sheet.value) }}.{% endif %}</p>
         </div>
         {% endif %}
 
@@ -112,7 +112,7 @@
         <section class="order-sums" aria-label="The sums" role="status" aria-live="polite">
           <h2>The sums</h2>
           <p class="sum"><span>It costs</span> <b data-sum="cookies">{{ "{:,}".format(sheet.cookies) }}</b> cookies</p>
-          <p class="sum"><span>It will be worth</span> <b data-sum="value">{{ shopui.usd(sheet.value) }}</b></p>
+          {% if sheet.value is not none %}<p class="sum"><span>It will be worth</span> <b data-sum="value">{{ shopui.usd(sheet.value) }}</b></p>{% endif %}
           <p class="sum"><span>Left in your jar</span> <b data-sum="left">{{ "{:,}".format(sheet.balance - sheet.cookies) }}</b></p>
           <p class="sum-warn" data-sum="warn" hidden></p>
         </section>

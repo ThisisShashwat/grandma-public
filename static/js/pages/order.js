@@ -22,7 +22,8 @@ function init(form) {
     const value = quantity * base.cents + upgrades.reduce((total, [n, , c]) => total + n * c, 0);
     const left = balance - cookies;
     out("cookies").textContent = cookies.toLocaleString("en-US");
-    out("value").textContent = dollars(value);
+    const worth = out("value");                     // a by-hand item has no dollar value on its page
+    if (worth) worth.textContent = dollars(value);
     out("left").textContent = left.toLocaleString("en-US");
     if (left < 0) warn = `You'd be ${(-left).toLocaleString("en-US")} cookies short, dear. I don't do credit.`;
     const note = out("warn");

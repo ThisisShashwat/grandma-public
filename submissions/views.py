@@ -50,6 +50,7 @@ def submit(request, pk=None):
         form = SubmitForm(cfg=cfg, initial=starts_from(project) if pk else None)
     if request.method == "POST" and form.is_valid():
         try:
+            hours.require_fresh(cfg, project)
             services.submit(request.user, project_id=pk, hackatime_required=hackatime.required(cfg), **form.cleaned_data)
         except ValidationError as error:
             form.add_error(None, error)

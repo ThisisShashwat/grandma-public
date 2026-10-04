@@ -66,11 +66,12 @@ def stock_problem(stock, wanted):
 
 
 def upgrade_count_problem(count, max_per_user, name):
-    """Upgrades are counted per order: up to the upgrade's own limit, or without end when it has none."""
+    """Upgrades are counted per order: up to the upgrade's own limit, or MAX_QUANTITY (what a line of an order can hold) when it has none."""
     if count < 0:
         return "Not a negative number, dear."
-    if max_per_user is not None and count > max_per_user:
-        return f"{name}: {max_per_user} at the very most, dear."
+    most = MAX_QUANTITY if max_per_user is None else min(max_per_user, MAX_QUANTITY)
+    if count > most:
+        return f"{name}: {most} at the very most, dear."
     return ""
 
 

@@ -18,6 +18,7 @@ from submissions.models import Submission
 
 NOTHING_TO_SHIP = "You have nothing to hand in right now, dear. Only a project you are building."
 CHECK_YOUR_HOURS = "Check your hours first, dear. I won't take it until Hackatime has shown me some time on this project. Use the Check my hours button on the note."
+OWN_PROJECT = "You cannot review your own project. Ask another reviewer."
 REVIEW_FIELDS = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note", "reviewed_by", "reviewed_at", "cookies_awarded")
 
 
@@ -159,10 +160,13 @@ def review(submission, *, by, max_rounds, now=None):
     change it. ValidationError (a sentence for the reviewer, rules.review_problem) for changes requested without a note, or newly asked
     for on the last round (`max_rounds` is the MAX_ROUNDS setting; a row that already has changes requested is not asked again);
     nothing is saved then. When changes are newly asked for, the Slack notice is registered to go out only once the transaction has
-    committed (notices.tell_changes_requested: switched off by default, and it never raises)."""
+    committed (notices.tell_changes_requested: switched off by default, and it never raises). ValidationError (OWN_PROJECT) when `by` is the
+    person who made the project, whoever they are: nobody reviews their own work, and nothing is saved."""
     current = Submission.objects.select_for_update().select_related("project__user").get(pk=submission.pk)
     if current.claimed_at is not None:
         raise AlreadyCollected
+    if current.project.user_id == by.pk:
+        raise ValidationError(OWN_PROJECT)
     changed = any(getattr(current, f) != getattr(submission, f) for f in ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note"))
     if not changed and current.reviewed_at is not None:
         return submission

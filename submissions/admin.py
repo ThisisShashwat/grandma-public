@@ -3,8 +3,8 @@ and ribbon bonuses, a note Grandma reads out and a private one). The real review
 person handed in is read only, and so is the whole review once Grandma has handed the result over (a correction after that is a
 ledger adjustment). Nothing can be added or deleted here: a submission is made by the person, and kept."""
 from django import forms
-from django.contrib import admin, messages
-from django.core.exceptions import ValidationError
+from django.contrib import admin
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
@@ -22,8 +22,10 @@ RESULT = ("cookies_preview", "reviewed_by", "reviewed_at", "cookies_awarded", "c
 
 class ReviewForm(forms.ModelForm):
     """The Review form: the status says "Ask for changes" for what the person hears as changes requested, and the decision is checked
-    with the same rule as services.review (a note, and not on the last round). `max_rounds` is set once per request by get_form."""
+    with the same rule as services.review (a note, and not on the last round, and never on your own project). `max_rounds` and `reviewer`
+    (the signed-in user's id) are set once per request by get_form."""
     max_rounds = 1
+    reviewer = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,6 +34,8 @@ class ReviewForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        if self.instance.project.user_id == self.reviewer:
+            raise ValidationError(services.OWN_PROJECT)
         if "status" in cleaned and "public_note" in cleaned:
             problem = rules.review_problem(cleaned["status"], cleaned["public_note"], self.instance.round, self.max_rounds, was=self.initial.get("status", ""))
             if problem:
@@ -56,13 +60,14 @@ class SubmissionAdmin(admin.ModelAdmin):
     )
     readonly_fields = PARTICIPANT + RESULT
 
-    def get_readonly_fields(self, request, obj=None):
-        """Once the person has collected, the review is frozen too."""
-        return self.readonly_fields + (REVIEW if obj is not None and obj.claimed else ())
+    def has_change_permission(self, request, obj=None):
+        """Once the person has collected, the whole result is frozen: it opens view only, and a form opened earlier is a 403 when posted (no success message)."""
+        return super().has_change_permission(request, obj) and not (obj is not None and obj.claimed)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.max_rounds = live().MAX_ROUNDS
+        form.reviewer = request.user.pk
         return form
 
     def has_add_permission(self, request):
@@ -76,12 +81,8 @@ class SubmissionAdmin(admin.ModelAdmin):
             return
         try:
             services.review(obj, by=request.user, max_rounds=form.max_rounds)
-        except services.AlreadyCollected:
-            self.message_user(request, "Grandma has already handed this one over, so it cannot be changed. A correction is a cookie ledger adjustment.", messages.ERROR)
-            return
-        except ValidationError as error:
-            self.message_user(request, " ".join(error.messages), messages.ERROR)
-            return
+        except (services.AlreadyCollected, ValidationError):
+            raise PermissionDenied from None        # only a race gets here (the form checks the same rules): nothing is saved, and the admin writes no success message or log entry
         self.message_user(request, saved_message(obj))
 
     # the list and the read only parts of the form

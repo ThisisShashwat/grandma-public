@@ -75,7 +75,7 @@ def resolve(category_slug, subcategory_id):
     """The Category and Subcategory (or None) an answer names. ValidationError if they do not exist, are switched off or do
     not belong together."""
     category = Category.objects.filter(slug=category_slug, active=True).first()
-    subcategory = Subcategory.objects.filter(pk=subcategory_id, category=category, active=True).first() if str(subcategory_id).isdigit() else None
+    subcategory = Subcategory.objects.filter(pk=subcategory_id, category=category, active=True).first() if str(subcategory_id).isascii() and str(subcategory_id).isdigit() else None
     if category is None or (subcategory_id and subcategory is None) or (subcategory is None and subcategory_choices(category_slug)):
         raise ValidationError("I don't know that one, dear.")
     return category, subcategory

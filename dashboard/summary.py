@@ -15,6 +15,7 @@ from ledger.models import CookieEntry
 from orders import rules as order_rules
 from orders.models import Order
 from projects import notes, rules, services as project_services
+from shop.models import ShopItem
 from submissions import rules as submission_rules
 from submissions.models import Submission
 from talk.portraits import portrait
@@ -92,7 +93,7 @@ def order_row(order, zone):
     quantity = f" x {base.quantity}" if base and base.quantity > 1 else ""
     return records.OrderRow(
         id=order.pk, title=order.item.name + quantity, detail=order_detail(order), when=day(order.created_at, zone), status=order.status,
-        status_label=order_rules.LABELS[order.status], cookies=order.total_cookies, value=order.total_value, note=order.public_note.strip(),
+        status_label=order_rules.LABELS[order.status], cookies=order.total_cookies, value=order.total_value if order.item.kind == ShopItem.Kind.GRANT else None, note=order.public_note.strip(),
         proofs=order_proofs(order), can_cancel=order.status == order_rules.PENDING)
 
 

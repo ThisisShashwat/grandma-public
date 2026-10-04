@@ -65,6 +65,10 @@ STILL_READING = ("I'm reading what you handed me, dear.", "Don't hover. I'll tel
 NOTHING_TO_HAND_IN = ("You've nothing on the go, dear.", "Come and talk to me about a new project. Then you'll have something to hand in.")
 
 
+# /submit/ when hours are required and the last check is too old or too short to back the hand-in (submissions/hours.py require_fresh): no number in it.
+HOURS_NOT_ENOUGH = "Check your hours again, dear. What Hackatime showed me last time is too old, or too little, for me to take it. Use the Check my hours button on the note."
+
+
 # /hackatime/check/ when checking the hours does not go through (submissions/hours.py): one fixed label and sentence per case, nothing from Hackatime or the
 # request is ever repeated, and never a number of hours.
 HOURS_REFUSALS = {

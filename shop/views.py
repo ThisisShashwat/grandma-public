@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.utils.cache import add_never_cache_headers
 from django.views.decorators.http import require_safe
 
 from accounts.access import has_access
@@ -19,4 +20,9 @@ def jar_of(user):
 
 @require_safe
 def shop(request):
-    return render(request, "pages/shop.html", {"shop": catalog.build(), "jar": jar_of(request.user)})
+    """The public Pantry. Someone who is signed in and let in also sees their jar, so that response is never cached; a visitor's page is unchanged."""
+    jar = jar_of(request.user)
+    response = render(request, "pages/shop.html", {"shop": catalog.build(), "jar": jar})
+    if jar is not None:
+        add_never_cache_headers(response)
+    return response

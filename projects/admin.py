@@ -79,6 +79,13 @@ class ProjectAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def save_model(self, request, obj, form, change):
+        """The change form can set the status by hand, so a changed status is audited (inside the admin's own transaction, with the save)."""
+        old_status = form.initial.get("status")
+        super().save_model(request, obj, form, change)
+        if "status" in form.changed_data:
+            audit.record("project.admin_status", actor=request.user, subject=obj.user, target=obj, details={"from": old_status, "to": obj.status})
+
     @admin.display(description="demands dealt (the hand)")
     def dealt(self, obj):
         return ", ".join(d.name for d in services.hand_demands(obj)) or "-"

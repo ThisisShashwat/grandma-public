@@ -47,7 +47,7 @@ class OrderRow:
     status: str             # the order's status key, for the stamp's colour
     status_label: str
     cookies: int            # what they paid, frozen
-    value: Decimal          # what the grant is worth in dollars, frozen
+    value: Decimal | None   # what the grant is worth in dollars, frozen; None for a by-hand item (its cost never leaves the database)
     note: str               # Grandma's public note
     proofs: tuple           # (label, address) pairs: the person's own screenshots, served by orders.views to them and to staff only
     can_cancel: bool        # only while nobody has looked at it

@@ -17,7 +17,7 @@
 <li class="slip" data-status="{{ o.status }}">
   <p class="slip-top"><span class="stamp" data-status="{{ o.status }}">{{ o.status_label }}</span></p>
   <p class="slip-name"><b>{{ o.title }}</b> <span>{% if o.detail %}{{ o.detail }}, {% endif %}{{ o.when }}</span></p>
-  <p class="slip-cookies">{{ cookies(o.cookies) }}, a grant worth ${{ ("{:,.0f}" if o.value == o.value.to_integral_value() else "{:,.2f}").format(o.value) }}.</p>
+  <p class="slip-cookies">{{ cookies(o.cookies) }}{% if o.value is not none %}, a grant worth ${{ ("{:,.0f}" if o.value == o.value.to_integral_value() else "{:,.2f}").format(o.value) }}{% endif %}.</p>
   {% if o.note %}<blockquote class="slip-note">{{ o.note }}</blockquote>{% endif %}
   {% if o.proofs %}<p class="slip-proofs">Your proof: {% for label, address in o.proofs %}<a href="{{ address }}" target="_blank" rel="noopener">{{ label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
   {% if o.can_cancel %}

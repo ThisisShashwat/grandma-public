@@ -52,7 +52,7 @@ def current(request):
     if waiting:
         return waiting
     shown = request.session.get(f"talk:{SESSION}", {}).get("answers", {}).get("submission", "")
-    if not str(shown).isdigit():
+    if not (str(shown).isascii() and str(shown).isdigit()):
         return None
     return Submission.objects.filter(pk=shown, project__user=request.user, claimed_at__isnull=False).select_related("project").first()
 

@@ -26,7 +26,7 @@ class Sheet:
     manual: bool                # staff hand it over: no link, no cart
     stackable: bool
     cookies: int
-    value: Decimal
+    value: Decimal | None       # a grant's value on the card; None for a by-hand item (its cost never leaves the database)
     most: int                   # the most the person may take in one order
     held: int                   # how many they hold already
     balance: int
@@ -57,6 +57,6 @@ def build(user, item, cfg, balance):
     held = services.held(user, item.pk)
     return Sheet(
         slug=item.slug, name=item.name, tagline=item.tagline, art=item.art, description=item.description,
-        manual=item.kind == item.Kind.MANUAL, stackable=item.stackable, cookies=item.effective_cookies, value=item.usd_value,
+        manual=item.kind == item.Kind.MANUAL, stackable=item.stackable, cookies=item.effective_cookies, value=item.usd_value if item.kind == item.Kind.GRANT else None,
         most=most_of(item, held), held=held, balance=balance, blocked=blocked_for(item, held, balance),
         options=tuple(option(u) for u in item.live_upgrades))
