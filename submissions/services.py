@@ -24,7 +24,7 @@ class AlreadyCollected(Exception):
 
 def shipping_project(user):
     """The project this person could hand in now: the one they are building. None if there is none."""
-    return Project.objects.filter(user=user, status=project_rules.BUILDING).select_related("category").first()
+    return Project.objects.filter(user=user, status=project_rules.BUILDING).first()
 
 
 def ship_for(project):
@@ -47,7 +47,7 @@ def submit(user, *, repo_url, playable_url, description, screenshot, recording_u
     locked = project_services.locked_project(user, project_rules.BUILDING)
     if locked is None:
         raise ValidationError(NOTHING_TO_SHIP)
-    project = Project.objects.select_related("category").get(pk=locked.pk)
+    project = Project.objects.get(pk=locked.pk)
     ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)

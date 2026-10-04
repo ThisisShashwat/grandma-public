@@ -8,6 +8,3 @@ class ProjectRow:
     name: str
     status: str
     status_label: str
-    hardware: bool
-    can_ship_build: bool
-    can_finish: bool

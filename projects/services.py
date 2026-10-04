@@ -40,9 +40,6 @@ def other_projects(user, statuses=None, limit=30):
             name=p.name,
             status=p.status,
             status_label=rules.LABELS.get(p.status, p.status),
-            hardware=p.category.kind == Category.Kind.HARDWARE,
-            can_ship_build=p.status == rules.AWAITING_BUILD,
-            can_finish=p.status == rules.AWAITING_BUILD,
         )
         for p in qs
     ]
@@ -103,37 +100,6 @@ def locked_project(user, *statuses):
     """The person's project in one of these statuses, row locked until the transaction ends. Not select_related: Postgres
     refuses FOR UPDATE on the nullable side of a join."""
     return Project.objects.select_for_update().filter(user=user, status__in=statuses).first()
-
-
-def design_collected(project):
-    """A hardware project whose design ship was approved and handed over (collected). Asked through the reverse relation so that
-    projects never imports submissions; tests/test_projects_finish.py pins these words to submissions.rules.next_ship."""
-    return project.category.kind == Category.Kind.HARDWARE and project.submissions.filter(stage="design", status="approved", claimed_at__isnull=False).exists()
-
-
-def closed_without_build(project):
-    """An approved hardware project that never had a build ship: the person closed it with the finish button."""
-    return project.status == rules.APPROVED and design_collected(project) and not project.submissions.filter(stage="build").exists()
-
-
-@transaction.atomic
-def finish(user, pk):
-    """The "I am done with this project" button, for a hardware project that sits in `awaiting_build` after its design ship was
-    approved and collected: the build ship is optional (it may go to this program, another one, or nowhere). It becomes `approved`.
-    Asking again on an already approved own hardware project is idempotent.
-    Returns the project, or None when there is nothing to finish."""
-    lock_person(user)
-    project = Project.objects.select_for_update().filter(user=user, pk=pk).first()
-    if project is None:
-        return None
-    if not design_collected(project) or project.status not in (rules.AWAITING_BUILD, rules.APPROVED):
-        return None
-    if project.status == rules.AWAITING_BUILD:
-        old_status = project.status
-        project.status = rules.APPROVED
-        project.save(update_fields=["status"])
-        audit.record("project.finish", actor=user, subject=user, target=project, details={"from": old_status, "to": project.status})
-    return project
 
 
 @transaction.atomic

@@ -82,10 +82,6 @@ def checks(text):
         return parse_checks(default_checks_json())
 
 
-def checks_for(text, kind=None):
-    return checks(text)
-
-
 def hosts(text):
     """The blocked hosts for the setting's text; words that are not host names are skipped."""
     return tuple(dict.fromkeys(host for _, host in _words(text) if HOST.fullmatch(host)))

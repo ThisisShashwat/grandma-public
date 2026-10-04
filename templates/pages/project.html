@@ -34,7 +34,7 @@
     </ul>
 
     {% if project.status == "building" %}
-    <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.{% if hardware %} Hardware gets two goes: the design first, then the build.{% endif %}</p>
+    <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.</p>
     <p class="actions">
       <a class="btn btn--big" href="{{ url('submit') }}">Ship it</a>
       <a class="btn btn--plain" href="{{ url('project_edit') }}">Change the idea, name or kind</a>
@@ -69,19 +69,6 @@
           <h3 class="other-project-name">{{ op.name }}</h3>
           <span class="stamp" data-status="{{ op.status }}">{{ op.status_label }}</span>
         </div>
-        {% if op.can_ship_build or op.can_finish %}
-        <div class="other-project-actions">
-          {% if op.can_ship_build %}
-          <a class="btn" href="{{ url('submit_build', args=[op.id]) }}">Ship the real build</a>
-          {% endif %}
-          {% if op.can_finish %}
-          <form method="post" action="{{ url('finish_project', args=[op.id]) }}">
-            {{ csrf_input }}
-            <button class="btn" type="submit">I am done with this project</button>
-          </form>
-          {% endif %}
-        </div>
-        {% endif %}
       </li>
       {% endfor %}
     </ul>

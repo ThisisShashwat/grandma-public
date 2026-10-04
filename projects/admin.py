@@ -16,7 +16,7 @@ class SubcategoryInline(admin.TabularInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "kind", "sort", "active", "demands_in_jar")
+    list_display = ("name", "sort", "active", "demands_in_jar")
     list_editable = ("sort", "active")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [SubcategoryInline]

@@ -23,7 +23,6 @@
 .submit-note::after { content: ""; position: absolute; top: 0; bottom: 0; left: clamp(1rem, 4.6vw, 3.3rem); width: 3px; background: rgba(232, 34, 42, 0.55); }   /* the page's margin line */
 .submit-note h1 { margin: 0; font-size: clamp(2.4rem, 7vw, 3.8rem); rotate: -1deg; overflow-wrap: anywhere; }
 .submit-for { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.9rem; margin: -0.8rem 0 0; font-size: 1.3rem; overflow-wrap: anywhere; }
-.submit-stage { padding: 0.05em 0.7em; font-family: var(--display); font-size: 1.4rem; background: var(--note-blue); border: 3px solid var(--ink); rotate: 1.2deg; }
 .submit-note > .oops { justify-self: start; max-width: 100%; }
 
 .nf { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.4rem; min-width: 0; }

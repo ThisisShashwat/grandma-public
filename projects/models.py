@@ -17,13 +17,8 @@ from projects.validators import validate_idea, validate_project_name
 class Category(models.Model):
     """What sort of project it is. A demand lists the categories it can be dealt for."""
 
-    class Kind(models.TextChoices):
-        SOFTWARE = "software", "Software"
-        HARDWARE = "hardware", "Hardware"          # electronics and CAD: the two-ship rule for them comes later
-
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=40, unique=True)
-    kind = models.CharField(max_length=10, choices=Kind)
     sort = models.PositiveSmallIntegerField(default=100, help_text="Smaller comes first.")
     active = models.BooleanField(default=True, help_text="Off hides it from Talk to Grandma. Projects already in it keep it.")
 

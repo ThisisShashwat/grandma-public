@@ -2,11 +2,10 @@
 onboarded person and shows only their own project: no URL carries a project id, so there is nothing to guess (no IDOR)."""
 import random
 
-from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_http_methods, require_POST, require_safe
+from django.views.decorators.http import require_http_methods, require_safe
 
 from accounts.access import onboarded
 from ledger import services as ledger
@@ -116,24 +115,9 @@ def project(request):
     context = {"others": others}
     if working is not None:
         context.update({
-            "project": working, "status": rules.LABELS[working.status], "hardware": working.category.kind == "hardware",
+            "project": working, "status": rules.LABELS[working.status],
             "notes": notes.notes(services.kept_demands(working)), "can_start_another": False})
     else:
         context.update({
             "project": None, "can_start_another": True})
     return render(request, "pages/project.html", context)
-
-
-@onboarded
-@never_cache
-@require_POST
-def finish(request, pk):
-    """"I am done with this project": closes the person's own hardware project without a build ship.
-    Only their own awaiting_build project is closed; anything else is a 404."""
-    try:
-        pk_int = int(pk)
-    except (TypeError, ValueError):
-        raise Http404
-    if services.finish(request.user, pk_int) is None:
-        raise Http404
-    return redirect("project")
