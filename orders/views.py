@@ -5,14 +5,13 @@ proofs are served only to the order's owner or to staff who may view orders, nev
 import uuid
 from pathlib import Path
 
-from django.contrib.auth.decorators import login_required
 from django.core.exceptions import SuspiciousFileOperation, ValidationError
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
-from accounts.access import onboarded
+from accounts.access import invited, onboarded
 from ledger import services as ledger
 from orders import forms, services, sheet
 from orders.models import Order
@@ -106,7 +105,7 @@ def serve(proof):
     return response
 
 
-@login_required
+@invited
 @require_safe
 def cart(request, pk):
     order = viewable(request.user, pk)

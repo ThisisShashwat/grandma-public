@@ -25,6 +25,8 @@ class Profile(models.Model):
     tutorial_done_at = models.DateTimeField(null=True, blank=True, help_text="Set when they finished or skipped the tutorial. Empty if the tutorial was switched off.")
     hackatime_connected = models.BooleanField(default=False, editable=False,
                                               help_text="Always False for now: the Hackatime connection is not built (accounts/hackatime.py).")
+    beta_access = models.BooleanField(default=False, help_text="May use the participant pages while the BETA_MODE setting is on. Staff never need it. "
+                                                               "New profiles start without it; the migration gave it to everyone who was here before.")
 
     class Meta:
         constraints = [

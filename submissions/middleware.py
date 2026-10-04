@@ -3,6 +3,8 @@ rather than a decorator on each view: the dashboard, the project page and Talk t
 about submissions, and the list of pages is in one place."""
 from django.shortcuts import redirect
 
+from accounts.access import has_access
+from pages.live import live
 from submissions import handover, services
 
 
@@ -16,4 +18,5 @@ class CollectFirst:
     def process_view(self, request, view_func, view_args, view_kwargs):
         match = request.resolver_match
         if match and match.url_name in handover.PAGES and request.user.is_authenticated and services.waiting(request.user):
-            return redirect("collect")
+            if has_access(request.user, live()):        # somebody the beta gate turns away never goes to her: they would only be sent on to /beta/
+                return redirect("collect")

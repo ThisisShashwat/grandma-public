@@ -2,9 +2,12 @@ from functools import partial
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.shortcuts import redirect, resolve_url
+from django.shortcuts import redirect, render, resolve_url
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_safe
 
 from accounts import onboarding
+from accounts.access import has_access, invited
 from accounts.forms import LoginForm
 from accounts.services import profile_of
 from pages.live import live
@@ -22,7 +25,7 @@ class Login(LoginView):
         return resolve_url("dashboard" if profile_of(self.request.user).onboarded_at else "welcome")
 
 
-@login_required
+@invited
 def welcome(request):
     """Onboarding. Someone who is already onboarded is sent home, unless this session has just finished it (then they
     still get the last page, with its button home)."""
@@ -32,3 +35,14 @@ def welcome(request):
     cfg = live()
     return flow.run(request, onboarding.dialogue(cfg), store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("home"), title="Welcome")
+
+
+@login_required
+@never_cache
+@require_safe
+def beta(request):
+    """Grandma at the door while the site is beta only. Not behind the beta gate (that is where it sends people); somebody who is let in, or
+    anybody once BETA_MODE is off, goes on to their dashboard. Nothing about the person is on the page."""
+    if has_access(request.user, live()):
+        return redirect("dashboard")
+    return render(request, "pages/beta.html")

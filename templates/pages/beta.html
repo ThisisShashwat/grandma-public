@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Testers only{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/errors.css') }}">
+{% endblock %}
+
+{% block head %}
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{# While the site is beta only (accounts/views.py beta): the error pages' look, her face, her line and one sticky note. Nothing about the person is on it. #}
+{% block main %}
+<section class="scene scene--sky error-scene">
+  <div class="wrap split">
+    {{ art.fig("grandma-peek.png", "Grandma peeking round the kitchen door", "aside-fig error-fig") }}
+    <div class="error-talk">
+      <div class="talk-bubble error-bubble"><p>The kitchen's only open to a few testers for now, dear. Wait there and I'll tell you when the door is open to everybody.</p></div>
+      <div class="error-note">
+        <h1>Testers only</h1>
+        <p class="fine">Want to be let in? Ask in {% if link("slack") != "#" %}<a data-link="slack" {{ link_attrs("slack") }}>the Slack</a>{% else %}the Slack{% endif %} and somebody will see about it.</p>
+      </div>
+      <p class="actions"><a class="btn" href="{{ url('home') }}">Back to the kitchen</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

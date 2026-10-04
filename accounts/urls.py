@@ -8,4 +8,5 @@ urlpatterns = [
     path("login/", views.Login.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),       # POST only (Django 5 and later), CSRF checked
     path("welcome/", views.welcome, name="welcome"),
+    path("beta/", views.beta, name="beta"),
 ]

@@ -15,6 +15,9 @@ CONFIG = {
                "When the program opens, as a UTC time like 2026-10-05T12:00:00Z (or with an offset like +05:30). "
                "The countdown on the home page counts down to it.", "launch"),
     "FREE_ASKS": (3, "How many free asks the fridge on the home page offers.", "free_asks"),
+    "BETA_MODE": (True, "While on, only people with beta access (and staff) can use the participant features: onboarding, the dashboard, Talk to Grandma, projects, "
+                        "submitting and orders. Everybody else is sent to a page saying the kitchen is open to a few testers. Give access in the admin under Profiles. "
+                        "Switch it off at the public launch."),
 
     "LINK_SIGNUP": ("", "Where the Sign up buttons go (a form). Empty means a placeholder link that goes nowhere.", "link"),
     "LINK_SLACK": ("", "The Slack join link.", "link"),
@@ -64,7 +67,7 @@ CONFIG = {
 
 # the admin's groups, in this order (a tuple, because constance sorts a plain dict by title)
 FIELDSETS = (
-    ("Launch", ("LAUNCH", "FREE_ASKS")),
+    ("Launch", ("LAUNCH", "FREE_ASKS", "BETA_MODE")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
