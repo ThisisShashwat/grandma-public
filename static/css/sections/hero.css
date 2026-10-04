@@ -9,3 +9,5 @@
   font-family: var(--display); font-size: clamp(1.1rem, 2.6vw, 1.6rem); line-height: 1.05; text-align: center;
   background: var(--paper); border: 3px solid var(--ink);
 }
+/* the software-only note sits in the free strip under Grandma and the cookie, hanging a little below the stage into the section's own padding */
+.stage-note--sorry { top: auto; bottom: -1rem; padding: 1rem 0.6rem 0.65rem; font-size: clamp(0.9rem, 2.2vw, 1.25rem); line-height: 1.1; }
