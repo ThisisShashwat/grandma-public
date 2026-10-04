@@ -9,7 +9,7 @@
       <b>{{ demand.name }}</b>
       <i>"{{ demand.line }}"</i>
       <p>{{ rule.plain }}</p>
-      <small>{{ "Any project" if rule.fits|length == 5 else rule.fits|join(", ") }}</small>
+      <small>{{ "Any project" if rule.anything else rule.fits|join(", ") }}</small>
     </li>
     {% endfor %}
   </ul>
