@@ -8,12 +8,13 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
+from accounts import hackatime
 from accounts.access import onboarded
 from pages.live import live
 from projects import rules as project_rules
 from projects import services as project_services
 from projects.models import Project
-from submissions import handover, script, services
+from submissions import handover, hours, script, services
 from submissions.forms import SubmitForm
 from talk import flow
 from talk.dialogue import End
@@ -49,7 +50,7 @@ def submit(request, pk=None):
         form = SubmitForm(cfg=cfg, initial=starts_from(project) if pk else None)
     if request.method == "POST" and form.is_valid():
         try:
-            services.submit(request.user, project_id=pk, **form.cleaned_data)
+            services.submit(request.user, project_id=pk, hackatime_required=hackatime.required(cfg), **form.cleaned_data)
         except ValidationError as error:
             form.add_error(None, error)
         else:
@@ -57,7 +58,8 @@ def submit(request, pk=None):
             return redirect("dashboard")
     return render(request, "pages/submit.html", {
         "form": form, "checks": form.checks, "project_name": project.name, "action": request.path, "round": ship.number if pk else 0, "max_rounds": max(cfg.MAX_ROUNDS, ship.number),
-        "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
+        "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3],
+        "hackatime": hours.note_block(cfg, request.user, project)})
 
 
 def starts_from(project):

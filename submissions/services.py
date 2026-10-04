@@ -5,7 +5,7 @@ locks do the work). The cookie handover writes the ledger only through ledger.se
 from functools import partial
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from audit import services as audit
@@ -17,11 +17,16 @@ from submissions import notices, rules
 from submissions.models import Submission
 
 NOTHING_TO_SHIP = "You have nothing to hand in right now, dear. Only a project you are building."
+CHECK_YOUR_HOURS = "Check your hours first, dear. I won't take it until Hackatime has shown me some time on this project. Use the Check my hours button on the note."
 REVIEW_FIELDS = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note", "reviewed_by", "reviewed_at", "cookies_awarded")
 
 
 class AlreadyCollected(Exception):
     """The person has already been handed the result: the review is frozen (a correction is a ledger adjustment)."""
+
+
+class NameTaken(Exception):
+    """The Hackatime project name already backs another of this person's projects."""
 
 
 def shipping_project(user):
@@ -64,11 +69,13 @@ def waiting(user):
 
 
 @transaction.atomic
-def submit(user, *, project_id=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
+def submit(user, *, project_id=None, hackatime_required=False, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
     """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
     changes requested, as the next round (a reviewer already granted it, whatever MAX_ROUNDS says now). The project becomes `in_review`.
     ValidationError (a sentence for the person) when there is nothing to hand in or no round left.
-    One at a time: a second click finds the project already in review."""
+    One at a time: a second click finds the project already in review. The Hackatime hours the project has been checked for (and the name they are
+    under) are copied onto the submission as they are now, and stay as they were; `hackatime_required` (hackatime.required(cfg), read once per request)
+    refuses a project with no checked hours, which is a ValidationError too."""
     project_services.lock_person(user)
     locked = locked_to_hand_in(user, project_id)
     if locked is None:
@@ -77,8 +84,11 @@ def submit(user, *, project_id=None, repo_url, playable_url, description, screen
     ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)
+    if hackatime_required and not project.tracked_seconds:
+        raise ValidationError(CHECK_YOUR_HOURS)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
-                            screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text)
+                            screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text,
+                            hackatime_project=project.tracked_name or None, tracked_seconds=project.tracked_seconds, tracked_at=project.tracked_at)
     submission.full_clean()
     submission.save()
     project.status = project_rules.IN_REVIEW
@@ -100,6 +110,26 @@ def submit(user, *, project_id=None, repo_url, playable_url, description, screen
         },
     )
     return submission
+
+
+@transaction.atomic
+def record_hours(user, project_id, name, seconds, now=None):
+    """Keep what Hackatime said for this project: the name it was asked about, the seconds, and when. Only the person's own project that can be handed in
+    (being built, or with changes requested), found by id under the locks; a second check replaces the first. NameTaken (nothing changes) when the name
+    already backs another project of theirs: one Hackatime project, one project here. Returns the project, None when it is not theirs to check.
+    The audit entry says only whether any time was found: never the seconds or the name."""
+    project_services.lock_person(user)
+    project = Project.objects.select_for_update().filter(pk=project_id, user=user, status__in=(project_rules.BUILDING, project_rules.CHANGES_REQUESTED)).first()
+    if project is None:
+        return None
+    project.tracked_name, project.tracked_seconds, project.tracked_at = name, seconds, now or timezone.now()
+    try:
+        with transaction.atomic():
+            project.save(update_fields=["tracked_name", "tracked_seconds", "tracked_at"])
+    except IntegrityError:
+        raise NameTaken from None
+    audit.record("project.hackatime_check", actor=user, subject=user, target=project, details={"has_hours": seconds > 0})
+    return project
 
 
 def tiers_of(project):

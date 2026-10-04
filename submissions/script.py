@@ -63,3 +63,12 @@ def goes_left_line(goes_left):
 # /submit/ when there is nothing to hand in (submissions/views.py not_now)
 STILL_READING = ("I'm reading what you handed me, dear.", "Don't hover. I'll tell you when I'm done, and you'll know, because I'll make you come and see me.", "Meanwhile you can talk to me about a new one.")
 NOTHING_TO_HAND_IN = ("You've nothing on the go, dear.", "Come and talk to me about a new project. Then you'll have something to hand in.")
+
+
+# /hackatime/check/ when checking the hours does not go through (submissions/hours.py): one fixed label and sentence per case, nothing from Hackatime or the
+# request is ever repeated, and never a number of hours.
+HOURS_REFUSALS = {
+    "bad_name": ("What is it called?", "I need the name of your Hackatime project, dear. Just the name, as Hackatime shows it, with no commas."),
+    "taken": ("Already counted", "You have already used that Hackatime project for another of my projects, dear. One Hackatime project for each of them, or I'd count your time twice."),
+    "failed": ("That didn't work", "Something went wrong between me and Hackatime, dear, and nothing was saved. Be sure to pick the Hackatime account you gave me, then try again in a minute."),
+}

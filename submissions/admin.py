@@ -5,6 +5,7 @@ ledger adjustment). Nothing can be added or deleted here: a submission is made b
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
 from pages.live import live
@@ -13,7 +14,7 @@ from projects import services as project_services
 from submissions import rules, services
 from submissions.models import Submission
 
-PARTICIPANT = ("project", "round", "owner", "submitted_at", "hackatime_project", "repo_link", "playable_link", "description", "screenshot_preview",
+PARTICIPANT = ("project", "round", "owner", "submitted_at", "hackatime_project", "hackatime_says", "repo_link", "playable_link", "description", "screenshot_preview",
                "recording_link", "ticked", "ai_declaration_text", "kept_notes")
 REVIEW = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note")
 RESULT = ("cookies_preview", "reviewed_by", "reviewed_at", "cookies_awarded", "claimed_at")
@@ -50,7 +51,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         ("Review", {"fields": REVIEW, "description": "Set the status and, for an approval, the hours that count. Ask for changes needs a public note that says what "
                                                      "to change (it is public, like Grandma's other notes), and cannot be used on the last round. Reject is final: for cheating or spam. "
                                                      "Grandma tells the person the public note in her voice and hands over the cookies when they next visit. "
-                                                     "The person never sees the hours or the internal note."}),
+                                                     "The person never sees the hours or the internal note. The hours are your own number: what Hackatime says (above) is evidence, never filled in for you."}),
         ("Result", {"fields": RESULT}),
     )
     readonly_fields = PARTICIPANT + RESULT
@@ -92,6 +93,14 @@ class SubmissionAdmin(admin.ModelAdmin):
     @admin.display(description="collected", boolean=True)
     def collected(self, obj):
         return obj.claimed
+
+    @admin.display(description="Hackatime says")
+    def hackatime_says(self, obj):
+        """Evidence for the reviewer, never a figure for the person: the seconds Hackatime counted for the project when they handed it in. approved_hours is still
+        the reviewer's own number (nothing is copied or prefilled from this)."""
+        if obj.tracked_seconds is None:
+            return "no Hackatime check"
+        return f"{obj.tracked_seconds / 3600:.2f} hours (checked at {timezone.localtime(obj.tracked_at):%Y-%m-%d %H:%M %Z})"
 
     @admin.display(description="repository")
     def repo_link(self, obj):

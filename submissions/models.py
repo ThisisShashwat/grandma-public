@@ -34,8 +34,11 @@ class Submission(models.Model):
 
     # what the person handed in (written once, never edited)
     hackatime_project = models.CharField(max_length=100, null=True, blank=True, editable=False,
-                                         help_text="STUB. The Hackatime project their hours come from, filled in when Hackatime is connected "
-                                                   "(accounts/hackatime.py). Nothing sets it yet.")
+                                         help_text="The Hackatime project their hours were checked against, copied from the project when they handed in. "
+                                                   "Empty when they made no check. Staff only.")
+    tracked_seconds = models.PositiveIntegerField(null=True, blank=True, editable=False,
+                                                  help_text="What Hackatime reported for it, copied from the project when they handed in. Staff only: the person never sees it.")
+    tracked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When that check was made.")
     repo_url = models.URLField(max_length=300, validators=[validate_repo_url])
     playable_url = models.URLField(max_length=300, validators=[validate_web_url],
                                    help_text="Where anyone can try it. Not on a host that falls asleep (the BLOCKED_HOSTS setting).")
@@ -47,7 +50,8 @@ class Submission(models.Model):
 
     # what the reviewer decided (the admin's Review form; frozen once claimed)
     approved_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True,
-                                         help_text=f"The hours that count, 0 to {rules.MAX_HOURS}. Never shown to the person: they see cookies only.")
+                                         help_text=f"The hours that count, 0 to {rules.MAX_HOURS}. Your own number: Hackatime's figure above is evidence, it is never copied here. "
+                                                   "Never shown to the person: they see cookies only.")
     quality = models.BooleanField(default=False, help_text="Grandma loved it: the quality bonus.")
     ribbon = models.BooleanField(default=False, help_text="A Blue Ribbon project.")
     public_note = models.TextField(max_length=1000, blank=True, help_text="What Grandma tells the person, in her voice. The person reads this. Never put anything private in it.")

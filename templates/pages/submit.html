@@ -31,6 +31,7 @@
         {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
         {% if form.errors %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
 
+        {% if not hackatime %}
         <div class="nf">
           <label class="nf-label" for="hackatime">Hackatime project</label>
           <div class="nf-row">
@@ -39,6 +40,26 @@
           </div>
           <p class="nf-hint" id="hackatime-hint">Your tracked time will come from here, once it can be connected. It can't yet, so there is nothing to do.</p>
         </div>
+        {% else %}
+        <div class="nf">
+          <label class="nf-label" for="hackatime">Hackatime project name</label>
+          {% if hackatime.connected %}
+          <div class="nf-row">
+            <input class="input" id="hackatime" name="name" form="hackatime-check" maxlength="100" required autocomplete="off" spellcheck="false" value="{{ hackatime.name }}" aria-describedby="hackatime-hint">
+            <button class="btn" form="hackatime-check">Check my hours</button>
+          </div>
+          <p class="nf-hint" id="hackatime-hint">
+            {% if hackatime.found %}Grandma has seen some hours on this one.
+            {% elif hackatime.checked %}Grandma found no hours under that name, dear.
+            {% else %}The name Hackatime shows for this project. Press the button and I'll go and look.{% endif %}
+            {% if hackatime.required and not hackatime.found %}I won't take it until I've seen some hours.{% endif %}
+          </p>
+          {% else %}
+          <p class="nf-hint" id="hackatime-hint">I can't look at your hours until you have given me your Hackatime, dear.{% if hackatime.required %} I won't take it until I have.{% endif %}</p>
+          <p><a class="btn btn--plain" href="{{ url('connect_hackatime') }}?next={{ action }}">Connect Hackatime</a></p>
+          {% endif %}
+        </div>
+        {% endif %}
 
         <div class="nf">
           <label class="nf-label" for="repo_url">Your repository</label>
@@ -102,6 +123,12 @@
         <p class="submit-actions"><button class="btn btn--big">Hand it to Grandma</button></p>
         <p class="nf-hint">Once it is with me, it stays with me. I'll tell you what I think when I've read it.</p>
       </form>
+      {% if hackatime and hackatime.connected %}
+      <form id="hackatime-check" method="post" action="{{ url('hackatime_check') }}" hidden>
+        {{ csrf_input }}
+        {% if hackatime.project %}<input type="hidden" name="project" value="{{ hackatime.project }}">{% endif %}
+      </form>
+      {% endif %}
     </div>
   </div>
 </section>
