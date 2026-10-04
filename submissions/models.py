@@ -33,9 +33,9 @@ class Submission(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     # what the person handed in (written once, never edited)
-    hackatime_project = models.CharField(max_length=100, null=True, blank=True, editable=False,
-                                         help_text="The Hackatime project their hours were checked against, copied from the project when they handed in. "
-                                                   "Empty when they made no check. Staff only.")
+    hackatime_projects = models.JSONField(default=list, blank=True, editable=False,
+                                          help_text="The Hackatime projects their hours were checked against, copied from the project when they handed in. "
+                                                    "Empty when they made no check. Staff only.")
     tracked_seconds = models.PositiveIntegerField(null=True, blank=True, editable=False,
                                                   help_text="What Hackatime reported for it, copied from the project when they handed in. Staff only: the person never sees it.")
     tracked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When that check was made.")

@@ -95,6 +95,10 @@ class SubmissionAdmin(admin.ModelAdmin):
     def collected(self, obj):
         return obj.claimed
 
+    @admin.display(description="Hackatime project")
+    def hackatime_project(self, obj):
+        return ", ".join(obj.hackatime_projects) or "none"
+
     @admin.display(description="Hackatime says")
     def hackatime_says(self, obj):
         """Evidence for the reviewer, never a figure for the person: the seconds Hackatime counted for the project when they handed it in. approved_hours is still

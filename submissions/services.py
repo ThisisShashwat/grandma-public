@@ -5,7 +5,7 @@ locks do the work). The cookie handover writes the ledger only through ledger.se
 from functools import partial
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.utils import timezone
 
 from audit import services as audit
@@ -89,7 +89,7 @@ def submit(user, *, project_id=None, hackatime_required=False, repo_url, playabl
         raise ValidationError(CHECK_YOUR_HOURS)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text,
-                            hackatime_project=project.tracked_name or None, tracked_seconds=project.tracked_seconds, tracked_at=project.tracked_at)
+                            hackatime_projects=list(project.tracked_names), tracked_seconds=project.tracked_seconds, tracked_at=project.tracked_at)
     submission.full_clean()
     submission.save()
     project.status = project_rules.IN_REVIEW
@@ -114,22 +114,24 @@ def submit(user, *, project_id=None, hackatime_required=False, repo_url, playabl
 
 
 @transaction.atomic
-def record_hours(user, project_id, name, seconds, now=None):
-    """Keep what Hackatime said for this project: the name it was asked about, the seconds, and when. Only the person's own project that can be handed in
-    (being built, or with changes requested), found by id under the locks; a second check replaces the first. NameTaken (nothing changes) when the name
-    already backs another project of theirs: one Hackatime project, one project here. Returns the project, None when it is not theirs to check.
-    The audit entry says only whether any time was found: never the seconds or the name."""
+def record_hours(user, project_id, names, seconds, now=None):
+    """Keep what Hackatime said for this project: the names it was asked about, the seconds, and when. Only the person's own project that can be handed in
+    (being built, or with changes requested), found by id under the locks; a second check replaces the first. NameTaken (nothing changes) when any other
+    project of theirs already has one of these names: one Hackatime project backs only one of their projects. Returns the project, None when it is not
+    theirs to check. The audit entry says only whether any time was found and how many projects were checked: never the seconds or the names."""
     project_services.lock_person(user)
     project = Project.objects.select_for_update().filter(pk=project_id, user=user, status__in=(project_rules.BUILDING, project_rules.CHANGES_REQUESTED)).first()
     if project is None:
         return None
-    project.tracked_name, project.tracked_seconds, project.tracked_at = name, seconds, now or timezone.now()
-    try:
-        with transaction.atomic():
-            project.save(update_fields=["tracked_name", "tracked_seconds", "tracked_at"])
-    except IntegrityError:
-        raise NameTaken from None
-    audit.record("project.hackatime_check", actor=user, subject=user, target=project, details={"has_hours": seconds > 0})
+    names_set = set(names)
+    for other in Project.objects.filter(user=user).exclude(pk=project.pk):
+        if any(n in names_set for n in other.tracked_names):
+            raise NameTaken
+    project.tracked_names = list(names)
+    project.tracked_seconds = seconds
+    project.tracked_at = now or timezone.now()
+    project.save(update_fields=["tracked_names", "tracked_seconds", "tracked_at"])
+    audit.record("project.hackatime_check", actor=user, subject=user, target=project, details={"has_hours": seconds > 0, "projects": len(names)})
     return project
 
 

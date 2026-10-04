@@ -34,10 +34,19 @@ NAME_MAX_LENGTH = 100                      # the longest Hackatime project name 
 MAX_SECONDS = 2**31 - 1                    # what the database column holds
 MIN_SECONDS = 600                          # when hours are required: a ten-minute floor, so one stray heartbeat is not "work" (code, not a setting)
 FRESH_FOR = timedelta(hours=24)            # when hours are required: a check older than this is made again
+MAX_PROJECTS = 10                          # the most Hackatime projects one hand-in may count
 
 
 class TokenUnreadable(Exception):
     """The stored token is empty, corrupted, or cannot be decrypted."""
+
+
+class Reconnect(Exception):
+    """There is no usable token: the person must connect again."""
+
+
+class Unreadable(Exception):
+    """Hackatime would not show their time: banned, down, an answer in a shape we do not know."""
 
 
 class Connection(NamedTuple):
@@ -240,52 +249,135 @@ def stamp(moment):
 
 
 @sensitive_variables("token")
-def project_seconds(token, name, start, end):
-    """The seconds Hackatime has recorded for the project called `name` between `start` and `end` (datetimes), from
-    GET api/v1/authenticated/projects?projects=NAME&start=&end=&include_archived=true. Nothing else of the answer is kept. ASSUMED (research 3.3 and 3.4,
-    from the docs and the source, never run live): the body is a JSON object with a `projects` list of objects with a `name` and a `total_seconds` (a
-    number), the name is matched exactly, and a project with no time in the window is simply missing (so 0). A bad name, a body in another shape, a
-    negative, boolean or huge number, or more seconds than the window is long (so the window was ignored), raises."""
-    cleaned = clean_name(name)
-    if cleaned is None or cleaned != name:
-        raise ValueError
-    response = client().get("api/v1/authenticated/projects", token=token, params={
-        "projects": name, "start": stamp(start), "end": stamp(end), "include_archived": "true"})
-    response.raise_for_status()
-    rows = response.json()["projects"]
+def read(profile, path, params=None):
+    """Call client().get(path, token=token_of(profile), params=params) and return the parsed JSON body (a dict).
+    Rules, with no retry loop:
+    - no token (token_of is None) raises Reconnect;
+    - a network error, a non-2xx status other than 401, a body that is not JSON or not a dict raises Unreadable;
+    - a 401 means the token was rejected: make ONE probe GET api/v1/authenticated/me with the same token:
+      if that probe succeeds (2xx) the account is banned or similar, so raise Unreadable and keep the token;
+      otherwise call drop_token(profile) and raise Reconnect."""
+    token = token_of(profile)
+    if token is None:
+        raise Reconnect
+    try:
+        response = client().get(path, token=token, params=params)
+    except Exception:
+        raise Unreadable from None
+
+    status = getattr(response, "status_code", None)
+    if status == 401:
+        try:
+            probe = client().get("api/v1/authenticated/me", token=token)
+            probe_ok = 200 <= getattr(probe, "status_code", 0) < 300
+        except Exception:
+            probe_ok = False
+        if probe_ok:
+            raise Unreadable
+        drop_token(profile)
+        raise Reconnect
+
+    if status is None or not (200 <= status < 300):
+        raise Unreadable
+
+    try:
+        body = response.json()
+    except Exception:
+        raise Unreadable from None
+
+    if not isinstance(body, dict):
+        raise Unreadable
+
+    return body
+
+
+@sensitive_variables("token")
+def list_projects(profile, start, end):
+    """Every Hackatime project that has recorded time in the window [start, end].
+    Calls GET api/v1/authenticated/projects with params start, end, include_archived="true".
+    Returns a list of (name, seconds) tuples sorted by seconds descending then name, capped at 200 rows.
+    A row without a valid name passing clean_name unchanged, or without valid total_seconds (not bool, 0 <= s <= MAX_SECONDS,
+    not more than the window is long), is skipped. A body without a projects list raises Unreadable."""
+    params = {
+        "start": stamp(start),
+        "end": stamp(end),
+        "include_archived": "true",
+    }
+    body = read(profile, "api/v1/authenticated/projects", params=params)
+    rows = body.get("projects")
     if not isinstance(rows, list):
+        raise Unreadable
+
+    window_seconds = (end - start).total_seconds()
+    result = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = row.get("name")
+        cleaned = clean_name(name)
+        if cleaned is None or cleaned != name:
+            continue
+        seconds = row.get("total_seconds")
+        if isinstance(seconds, bool) or not isinstance(seconds, (int, float)):
+            continue
+        if not (0 <= seconds <= MAX_SECONDS):
+            continue
+        if seconds > window_seconds:
+            continue
+        result.append((name, int(seconds)))
+
+    result.sort(key=lambda item: (-item[1], item[0]))
+    return result[:200]
+
+
+@sensitive_variables("token")
+def total_seconds(profile, names, start, end):
+    """The combined seconds of all names in the window without double counting overlaps, from
+    GET api/v1/users/my/stats with total_seconds="true", filter_by_project, start_date and end_date.
+
+    ASSUMED (documented from Hackatime's source, never run live): the endpoint accepts the OAuth read token,
+    my means its owner, the window is half open, ISO 8601 with Z is accepted, a bad date answers 400.
+
+    names must be 1 to MAX_PROJECTS items, each passing clean_name unchanged, with no duplicates, else ValueError.
+    N must be a number (not bool), 0 <= N <= MAX_SECONDS, and not more than the window is long, else Unreadable.
+    Returns int(N)."""
+    if not isinstance(names, (list, tuple)) or not (1 <= len(names) <= MAX_PROJECTS):
         raise ValueError
-    found = [row["total_seconds"] for row in rows if row["name"] == name]
-    if not found:
-        return 0
-    seconds = found[0]
-    if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= MAX_SECONDS:
+    if len(set(names)) != len(names):
         raise ValueError
-    if seconds > (end - start).total_seconds():                    # a window cannot hold more time than it is long: Hackatime ignored start and end
-        raise ValueError
-    return int(seconds)
+    for name in names:
+        cleaned = clean_name(name)
+        if cleaned is None or cleaned != name:
+            raise ValueError
+
+    params = {
+        "total_seconds": "true",
+        "filter_by_project": ",".join(names),
+        "start_date": stamp(start),
+        "end_date": stamp(end),
+    }
+    body = read(profile, "api/v1/users/my/stats", params=params)
+    if "total_seconds" not in body:
+        raise Unreadable
+
+    n = body["total_seconds"]
+    if isinstance(n, bool) or not isinstance(n, (int, float)):
+        raise Unreadable
+    if not (0 <= n <= MAX_SECONDS):
+        raise Unreadable
+    window_seconds = (end - start).total_seconds()
+    if n > window_seconds:
+        raise Unreadable
+
+    return int(n)
+
+
+def window(project, now):
+    """(project.started_at, now). The window starts when the person kept their demands (started_at, set when the project became building), not before, so work done before they spoke to Grandma never counts."""
+    return project.started_at, now
 
 
 def check_counts(seconds, checked_at, since, now):
     """Whether a stored check may back a hand-in while hours are required: at least MIN_SECONDS, made after `since` (when the project started, or was
     last handed in, so an old check cannot carry over to a later round) and no more than FRESH_FOR ago. Nothing stored (None) never counts."""
     return bool(seconds and seconds >= MIN_SECONDS and checked_at and since < checked_at <= now and now - checked_at <= FRESH_FOR)
-
-
-@sensitive_variables("token")
-def seconds_of(request, expected_id, name, start, end):
-    """The seconds for one Hackatime project of the connection the person has just made, or None when anything at all went wrong (a refusal, a stale or
-    forged state, a bad code, no network, an answer in a shape we do not know, or a Hackatime account that is not the one they connected: their
-    `expected_id`). Like identity_of, a token that was handed over is revoked here whatever happened, and never leaves this function."""
-    try:
-        token = client().authorize_access_token(request)
-    except Exception:
-        return None
-    try:
-        if read_identity(token)[0] != expected_id:
-            return None
-        return project_seconds(token, name, start, end)
-    except Exception:
-        return None
-    finally:
-        revoke(token)

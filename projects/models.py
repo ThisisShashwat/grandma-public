@@ -81,8 +81,8 @@ class Project(models.Model):
     hand = models.JSONField(default=list, editable=False, help_text="The ids of the demands dealt. Saved on the project so a refresh never re-rolls.")
     redeals_used = models.PositiveSmallIntegerField(default=0, editable=False, help_text="Re-deals so far, free and paid.")
     demands = models.ManyToManyField(Demand, through="ProjectDemand", related_name="projects")
-    tracked_name = models.CharField(max_length=100, blank=True, default="", editable=False,
-                                    help_text="The Hackatime project the person last checked their hours against (accounts/hackatime.py). One name backs one of their projects. Staff only.")
+    tracked_names = models.JSONField(default=list, blank=True, editable=False,
+                                     help_text="The Hackatime projects the person last checked their hours against (accounts/hackatime.py). Staff only.")
     tracked_seconds = models.PositiveIntegerField(null=True, blank=True, editable=False,
                                                   help_text="What Hackatime reported for that name between the start of the project and the check. Staff only: the person never sees it.")
     tracked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When the check was made.")
@@ -90,8 +90,6 @@ class Project(models.Model):
     class Meta:
         ordering = ["-created_at", "-id"]
         constraints = [
-            models.UniqueConstraint(fields=["user", "tracked_name"], condition=~Q(tracked_name=""), name="project_tracked_name_unique_per_person_when_set",
-                                    violation_error_message="That Hackatime project already backs another of their projects."),
             models.UniqueConstraint(fields=["user"], condition=Q(status__in=rules.WORKING_STATUSES), name="one_working_project_per_user",
                                     violation_error_message="That person already has a project in progress. Abandon it first."),
             models.CheckConstraint(condition=Q(status__in=[rules.DEALING, rules.ABANDONED]) | Q(started_at__isnull=False),
