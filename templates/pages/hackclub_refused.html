@@ -11,8 +11,9 @@
 <meta name="robots" content="noindex">
 {% endblock %}
 
-{# A Hack Club sign-in that did not go through (accounts/views.py hackclub_refused): her face, one fixed line from accounts/script.py HCA_REFUSALS, the way back.
-   Nothing in it comes from Hack Club or from the request. #}
+{# A Hack Club sign-in or a Hackatime connection that did not go through (accounts/views.py hackclub_refused, hackatime_refused): her face, one fixed line from
+   accounts/script.py (HCA_REFUSALS, HACKATIME_REFUSALS), the way back (back_url and back_label, to sign in unless the view says otherwise).
+   Nothing in it comes from Hack Club, Hackatime or the request. #}
 {% block main %}
 <section class="scene scene--sky error-scene">
   <div class="wrap split">
@@ -24,7 +25,7 @@
         {% if link("slack") != "#" %}<p class="fine">Need a hand? Ask in <a data-link="slack" {{ link_attrs("slack") }}>the Slack</a>.</p>{% endif %}
       </div>
       <p class="actions">
-        <a class="btn" href="{{ url('login') }}">Back to sign in</a>
+        <a class="btn" href="{{ back_url or url('login') }}">{{ back_label or "Back to sign in" }}</a>
         <a class="btn btn--plain" href="{{ url('home') }}">Back to the kitchen</a>
       </p>
     </div>

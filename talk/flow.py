@@ -46,6 +46,8 @@ def answer(request, steps, step, position, state, *, store, finish, then, title,
         if back:
             store.go_to(request, previous_position(steps, position, state.answers))
         return redirect(request.path)
+    if isinstance(step, Say) and step.locked:       # no way past by posting: only `when` stopping the step (the thing was done elsewhere) moves the person on
+        return redirect(request.path)
     form = form_for(step, request.POST, state.answers)
     if form is not None and not form.is_valid():
         return show(request, step, position, state.answers, form, then, title, back)

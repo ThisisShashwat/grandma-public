@@ -1,6 +1,7 @@
 """What Grandma says during onboarding. Text and steps only: the questions, the Hackatime step and the two tutorial parts.
 Who sees which part is decided in accounts/onboarding.py; how a step is built is talk/dialogue.py."""
-from accounts import hackatime
+from django.urls import reverse
+
 from accounts.validators import suggested_timezones, validate_display_name, validate_slack_id, validate_timezone
 from program.content.expertise import EXPERTISE
 from program.content.regions import REGIONS
@@ -32,15 +33,19 @@ QUESTIONS = [
         "How much of this have you done before?", "Be honest. I can tell.")),
 ]
 
-def hackatime_step():
-    """SEAM: the Hackatime connection plugs in here (accounts/hackatime.py). Until it exists the button is greyed out and
-    the step lets people carry on. Flipping `hackatime.AVAILABLE` without writing the real step fails loudly on purpose."""
-    if hackatime.AVAILABLE:
-        raise NotImplementedError("Hackatime is marked available: replace the greyed-out button with the connect link (accounts/hackatime.py).")
-    return Say(face="finger", disabled="Connect Hackatime", lines=(
+def hackatime_step(enabled=False, connected=False):
+    """The Hackatime step (accounts/hackatime.py). Switched off (the default) it is a greyed-out button that lets people carry on, because nobody could
+    finish onboarding otherwise. Switched on it is the real thing: the button goes to the connect page, there is no Go on, and the step is not played
+    once they are connected (`connected`: the person's Profile), so the only way past it is to connect."""
+    if not enabled:
+        return Say(face="finger", disabled="Connect Hackatime", lines=(
+            "Now the important bit.",
+            "I count your hours with a thing called Hackatime. No Hackatime, no hours. No hours, no cookies.",
+            "Press the button and we'll hook you up. ...Oh. It's not ready. Whoever built this place hasn't plugged it in yet. Carry on, dear, we'll come back to it."))
+    return Say(face="finger", link=("Connect Hackatime", reverse("connect_hackatime")), locked=True, when=lambda answers: not connected, lines=(
         "Now the important bit.",
         "I count your hours with a thing called Hackatime. No Hackatime, no hours. No hours, no cookies.",
-        "Press the button and we'll hook you up. ...Oh. It's not ready. Whoever built this place hasn't plugged it in yet. Carry on, dear, we'll come back to it."))
+        "Press the button and Hackatime will ask if I may take a look. Its screen lists more than I need, and I can't help that. I keep one number, dear, and hand the key straight back."))
 
 
 SKIP_OFFER = AskChoice(
@@ -92,4 +97,11 @@ HCA_REFUSALS = {
     "no_slack_id": ("No Slack ID", "Hack Club didn't tell me your Slack ID, dear, and that's how I find you in my book. Join the Hack Club Slack, then try again."),
     "no_account": ("No place at the table", "I can't find a place for you in my book, dear. Accounts here are made by hand, so ask in the Slack and somebody will see about it."),
     "failed": ("That didn't work", "Something went wrong between me and Hack Club, dear, and nothing was saved. Try again in a minute."),
+}
+
+# What Grandma says when connecting Hackatime does not go through (accounts/views.py): one fixed label and sentence per case, nothing from Hackatime or
+# the request is ever repeated. "taken" is a Hackatime account that already belongs to another account here, or an account here already connected to another one.
+HACKATIME_REFUSALS = {
+    "taken": ("Already spoken for", "That Hackatime account is down in my book for somebody else, dear, or you have already given me a different one. One Hackatime account for each of you. Ask in the Slack and somebody will see about it."),
+    "failed": ("That didn't work", "Something went wrong between me and Hackatime, dear, and nothing was saved. Try again in a minute."),
 }

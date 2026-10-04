@@ -64,6 +64,9 @@ CONFIG = {
                          "matched by the person's Slack ID: it never makes one."),
     "HCA_REQUIRE_ELIGIBLE": (True, "A Hack Club sign-in must come from a verified identity that Hack Club says is eligible (verification status verified and ysws_eligible true). "
                                    "Off lets in anyone whose Slack ID matches an account."),
+    "HACKATIME_ENABLED": (False, "Make the Hackatime step of onboarding real and mandatory: people connect their Hackatime account and cannot go on until they have. "
+                                 "It needs the environment values (HACKATIME_CLIENT_ID, HACKATIME_CLIENT_SECRET, HACKATIME_BASE_URL; the id and secret are never set here). "
+                                 "Off (the default) keeps the greyed-out button and lets people carry on."),
 
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
@@ -80,7 +83,7 @@ FIELDSETS = (
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Notifications", ("SLACK_NOTIFICATIONS",)),
-    ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE")),
+    ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 

@@ -24,7 +24,10 @@ class Profile(models.Model):
     onboarded_at = models.DateTimeField(null=True, blank=True, help_text="Set when they finish /welcome/. Until then they are sent there.")
     tutorial_done_at = models.DateTimeField(null=True, blank=True, help_text="Set when they finished or skipped the tutorial. Empty if the tutorial was switched off.")
     hackatime_connected = models.BooleanField(default=False, editable=False,
-                                              help_text="Always False for now: the Hackatime connection is not built (accounts/hackatime.py).")
+                                              help_text="True once they have connected a Hackatime account. Only the connect callback sets it (accounts/hackatime.py).")
+    hackatime_user_id = models.CharField("Hackatime user ID", max_length=40, null=True, blank=True, unique=True, editable=False,
+                                         help_text="The id of the Hackatime account they connected, so one Hackatime account backs only one account here. Only the connect callback "
+                                                   "sets it. Nothing else about them is kept from Hackatime, and no token.")
     hca_sub = models.CharField("Hack Club Auth ID", max_length=100, null=True, blank=True, unique=True, editable=False,
                                help_text="The stable id Hack Club Auth gives this person (its sub claim). Only the Hack Club sign-in sets it (accounts/hca.py), the first time, "
                                          "by matching the Slack ID. Nothing else about them is kept from Hack Club.")

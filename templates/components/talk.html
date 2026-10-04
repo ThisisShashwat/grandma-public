@@ -61,8 +61,9 @@
 
       {% else %}
       <p class="talk-actions">
+        {% if step.link %}<a class="btn" href="{{ step.link[1] }}">{{ step.link[0] }}</a>{% endif %}
         {% if step.disabled %}<button class="btn btn--plain" type="button" disabled>{{ step.disabled }}</button>{% endif %}
-        <button class="btn">{{ step.button }}</button>
+        {% if not step.locked %}<button class="btn">{{ step.button }}</button>{% endif %}
         {% if can_back %}<button class="btn btn--plain talk-back" name="back" value="1" formnovalidate>Back</button>{% endif %}
       </p>
       {% endif %}

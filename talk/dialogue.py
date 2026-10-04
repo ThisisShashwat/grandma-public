@@ -1,6 +1,6 @@
 """A dialogue is data: a list of steps Grandma goes through one at a time. No Django import in this file.
 
-    Say(lines=...)                         Grandma talks, the person taps "go on"
+    Say(lines=...)                         Grandma talks, the person taps "go on" (or `link`s away, and `locked` waits for them to come back done)
     AskText(key=..., lines=...)            Grandma asks for a line of text
     AskChoice(key=..., choices=...)        Grandma asks, the person taps one answer
     Deal(key=..., notes=...)               Grandma lays notes on her fridge, the person keeps some of them
@@ -27,6 +27,8 @@ class Step:
 class Say(Step):
     button: str = "Go on"
     disabled: str = ""           # label of a button that does not work yet, shown greyed out above the real one
+    link: tuple = ()             # (label, address) of a button that takes the person away to do something first (connecting Hackatime)
+    locked: bool = False         # no "Go on": the person moves on only when `when` stops playing the step (the thing was done), and a POST to it is refused
 
 
 @dataclass(frozen=True, kw_only=True)

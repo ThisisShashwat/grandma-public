@@ -22,6 +22,9 @@ SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's
 HCA_CLIENT_ID = env("HCA_CLIENT_ID", default="")                 # Sign in with Hack Club (accounts/hca.py). The id and the secret: environment only, never the admin or the database
 HCA_CLIENT_SECRET = env("HCA_CLIENT_SECRET", default="")
 HCA_ISSUER = env("HCA_ISSUER", default="https://auth.hackclub.com")
+HACKATIME_CLIENT_ID = env("HACKATIME_CLIENT_ID", default="")             # Connecting a Hackatime account (accounts/hackatime.py). The id and the secret: environment only, never the admin or the database
+HACKATIME_CLIENT_SECRET = env("HACKATIME_CLIENT_SECRET", default="")
+HACKATIME_BASE_URL = env("HACKATIME_BASE_URL", default="https://hackatime.hackclub.com")
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",

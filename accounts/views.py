@@ -10,10 +10,10 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_safe
 
-from accounts import hca, onboarding
+from accounts import hackatime, hca, onboarding
 from accounts.access import has_access, invited
 from accounts.forms import LoginForm
-from accounts.script import HCA_REFUSALS
+from accounts.script import HACKATIME_REFUSALS, HCA_REFUSALS
 from accounts.services import profile_of
 from pages.live import live
 from talk import flow
@@ -21,6 +21,7 @@ from talk import flow
 
 log = logging.getLogger(__name__)
 HCA_NEXT = "hca_next"        # the session key that carries the safe `next` over to the callback
+HACKATIME_NEXT = "hackatime_next"
 
 
 def landing(user):
@@ -47,10 +48,11 @@ def welcome(request):
     """Onboarding. Someone who is already onboarded is sent home, unless this session has just finished it (then they
     still get the last page, with its button home)."""
     store = onboarding.ProfileStore()
-    if profile_of(request.user).onboarded_at and not store.load(request).position:
+    profile = profile_of(request.user)
+    if profile.onboarded_at and not store.load(request).position:
         return redirect("home")
     cfg = live()
-    return flow.run(request, onboarding.dialogue(cfg), store=store, finish=partial(onboarding.finish, cfg),
+    return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected), store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("home"), title="Welcome")
 
 
@@ -65,6 +67,14 @@ def beta(request):
     return render(request, "pages/beta.html")
 
 
+def safe_next(request):
+    """The `next` of the request when it is safe (this host, this scheme), else an empty string. Kept in the session before a person leaves for another
+    service: the callback never takes a redirect target from its own request."""
+    target = request.GET.get("next", "")
+    safe = url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}, require_https=request.is_secure())
+    return target if safe else ""
+
+
 def hackclub_refused(request, reason):
     """Grandma's page for a Hack Club sign-in that did not go through: one fixed sentence per reason, nothing from the request or from Hack Club.
     Only a failure that is nobody's fault is a 400; a refusal is a 403."""
@@ -75,13 +85,10 @@ def hackclub_refused(request, reason):
 @never_cache
 @require_GET
 def login_hackclub(request):
-    """Sends the person to Hack Club to sign in. Only the `next` that is safe (this host, this scheme) is kept, in the session, before leaving;
-    the callback never takes a redirect target from its own request."""
+    """Sends the person to Hack Club to sign in. Only a safe `next` is kept, in the session, before leaving."""
     if not hca.enabled(live()):
         raise Http404
-    target = request.GET.get("next", "")
-    safe = url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}, require_https=request.is_secure())
-    request.session[HCA_NEXT] = target if safe else ""
+    request.session[HCA_NEXT] = safe_next(request)
     try:
         return hca.authorize_redirect(request)
     except Exception:
@@ -111,3 +118,45 @@ def login_hackclub_callback(request):
         return hackclub_refused(request, "no_account")
     login(request, profile.user, backend="django.contrib.auth.backends.ModelBackend")
     return redirect(target or landing(profile.user))
+
+
+def hackatime_refused(request, reason):
+    """Grandma's page for a Hackatime connection that did not go through: one fixed sentence per reason, nothing from the request or from Hackatime.
+    The way back is onboarding (they are signed in). Only a failure that is nobody's fault is a 400; a refusal is a 403."""
+    label, line = HACKATIME_REFUSALS[reason]
+    context = {"label": label, "line": line, "back_url": resolve_url("welcome"), "back_label": "Back to Grandma"}
+    return render(request, "pages/hackclub_refused.html", context, status=400 if reason == "failed" else 403)
+
+
+@invited
+@never_cache
+@require_GET
+def connect_hackatime(request):
+    """Sends the person to Hackatime to connect their account: part of onboarding, so it needs a person who is let in but not one who has finished
+    /welcome/. 404 until it is switched on. A safe `next` is kept in the session before leaving."""
+    if not hackatime.enabled(live()):
+        raise Http404
+    request.session[HACKATIME_NEXT] = safe_next(request)
+    try:
+        return hackatime.authorize_redirect(request)
+    except Exception:
+        log.warning("hackatime connect failed")
+        return hackatime_refused(request, "failed")
+
+
+@invited
+@never_cache
+@require_GET
+def connect_hackatime_callback(request):
+    """Where Hackatime sends the person back. The library checks the state and the code, we read the Hackatime user id and revoke the token at once
+    (accounts/hackatime.py), then link it to this person's Profile. No token is kept. Back to the safe `next`, else to where they were."""
+    if not hackatime.enabled(live()):
+        raise Http404
+    target = request.session.pop(HACKATIME_NEXT, "")
+    hackatime_id = hackatime.identity_of(request)
+    if hackatime_id is None:
+        log.warning("hackatime connect failed")
+        return hackatime_refused(request, "failed")
+    if not hackatime.link(profile_of(request.user), hackatime_id):
+        return hackatime_refused(request, "taken")
+    return redirect(target or landing(request.user))

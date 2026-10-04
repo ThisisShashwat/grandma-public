@@ -4,7 +4,7 @@ from dataclasses import replace
 from django.db import transaction
 from django.utils import timezone
 
-from accounts import script
+from accounts import hackatime, script
 from accounts.models import FILLED_IN
 from accounts.services import profile_of
 from audit import services as audit
@@ -27,10 +27,10 @@ def asks_to_skip(cfg):
     return lambda answers: offers_skip(cfg.TUTORIAL_ENABLED, depth_for(answers.get("expertise"), cfg))
 
 
-def dialogue(cfg):
-    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live())."""
+def dialogue(cfg, hackatime_connected=False):
+    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()) and whether this person has connected Hackatime."""
     return [
-        *script.OPENING, *script.QUESTIONS, script.hackatime_step(),
+        *script.OPENING, *script.QUESTIONS, script.hackatime_step(hackatime.enabled(cfg), hackatime_connected),
         replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
         *(replace(step, when=plays(1, cfg)) for step in script.PART_ONE),
         *(replace(step, when=plays(2, cfg)) for step in script.PART_TWO),
