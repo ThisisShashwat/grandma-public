@@ -121,14 +121,16 @@ def submit(user, *, project_id=None, hackatime_required=False, hours_check=None,
 def record_hours(user, project_id, names, seconds, now=None):
     """Keep what Hackatime said for this project: the names it was asked about, the seconds, and when. Only the person's own project that can be handed in
     (being built, or with changes requested), found by id under the locks; a second check replaces the first. NameTaken (nothing changes) when any other
-    project of theirs already has one of these names: one Hackatime project backs only one of their projects. Returns the project, None when it is not
-    theirs to check. The audit entry says only whether any time was found and how many projects were checked: never the seconds or the names."""
+    project of theirs already has one of these names: one Hackatime project backs only one of their projects. An abandoned or a rejected project no
+    longer backs anything, so its names may be used again; approved, handed in, in review, changes requested and building ones still hold theirs.
+    Returns the project, None when it is not theirs to check. The audit entry says only whether any time was found and how many projects were
+    checked: never the seconds or the names."""
     project_services.lock_person(user)
     project = Project.objects.select_for_update().filter(pk=project_id, user=user, status__in=(project_rules.BUILDING, project_rules.CHANGES_REQUESTED)).first()
     if project is None:
         return None
     names_set = set(names)
-    for other in Project.objects.filter(user=user).exclude(pk=project.pk):
+    for other in Project.objects.filter(user=user).exclude(pk=project.pk).exclude(status__in=(project_rules.ABANDONED, project_rules.REJECTED)):
         if any(n in names_set for n in other.tracked_names):
             raise NameTaken
     project.tracked_names = list(names)
