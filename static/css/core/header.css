@@ -5,3 +5,5 @@
 .strip nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; }
 .strip nav a:not(.btn) { color: var(--ink); font-size: 1.15rem; }
 .strip .btn { font-size: 1.3rem; }
+.nav-leave { display: contents; }
+.nav-leave button { font: inherit; font-size: 1.15rem; color: var(--ink); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }

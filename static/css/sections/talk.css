@@ -34,9 +34,6 @@
 .pick:hover { background: var(--pink); }
 .pick.is-picked { box-shadow: 4px 4px 0 var(--ink); }
 
-.talk-leave { margin-top: 2rem; text-align: center; }
-.talk-leave button { padding: 0; font: inherit; font-size: 1rem; color: var(--ink); background: none; border: 0; text-decoration: underline; }
-
 /* a Blue Ribbon: Grandma pops in with the site's steps() easing, a little bigger than she ends up (confetti is static/js/features/celebrate.js) */
 .talk-face[data-celebrate] img { transform-origin: 50% 85%; animation: ribbon-pop 0.9s steps(6) both; }
 @keyframes ribbon-pop { 0% { scale: 0.25; rotate: -14deg; opacity: 0; } 60% { scale: 1.12; rotate: 4deg; opacity: 1; } 100% { scale: 1; rotate: 0deg; opacity: 1; } }

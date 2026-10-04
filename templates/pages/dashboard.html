@@ -151,11 +151,6 @@
       <p>Nothing ordered yet, dear. Have a look in <a href="{{ url('shop') }}">the Pantry</a>.</p>
       {% endif %}
     </section>
-
-    <form class="dash-leave" method="post" action="{{ url('logout') }}">
-      {{ csrf_input }}
-      <button>Not you? Log out</button>
-    </form>
   </div>
 </section>
 {% endblock %}

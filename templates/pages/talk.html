@@ -15,12 +15,6 @@
 <section class="scene scene--sky talk-scene">
   <div class="wrap">
     {% include "components/talk.html" %}
-    {% if request.user.is_authenticated %}
-    <form class="talk-leave" method="post" action="{{ url('logout') }}">
-      {{ csrf_input }}
-      <button>Not you? Log out</button>
-    </form>
-    {% endif %}
   </div>
 </section>
 {% endblock %}
