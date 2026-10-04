@@ -1,0 +1,160 @@
+<div class="formula-constants">
+  <h3>The numbers</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Symbol</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Cookies for one plain hour</td>
+        <td>one plain hour</td>
+        <td>{{ base_cookies }}</td>
+      </tr>
+      <tr>
+        <td>Multiplier cap</td>
+        <td><code>cap</code></td>
+        <td>{{ config.cap }}</td>
+      </tr>
+      <tr>
+        <td>Curve constant</td>
+        <td><code>k</code></td>
+        <td>{{ config.k }}</td>
+      </tr>
+      <tr>
+        <td>Largest x</td>
+        <td><code>xmax</code></td>
+        <td>{{ config.xmax }}</td>
+      </tr>
+      <tr>
+        <td>Mild demand tier</td>
+        <td><code>tier[1]</code></td>
+        <td>{{ config.tier[1] }}</td>
+      </tr>
+      <tr>
+        <td>Medium demand tier</td>
+        <td><code>tier[2]</code></td>
+        <td>{{ config.tier[2] }}</td>
+      </tr>
+      <tr>
+        <td>Spicy demand tier</td>
+        <td><code>tier[3]</code></td>
+        <td>{{ config.tier[3] }}</td>
+      </tr>
+      <tr>
+        <td>Grandma loved it</td>
+        <td><code>quality</code></td>
+        <td>{{ config.quality }}</td>
+      </tr>
+      <tr>
+        <td>Huge project bonus</td>
+        <td><code>huge</code></td>
+        <td>{{ config.huge }}</td>
+      </tr>
+      <tr>
+        <td>Huge project hours threshold</td>
+        <td><code>huge_hours</code></td>
+        <td>{{ config.huge_hours }}</td>
+      </tr>
+      <tr>
+        <td>Blue Ribbon bonus</td>
+        <td><code>ribbon</code></td>
+        <td>{{ config.ribbon }}</td>
+      </tr>
+      <tr>
+        <td>Held Blue Ribbon before</td>
+        <td><code>ribbon_holder</code></td>
+        <td>{{ config.ribbon_holder }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="formula-steps">
+  <h3>The three steps</h3>
+  <ol>
+    <li>
+      <strong>Step 1: Find x</strong>
+      <p>x equals the sum of the demand tiers you kept plus the bonuses that apply, but never more than the largest x (xmax).</p>
+      <p><code>x = min(xmax, sum of kept demand tiers + quality + huge + ribbon + ribbon_holder)</code></p>
+      <p>Filled in with Grandma's numbers:</p>
+      <p><code>x = min({{ config.xmax }}, kept demands + bonuses)</code></p>
+      <p>Where mild is {{ config.tier[1] }}, medium is {{ config.tier[2] }}, and spicy is {{ config.tier[3] }}. Bonuses are: Grandma loved it ({{ config.quality }}), huge project at {{ config.huge_hours }} hours or more ({{ config.huge }}), Blue Ribbon ({{ config.ribbon }}), and held a Blue Ribbon before ({{ config.ribbon_holder }}).</p>
+    </li>
+    <li>
+      <strong>Step 2: Calculate the multiplier</strong>
+      <p>Grandma uses an exponential curve so the multiplier climbs faster as you stack harder challenges:</p>
+      <p><code>multiplier = 1 + (cap - 1) * (1 - e^(-k * x)) / (1 - e^(-k * xmax))</code></p>
+      <p>Filled in with Grandma's numbers:</p>
+      <p><code>multiplier = 1 + ({{ config.cap }} - 1) * (1 - e^(-({{ config.k }}) * x)) / (1 - e^(-({{ config.k }}) * {{ config.xmax }}))</code></p>
+    </li>
+    <li>
+      <strong>Step 3: Calculate cookies</strong>
+      <p>Multiply cookies for one plain hour by the multiplier and your approved hours:</p>
+      <p><code>cookies = cookies for a plain hour * multiplier * approved hours</code></p>
+      <p>Filled in with Grandma's numbers:</p>
+      <p><code>cookies = {{ base_cookies }} * multiplier * approved hours</code></p>
+    </li>
+  </ol>
+</div>
+
+<div class="formula-worked">
+  <h3>Worked example: one mild demand, 12 hours</h3>
+  <ol>
+    <li>
+      <strong>Step 1 (find x):</strong>
+      One mild demand gives tier value {{ worked.x }}. With 12 hours (under {{ config.huge_hours }} hours), no extra bonuses apply.
+      <br>
+      <code>x = min({{ config.xmax }}, {{ worked.x }}) = {{ worked.x }}</code>
+    </li>
+    <li>
+      <strong>Step 2 (calculate multiplier):</strong>
+      Substitute x into Grandma's curve formula:
+      <br>
+      <code>multiplier = 1 + ({{ config.cap }} - 1) * (1 - e^(-({{ config.k }}) * {{ worked.x }})) / (1 - e^(-({{ config.k }}) * {{ config.xmax }}))</code>
+      <br>
+      <code>multiplier = 1 + {{ worked.cap_minus_1 }} * (1 - e^({{ worked.exp_num_pow }})) / (1 - e^({{ worked.exp_den_pow }}))</code>
+      <br>
+      <code>multiplier = 1 + {{ worked.cap_minus_1 }} * (1 - {{ worked.exp_num }}) / (1 - {{ worked.exp_den }})</code>
+      <br>
+      <code>multiplier = 1 + {{ worked.cap_minus_1 }} * ({{ worked.term_num }}) / ({{ worked.term_den }})</code>
+      <br>
+      <code>multiplier = 1 + {{ worked.cap_minus_1 }} * {{ worked.ratio }} = {{ worked.multiplier_4dp }}</code>
+    </li>
+    <li>
+      <strong>Step 3 (calculate cookies):</strong>
+      Multiply cookies for one plain hour by the multiplier and your approved hours:
+      <br>
+      <code>cookies = {{ worked.base_cookies }} * {{ worked.multiplier_4dp }} * {{ worked.hours }} = {{ worked.raw_cookies_2dp }}</code>
+      <br>
+      Rounded half up gives <strong>{{ worked.shown_cookies }}</strong> cookies.
+    </li>
+  </ol>
+</div>
+
+<div class="formula-reference">
+  <h3>Reference cases</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>What was kept</th>
+        <th>Hours</th>
+        <th>Extras</th>
+        <th>Cookies</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in reference_rows %}
+      <tr>
+        <td>{{ row.kept }}</td>
+        <td>{{ row.hours }}</td>
+        <td>{{ row.extras }}</td>
+        <td>{{ row.cookies }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
