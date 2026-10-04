@@ -33,6 +33,11 @@ QUESTIONS = [
         "How much of this have you done before?", "Be honest. I can tell.")),
 ]
 
+# Played instead of the Slack ID question for somebody Hack Club already told us about (accounts/onboarding.py): the ID is public on their page, so they are told.
+SLACK_KNOWN = Say(face="magnifier", lines=(
+    "Hack Club already told me your Slack ID, {display_name}, so I won't ask.",
+    "It goes on my wall next to your name, so people can find you in the Slack. That is how my wall works, dear."))
+
 def hackatime_step(enabled=False, connected=False):
     """The Hackatime step (accounts/hackatime.py). Switched off (the default) it is a greyed-out button that lets people carry on, because nobody could
     finish onboarding otherwise. Switched on it is the real thing: the button goes to the connect page, there is no Go on, and the step is not played
