@@ -15,7 +15,7 @@
     <div class="submit-main">
       <div class="talk-bubble submit-bubble">
         <p>Pick your Hackatime projects, dear.</p>
-        <p>Only time after you kept your demands counts.</p>
+        <p>Only time after you kept your demands counts, and only on projects you started after that.</p>
       </div>
 
       <form class="submit-note" method="post" action="{{ action }}">
@@ -31,9 +31,10 @@
             {% for row in rows %}
             <li>
               <label class="check">
-                <input type="checkbox" name="names" value="{{ row.name }}"{% if row.ticked %} checked{% endif %}>
+                <input type="checkbox" name="names" value="{{ row.name }}"{% if row.ticked %} checked{% endif %}{% if not row.askable %} disabled{% endif %}>
                 <span>{{ row.name }} ({{ row.time }})</span>
               </label>
+              {% if not row.askable %}<p class="nf-hint">I can't count this one, dear, because its name has a comma or stray spaces. Rename it in Hackatime.</p>{% endif %}
             </li>
             {% endfor %}
           </ul>

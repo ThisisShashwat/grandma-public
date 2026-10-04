@@ -24,7 +24,7 @@ from submissions import services
 from submissions.script import HOURS_NOT_ENOUGH, HOURS_REFUSALS
 
 log = logging.getLogger(__name__)
-STATUS = {"bad_name": 400, "failed": 400, "taken": 403}
+STATUS = {"bad_name": 400, "failed": 400, "taken": 403, "older": 403}
 
 
 def note_url(project):
@@ -80,6 +80,19 @@ def to_check(user, wanted):
     return None
 
 
+def listing(profile, start, end):
+    """(the window's (name, seconds) rows, the names among them that are older than the project and so not countable: accounts/hackatime.py `ineligible`).
+    GET shows from it and POST enforces it, both read the same way. Raises Reconnect or Unreadable."""
+    listed = hackatime.list_projects(profile, start, end)
+    return listed, hackatime.ineligible(profile, listed)
+
+
+def pick_row(name, seconds, ticked):
+    """One line of the picker. A name that cannot be asked for (a comma in it) is shown, but not tickable."""
+    askable = hackatime.clean_name(name) == name
+    return {"name": name, "time": duration.text(seconds), "ticked": ticked and askable, "askable": askable}
+
+
 def connect_redirect(request, project=None):
     """Redirect to the connect flow with a safe next returning to this page."""
     path = request.get_full_path()
@@ -108,10 +121,9 @@ def check(request):
         if project is None:
             raise Http404
 
-        now = timezone.now()
-        start, end = hackatime.window(project, now)
+        start, end = hackatime.window(project, timezone.now())
         try:
-            listed = hackatime.list_projects(profile, start, end)
+            listed, older = listing(profile, start, end)
         except hackatime.Reconnect:
             return connect_redirect(request, project)
         except hackatime.Unreadable:
@@ -119,22 +131,9 @@ def check(request):
             return refused(request, "failed", note_url(project))
 
         tracked_set = set(project.tracked_names)
-        rows = []
-        listed_names = set()
-        for name, seconds in listed:
-            listed_names.add(name)
-            rows.append({
-                "name": name,
-                "time": duration.text(seconds),
-                "ticked": name in tracked_set,
-            })
-        for name in project.tracked_names:
-            if name not in listed_names:
-                rows.append({
-                    "name": name,
-                    "time": duration.text(0),
-                    "ticked": True,
-                })
+        listed_names = {name for name, _ in listed}
+        rows = [pick_row(name, seconds, name in tracked_set) for name, seconds in listed if name not in older]
+        rows += [pick_row(name, 0, True) for name in project.tracked_names if name not in listed_names]
 
         context = {
             "project_name": project.name,
@@ -158,9 +157,11 @@ def check(request):
     if not all(hackatime.clean_name(name) == name for name in names):
         return refused(request, "bad_name", back)
 
-    now = timezone.now()
-    start, end = hackatime.window(project, now)
+    start, end = hackatime.window(project, timezone.now())
     try:
+        _, older = listing(profile, start, end)
+        if older.intersection(names):
+            return refused(request, "older", back)
         seconds = hackatime.total_seconds(profile, names, start, end)
     except hackatime.Reconnect:
         return connect_redirect(request, project)
