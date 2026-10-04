@@ -70,13 +70,15 @@ def waiting(user):
 
 
 @transaction.atomic
-def submit(user, *, project_id=None, hackatime_required=False, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
+def submit(user, *, project_id=None, hackatime_required=False, hours_check=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
     """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
     changes requested, as the next round (a reviewer already granted it, whatever MAX_ROUNDS says now). The project becomes `in_review`.
     ValidationError (a sentence for the person) when there is nothing to hand in or no round left.
     One at a time: a second click finds the project already in review. The Hackatime hours the project has been checked for (and the name they are
     under) are copied onto the submission as they are now, and stay as they were; `hackatime_required` (hackatime.required(cfg), read once per request)
-    refuses a project with no checked hours, which is a ValidationError too."""
+    refuses a project with no checked hours, which is a ValidationError too. `hours_check`, when given, is called with the locked, re-read project (so
+    a check made in a second tab cannot slip past it) and raises ValidationError when the stored check is too short, too old or from before the start;
+    nothing is saved then."""
     project_services.lock_person(user)
     locked = locked_to_hand_in(user, project_id)
     if locked is None:
@@ -85,6 +87,8 @@ def submit(user, *, project_id=None, hackatime_required=False, repo_url, playabl
     ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)
+    if hours_check:
+        hours_check(project)
     if hackatime_required and not project.tracked_seconds:
         raise ValidationError(CHECK_YOUR_HOURS)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,

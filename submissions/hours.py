@@ -55,8 +55,9 @@ def note_block(cfg, user, project):
 
 
 def require_fresh(cfg, project, now=None):
-    """Before a hand-in: while hours are required, a check that found some must also be enough (hackatime.check_counts: long enough, newer than the
-    project's start or last hand-in, and recent), or ValidationError. No check, or one that found nothing, is left for services.submit to refuse."""
+    """At a hand-in: while hours are required, a check that found some must also be enough (hackatime.check_counts: long enough, newer than the
+    project's start or last hand-in, and recent), or ValidationError. services.submit calls it (as its `hours_check`, the view passes
+    `partial(require_fresh, cfg)`) with the project re-read under the locks. No check, or one that found nothing, is left for submit to refuse."""
     if not hackatime.required(cfg) or not project.tracked_seconds:
         return
     last = services.latest_round(project)

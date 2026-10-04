@@ -1,6 +1,8 @@
 """/submit/ (a person hands their building project to Grandma), /submit/<id>/ (they fix a project she asked changes of and hand it in
 again) and /grandma/collect/ (she hands the result back). All are for one signed-in, onboarded person and touch only their own
 project: the only id in an address is the project to fix, and it is only found among the person's own projects with changes requested."""
+from functools import partial
+
 from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect, render
@@ -50,8 +52,8 @@ def submit(request, pk=None):
         form = SubmitForm(cfg=cfg, initial=starts_from(project) if pk else None)
     if request.method == "POST" and form.is_valid():
         try:
-            hours.require_fresh(cfg, project)
-            services.submit(request.user, project_id=pk, hackatime_required=hackatime.required(cfg), **form.cleaned_data)
+            services.submit(request.user, project_id=pk, hackatime_required=hackatime.required(cfg), hours_check=partial(hours.require_fresh, cfg),
+                            **form.cleaned_data)
         except ValidationError as error:
             form.add_error(None, error)
         else:
