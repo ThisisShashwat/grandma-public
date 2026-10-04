@@ -64,9 +64,8 @@ As long as it takes. Half an hour or ten days, nobody is timing you. The program
 :::
 
 ::: faq Can I ship the same project twice?
-Software ships once. Hardware is the exception: the design ships first, then the build. [All about hardware](/guides/hardware/).
+No. One project, one ship, however much you polish it afterwards. See the [rules](/guides/rules/).
 :::
-
 ::: faq Can one project count in two programs?
 Not the same work and hours. Time that another program already counted does not count here. Make something new for Grandma.
 :::
@@ -133,20 +132,6 @@ A public repository and a README that says what it is and how to run it, yes. A 
 Grandma tells you why when you next visit, in her own words. That project is finished. You do not have to wait for review to start another project anyway: the moment you hand one in, you can start the next.
 :::
 
-## Hardware
-
-::: faq What do I hand in for a hardware design?
-A parts list with exact names (even the parts you already own), a schematic or wiring diagram if it has electronics, editable CAD files for anything printed, and the firmware if it needs any. An STL on its own is not enough.
-:::
-
-::: faq When can I buy a hardware grant?
-After your design ship is approved and Grandma has told you so, that project shows as "Waiting for parts" on your project page. Ordering the hardware grant for it is done from the shop once the project is waiting for parts. [The details](/guides/hardware/).
-:::
-
-::: faq Do I have to hand in the build here?
-No. The build ship is up to you: hand it in here with "Ship the real build", hand it in to another program, or not at all. If you are not handing it in here, press "I am done with this project" on your project page to close it.
-:::
-
 ## Shop and grants
 
 ::: faq What is a grant?
@@ -154,7 +139,7 @@ Money on a Hack Club Bank card for one specific thing, which you buy yourself. G
 :::
 
 ::: faq What do I have to show to get one?
-The link to the product and a screenshot of your whole cart, with tax and shipping in it. Hardware grants also want every part listed with its price.
+The link to the product and a screenshot of your whole cart, with tax and shipping in it.
 :::
 
 ::: faq What if the thing costs more where I live?

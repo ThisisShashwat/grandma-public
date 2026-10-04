@@ -10,34 +10,21 @@ This is the checklist for the day you ship. Read it before you are tired and in 
 
 The most important ones come first.
 
-**For every project**
-
 - Your project follows the demands Grandma gave you, and a reviewer can check every one of them.
 - You started it after you talked to Grandma.
 - It is not an old project with a new name. If you reused an old repository, say why in your description.
 - No other program has counted these hours or this work.
 - It is your own work, in your own time: not a copied tutorial, not someone else's code, not school work, not paid Hack Club work.
 - Everything your description says it does is true and works.
+- Your link opens for anyone in a private window with no login (or you gave demo logins in your description), on a host that stays awake. A newcomer can try it in two minutes without compiling anything.
 - Your repository is public and opens without signing in.
 - Your README says what it is, how to set it up, and how to run, play or build it.
 - Your commits grew while you worked. One giant upload at the end looks suspicious.
 - Your hours are real work on this project: no idle timer, no scripts, nothing from other projects. They come from [Hackatime](/guides/hackatime-setup/).
 - AI took less than 30% of your total time, and you can explain every part of your project.
 - Your screenshot is a still picture of the real project. A recording, if you have one, is on YouTube, Vimeo or a plain mp4 link, not Google Drive.
-- You read the [rules](/guides/rules/).
-
-**If it is software**
-
-- Your link opens for anyone in a private window with no login (or you gave demo logins in your description), on a host that stays awake. A newcomer can try it in two minutes without compiling anything.
 - Your art, models and sound took at most a quarter of your hours, unless they are the heart of the project.
-
-**If it is hardware**
-
-- The page you linked shows it working: photos, a video or a viewer. It opens for anyone with no login.
-- Your parts list names every part exactly, including the ones you already own.
-- If it has electronics, you included a schematic or a wiring diagram.
-- Anything you print has editable CAD files (STEP or your own project files), not only an STL.
-- If this is your build ship, you only claim the hours since your design ship, and you say what changed.
+- You read the [rules](/guides/rules/).
 
 ## Hours are not paid word for word
 
@@ -51,11 +38,9 @@ Once you hand a project in, nothing about it can be changed.
 
 The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. Grandma tells you each result herself, one at a time, the next time you visit.
 
-If this was a hardware design ship, once it is approved and Grandma has told you, it will show as "Waiting for parts" on your project page. When your parts arrive, you open your project page, find the project under My other projects, and press "Ship the real build" to hand the finished build in here.
-
 ## The link to try it
 
-If your project is software, people need to be able to use it. The link must not point to a host that goes to sleep when nobody visits, such as Streamlit or the free tier of Render. A reviewer who clicks a sleeping link just sees a loading screen, and Grandma does not wait for loading screens. The hand-in note refuses the hosts Grandma knows about, and so does a notebook on Colab: that is a page to read, not a project to try.
+People need to be able to use your project. The link must not point to a host that goes to sleep when nobody visits, such as Streamlit or the free tier of Render. A reviewer who clicks a sleeping link just sees a loading screen, and Grandma does not wait for loading screens. The hand-in note refuses the hosts Grandma knows about, and so does a notebook on Colab: that is a page to read, not a project to try.
 
 ## The AI declaration
 

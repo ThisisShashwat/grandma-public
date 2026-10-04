@@ -8,7 +8,7 @@ Grandma runs a tight kitchen. Here is the whole recipe.
 
 ## 1. You pick a project
 
-Anything technical you want to build. A website, an app, a game, a gadget, something to print. Grandma never picks what. She is a lovable tyrant, not a project manager.
+Anything you want to build with code. A website, an app, a game, a tool. Grandma never picks what. She is a lovable tyrant, not a project manager.
 
 ## 2. Grandma phones
 
@@ -22,7 +22,7 @@ As long as it takes: half an hour or ten days, on your own. There is no time lim
 
 ## 4. You submit
 
-Software ships once. Hardware hands in the design first, then an optional build ship. The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. [The checklist](/guides/submitting/).
+One project, one ship. The moment you hand a project in you may start the next one: it does not wait for the reviewers. You can have several projects handed in and waiting at once. [The checklist](/guides/submitting/).
 
 ## 5. You earn cookies
 

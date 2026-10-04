@@ -48,10 +48,6 @@ Everything is a grant, so Grandma wants to see what the money is for before she 
 Screenshot the whole cart, not just the price. If the total is not visible, the screenshot does not count.
 :::
 
-## Hardware grants
-
-Hardware grants are different. They live in their own part of the Pantry, and ordering one is done from the shop once your project is waiting for parts. That means its design ship was approved and Grandma has told you. You pick that project, then list **every item** you are buying with its link and price, with screenshots. Only then can you buy. [More in the hardware guide](/guides/hardware/).
-
 ## Buying one
 
 You need an account and you need to have met Grandma (the welcome chat). Then every card in the [Pantry](/shop/) has a button, and the cookies come out of your jar when you press it. Grandma checks what you sent, and when she is happy she hands over the grant. If she is not, your cookies come back.

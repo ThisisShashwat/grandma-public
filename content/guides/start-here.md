@@ -22,7 +22,7 @@ Then you spend the cookies in the Pantry. [How that works](/guides/shop-and-gran
 - **Fibbing about AI.** It must be under 30% of your total time, and you say so when you submit. See [submitting](/guides/submitting/).
 
 ::: tip
-You always pick the project. Grandma only picks how. A website, a game, a robot or a 3D print: all fine.
+You always pick the project. Grandma only picks how. A website, an app or a game: all fine. Just remember it is a software-only program, dear, and hardware is not allowed.
 :::
 
 ## Lost already?

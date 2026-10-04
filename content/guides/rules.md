@@ -14,7 +14,7 @@ The moment you hand a project in you may start the next one: it does not wait fo
 
 ## Changing your mind
 
-While a project is still being worked on (before you hand it in), you can change its idea, its name, its kind (software or hardware, the category and the subcategory) and which of Grandma's demands you keep, from your project page ("Change the idea, name or kind", "Change my demands").
+While a project is still being worked on (before you hand it in), you can change its idea, its name, its kind (web, software, games or other, and the subcategory) and which of Grandma's demands you keep, from your project page ("Change the idea, name or kind", "Change my demands").
 
 The notes Grandma dealt you stay the notes you get: changing the kind can cross out notes that do not suit the new kind (they come back if you change it back, but demands you had kept that do not fit are dropped and have to be chosen again).
 
@@ -36,19 +36,9 @@ You may not ship something you made before. The project has to be created after 
 
 No demands, no project. The order is always the same: you ask, she demands, then you start building.
 
-## Software ships once
+## One project, one ship
 
-One project, one ship. You cannot ship the same software project twice, however much you polish it afterwards.
-
-## Hardware ships twice
-
-Hardware is the one exception. The same project may ship two times: first the **design**, then the **build** in real life.
-
-- The design ship comes first, and it comes to this program. As soon as the design is handed in you can start another project: you do not sit and wait.
-- When the design is approved and Grandma has told you, that project shows as "Waiting for parts" on your project page. Then you can order hardware grants for it from the shop.
-- The build ship is optional. When your parts arrive, press "Ship the real build" on your project page to hand it in here. You may instead ship the build to another program, or build it and never hand it in anywhere: then press "I am done with this project" to close it. Your choice.
-
-[All about hardware](/guides/hardware/).
+You cannot ship the same project twice, however much you polish it afterwards.
 
 ## Also
 
