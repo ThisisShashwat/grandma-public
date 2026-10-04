@@ -82,3 +82,14 @@ PART_TWO = [
 
 ENDING = End(face="overjoyed", button="Take me home", lines=(
     "{display_name}, you're all set.", "Off you go. And wipe your feet on the way out."))
+
+# What Grandma says when a Hack Club sign-in does not go through (accounts/views.py): one fixed label and sentence per case, so nothing from Hack Club
+# or the request is ever repeated. A refusal for an inactive user, a clash of ids and no account at all all get "no_account".
+HCA_REFUSALS = {
+    "pending": ("Not quite yet", "Hack Club is still looking over your verification, dear. Give them a little time, then come and try again."),
+    "not_verified": ("Not verified yet", "Hack Club doesn't have you down as verified yet, dear. Sort that out with them first, then come and try again."),
+    "not_eligible": ("Not this time", "Hack Club doesn't have you down as eligible for a program like mine, dear. That's their rule, not mine."),
+    "no_slack_id": ("No Slack ID", "Hack Club didn't tell me your Slack ID, dear, and that's how I find you in my book. Join the Hack Club Slack, then try again."),
+    "no_account": ("No place at the table", "I can't find a place for you in my book, dear. Accounts here are made by hand, so ask in the Slack and somebody will see about it."),
+    "failed": ("That didn't work", "Something went wrong between me and Hack Club, dear, and nothing was saved. Try again in a minute."),
+}

@@ -59,6 +59,12 @@ CONFIG = {
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
                                    "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
 
+    "HCA_LOGIN": (False, "Show a Sign in with Hack Club button on the sign-in page and let people sign in that way. It needs the three environment values "
+                         "(HCA_CLIENT_ID, HCA_CLIENT_SECRET, HCA_ISSUER; the id and secret are never set here). It only links to an account you already made, "
+                         "matched by the person's Slack ID: it never makes one."),
+    "HCA_REQUIRE_ELIGIBLE": (True, "A Hack Club sign-in must come from a verified identity that Hack Club says is eligible (verification status verified and ysws_eligible true). "
+                                   "Off lets in anyone whose Slack ID matches an account."),
+
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
     "TUTORIAL_FOR_SOME": ("second", "What someone who has shipped a project or two sees.", "tutorial_depth"),
@@ -74,6 +80,7 @@ FIELDSETS = (
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Notifications", ("SLACK_NOTIFICATIONS",)),
+    ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 

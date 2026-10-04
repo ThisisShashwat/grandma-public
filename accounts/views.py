@@ -1,17 +1,31 @@
+import logging
 from functools import partial
 
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.http import Http404
 from django.shortcuts import redirect, render, resolve_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_safe
+from django.views.decorators.http import require_GET, require_safe
 
-from accounts import onboarding
+from accounts import hca, onboarding
 from accounts.access import has_access, invited
 from accounts.forms import LoginForm
+from accounts.script import HCA_REFUSALS
 from accounts.services import profile_of
 from pages.live import live
 from talk import flow
+
+
+log = logging.getLogger(__name__)
+HCA_NEXT = "hca_next"        # the session key that carries the safe `next` over to the callback
+
+
+def landing(user):
+    """Where somebody goes after signing in with nothing asked for: /welcome/ until they have finished it, then their dashboard."""
+    return resolve_url("dashboard" if profile_of(user).onboarded_at else "welcome")
 
 
 class Login(LoginView):
@@ -22,7 +36,10 @@ class Login(LoginView):
     redirect_authenticated_user = True
 
     def get_default_redirect_url(self):
-        return resolve_url("dashboard" if profile_of(self.request.user).onboarded_at else "welcome")
+        return landing(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs) | {"hackclub": hca.enabled(live())}
 
 
 @invited
@@ -46,3 +63,51 @@ def beta(request):
     if has_access(request.user, live()):
         return redirect("dashboard")
     return render(request, "pages/beta.html")
+
+
+def hackclub_refused(request, reason):
+    """Grandma's page for a Hack Club sign-in that did not go through: one fixed sentence per reason, nothing from the request or from Hack Club.
+    Only a failure that is nobody's fault is a 400; a refusal is a 403."""
+    label, line = HCA_REFUSALS[reason]
+    return render(request, "pages/hackclub_refused.html", {"label": label, "line": line}, status=400 if reason == "failed" else 403)
+
+
+@never_cache
+@require_GET
+def login_hackclub(request):
+    """Sends the person to Hack Club to sign in. Only the `next` that is safe (this host, this scheme) is kept, in the session, before leaving;
+    the callback never takes a redirect target from its own request."""
+    if not hca.enabled(live()):
+        raise Http404
+    target = request.GET.get("next", "")
+    safe = url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}, require_https=request.is_secure())
+    request.session[HCA_NEXT] = target if safe else ""
+    try:
+        return hca.authorize_redirect(request)
+    except Exception:
+        log.warning("hack club sign-in failed")
+        return hackclub_refused(request, "failed")
+
+
+@never_cache
+@require_GET
+def login_hackclub_callback(request):
+    """Where Hack Club sends the person back. The library checks the state, the code and the id token; then the eligibility rules, then the
+    account (docs/accounts.md). Nothing is created: an unknown person is refused. The Django login uses the named backend (Axes guards passwords
+    only, and two backends are configured). No token is kept."""
+    cfg = live()
+    if not hca.enabled(cfg):
+        raise Http404
+    target = request.session.pop(HCA_NEXT, "")
+    userinfo = hca.userinfo_of(request)
+    if userinfo is None:
+        log.warning("hack club sign-in failed")
+        return hackclub_refused(request, "failed")
+    ok, reason = hca.check(userinfo, cfg.HCA_REQUIRE_ELIGIBLE)
+    if not ok:
+        return hackclub_refused(request, reason)
+    profile = hca.identify(userinfo)
+    if profile is None:
+        return hackclub_refused(request, "no_account")
+    login(request, profile.user, backend="django.contrib.auth.backends.ModelBackend")
+    return redirect(target or landing(profile.user))

@@ -19,6 +19,9 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
 SITE_URL = env("SITE_URL", default="http://localhost:8000")      # the public address, for links in messages sent outside a request (submissions/notices.py)
 SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's Slack bot (accounts/slack.py). A secret: environment only, never the admin or the database
+HCA_CLIENT_ID = env("HCA_CLIENT_ID", default="")                 # Sign in with Hack Club (accounts/hca.py). The id and the secret: environment only, never the admin or the database
+HCA_CLIENT_SECRET = env("HCA_CLIENT_SECRET", default="")
+HCA_ISSUER = env("HCA_ISSUER", default="https://auth.hackclub.com")
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",

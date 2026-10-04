@@ -12,7 +12,7 @@ class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
     max_num = 1
-    readonly_fields = ("hackatime_connected", "beta_access")        # beta access is given under Profiles, where every change is recorded
+    readonly_fields = ("hackatime_connected", "hca_sub", "hca_checked_at", "beta_access")        # the Hack Club fields are set only by the sign-in (accounts/hca.py); beta access is given under Profiles, where every change is recorded
 
 
 class UserAdmin(BaseUserAdmin):
