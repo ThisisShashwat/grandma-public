@@ -195,9 +195,10 @@ if env.bool("BEHIND_PROXY", default=False):     # set when a reverse proxy termi
 # environment only reports to the browser console, to look before blocking. Scripts: our own files and the libraries in templates/base.html,
 # each by its exact address (a bare host would allow any npm package on that CDN; tests/test_csp.py pins this list to the template). No inline
 # script or handler exists and eval is never allowed. style-src-attr lets the style="--x: 36" attributes (custom properties) through and
-# nothing else inline except one hashed <style> (below). form-action also names the Hackatime host and the Hack Club Auth host: Chrome applies it to the redirect
-# after a form POST, and the hours check posts, goes to Hackatime and, for somebody signed out there, on to Hack Club to sign in (not verified in a browser:
-# it needs live credentials). Sign in with Hack Club and the Hackatime connect are plain links, so they need nothing here.
+# nothing else inline except one hashed <style> (below). form-action also names the Hackatime host and the Hack Club Auth host: Chrome applies it to the redirects
+# that follow a form POST, and the hours picker's POST ends in a redirect through the connect flow to Hackatime (and, for somebody signed out there, on to Hack Club
+# to sign in) when Hackatime has rejected the stored token (not verified in a browser: it needs live credentials). The hours check itself no longer goes to
+# Hackatime: it reads with the stored token on the server. Sign in with Hack Club and the Hackatime connect are plain links, so they need nothing here.
 CSP_REPORT_ONLY = env.bool("CSP_REPORT_ONLY", default=False)
 CSP_SCRIPTS = [f"https://cdn.jsdelivr.net/npm/{file}" for file in (
     "gsap@3.15.0/dist/gsap.min.js", "gsap@3.15.0/dist/ScrollTrigger.min.js", "gsap@3.15.0/dist/Draggable.min.js",

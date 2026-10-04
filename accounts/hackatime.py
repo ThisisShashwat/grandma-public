@@ -29,7 +29,7 @@ NAME = "hackatime"
 SCOPE = "profile read"
 TIMEOUT_SECONDS = 5
 ID_MAX_LENGTH = 40
-NAME_MAX_LENGTH = 100                      # the longest Hackatime project name we ask about (Project.tracked_name, a test pins them together)
+NAME_MAX_LENGTH = 100                      # the longest Hackatime project name we ask about (the per name limit is enforced by clean_name)
 MAX_SECONDS = 2**31 - 1                    # what the database column holds
 MIN_SECONDS = 600                          # when hours are required: a ten-minute floor, so one stray heartbeat is not "work" (code, not a setting)
 FRESH_FOR = timedelta(hours=24)            # when hours are required: a check older than this is made again
@@ -222,7 +222,7 @@ def link(profile, hackatime_id, slack_id=None, sealed=""):
 
 
 def drop_token(profile):
-    """For a token Hackatime rejected (the lead's later code calls it): under the Profile row lock set hackatime_token = ""
+    """For a token Hackatime rejected (`read` calls it when the probe also answers 401): under the Profile row lock set hackatime_token = ""
     and hackatime_connected = False, keep hackatime_user_id (so one Hackatime account still backs only one person),
     audit profile.hackatime_token_dropped with details={}; returns whether anything changed. Do not revoke."""
     with transaction.atomic():
