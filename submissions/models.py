@@ -1,8 +1,9 @@
 """What a person hands in to Grandma, and what a reviewer decided about it.
 
-A Submission belongs to a project. A project has exactly one ship. The participant
-fields are written once, when they hand it in, and never edited. The reviewer fields are set in the admin (docs/submissions.md) and
-frozen once the person has collected the result. Layers: program <- rules.py, links.py <- models.py <- services.py.
+A Submission belongs to a project and is one ROUND of handing it in: a project is handed in once, and again after each time a reviewer
+asked for changes, up to the MAX_ROUNDS setting (docs/changes-requested-plan.md). The participant fields are written once, when they hand
+it in, and never edited. The reviewer fields are set in the admin (docs/submissions.md) and frozen once the person has collected the
+result. Layers: program <- rules.py, links.py <- models.py <- services.py.
 """
 import uuid
 from pathlib import Path
@@ -27,7 +28,8 @@ def screenshot_path(instance, filename):
 
 class Submission(models.Model):
     project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="submissions")
-    status = models.CharField(max_length=9, choices=rules.STATUSES, default=rules.SUBMITTED)
+    round = models.PositiveSmallIntegerField(default=1, help_text="Which time this project was handed in: 1 the first time, 2 after changes were asked for once, and so on.")
+    status = models.CharField(max_length=20, choices=rules.STATUSES, default=rules.SUBMITTED)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     # what the person handed in (written once, never edited)
@@ -59,8 +61,10 @@ class Submission(models.Model):
         ordering = ["-submitted_at", "-id"]
         constraints = [
             models.CheckConstraint(condition=Q(status__in=[s for s, _ in rules.STATUSES]), name="submission_status_is_known"),
-            models.UniqueConstraint(fields=["project"], name="submission_one_per_project",
-                                    violation_error_message="That project has already handed in its one ship."),
+            models.UniqueConstraint(fields=["project", "round"], name="submission_one_per_round",
+                                    violation_error_message="That project has already handed in that round."),
+            models.CheckConstraint(condition=Q(round__gte=1, round__lte=rules.MAX_ROUND_LIMIT), name="submission_round_is_sane",
+                                   violation_error_message=f"The round must be between 1 and {rules.MAX_ROUND_LIMIT}."),
             models.CheckConstraint(condition=Q(claimed_at__isnull=True) | Q(status__in=rules.REVIEWED), name="submission_claimed_only_after_review"),
             models.CheckConstraint(condition=~Q(status=rules.APPROVED) | Q(approved_hours__isnull=False), name="submission_approved_has_hours",
                                    violation_error_message="An approved submission needs its approved hours (0 pays nothing)."),

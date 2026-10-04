@@ -27,9 +27,26 @@ def shipping_project(user):
     return Project.objects.filter(user=user, status=project_rules.BUILDING).first()
 
 
-def ship_for(project):
-    """What this project may hand in next (rules.next_ship) given what it has handed in so far."""
-    return rules.next_ship(project.submissions.exists())
+def fixing_project(user, project_id):
+    """The person's own project that has changes requested, which they can fix and hand in again. None for any other id."""
+    return Project.objects.filter(pk=project_id, user=user, status=project_rules.CHANGES_REQUESTED).first()
+
+
+def latest_round(project):
+    """The newest round this project has handed in (the one a fix starts from), or None."""
+    return project.submissions.order_by("-round", "-id").first()
+
+
+def ship_for(project, max_rounds):
+    """What this project may hand in next (rules.next_round) given the rounds it has handed in so far."""
+    return rules.next_round(list(project.submissions.values_list("round", "status")), max_rounds)
+
+
+def locked_to_hand_in(user, project_id):
+    """The project row, locked, that a hand-in is for: the one being built, or with an id the person's own project with changes requested."""
+    if project_id is None:
+        return project_services.locked_project(user, project_rules.BUILDING)
+    return Project.objects.select_for_update().filter(pk=project_id, user=user, status=project_rules.CHANGES_REQUESTED).first()
 
 
 def waiting(user):
@@ -39,19 +56,20 @@ def waiting(user):
 
 
 @transaction.atomic
-def submit(user, *, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
-    """Hand in the person's project in building. The project becomes `in_review`.
-    ValidationError (a sentence for the person) when there is nothing to hand in.
+def submit(user, *, max_rounds, project_id=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
+    """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
+    changes requested, as the next round (`max_rounds` is the MAX_ROUNDS setting). The project becomes `in_review`.
+    ValidationError (a sentence for the person) when there is nothing to hand in or no round left.
     One at a time: a second click finds the project already in review."""
     project_services.lock_person(user)
-    locked = project_services.locked_project(user, project_rules.BUILDING)
+    locked = locked_to_hand_in(user, project_id)
     if locked is None:
         raise ValidationError(NOTHING_TO_SHIP)
     project = Project.objects.get(pk=locked.pk)
-    ship = ship_for(project)
+    ship = ship_for(project, max_rounds)
     if ship.problem:
         raise ValidationError(ship.problem)
-    submission = Submission(project=project, repo_url=repo_url, playable_url=playable_url, description=description,
+    submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text)
     submission.full_clean()
     submission.save()
@@ -64,6 +82,7 @@ def submit(user, *, repo_url, playable_url, description, screenshot, recording_u
         target=submission,
         details={
             "project": project.id,
+            "round": submission.round,
             "project_name": project.name,
             "category": project.category_id,
             "subcategory": project.subcategory_id,
@@ -95,17 +114,21 @@ def cookies_for(submission):
 
 
 @transaction.atomic
-def review(submission, *, by, now=None):
+def review(submission, *, by, max_rounds, now=None):
     """Save the reviewer's decision, which is already on `submission` (the admin form put it there). Stamps who and when and works
     out the cookies, then saves only the review fields. Put back to `submitted`, the stamps are cleared. AlreadyCollected once
     the person has been handed the result: the check is made under a lock on the row, so a form opened before the handover cannot
-    change it."""
+    change it. ValidationError (a sentence for the reviewer, rules.review_problem) for changes requested without a note or on the last
+    round (`max_rounds` is the MAX_ROUNDS setting); nothing is saved then."""
     current = Submission.objects.select_for_update().select_related("project__user").get(pk=submission.pk)
     if current.claimed_at is not None:
         raise AlreadyCollected
     changed = any(getattr(current, f) != getattr(submission, f) for f in ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note"))
     if not changed and current.reviewed_at is not None:
         return submission
+    problem = rules.review_problem(submission.status, submission.public_note, current.round, max_rounds)
+    if problem:
+        raise ValidationError(problem)
     if submission.status == rules.SUBMITTED:
         submission.reviewed_by, submission.reviewed_at, submission.cookies_awarded = None, None, None
     else:
@@ -130,9 +153,9 @@ def review(submission, *, by, now=None):
 @transaction.atomic
 def claim(user, submission_id, *, now=None):
     """Grandma hands over the result of a review, once. Approved: the cookies go on the ledger under the key `submission:{id}`
-    (nothing is written for 0 cookies) and `claimed_at` is set in the same transaction, so a double click or a reload credits once.
-    The project becomes approved or rejected, which frees the person for another one. Only the person's own submission, only a reviewed one. Returns the
-    submission, None if there is nothing of theirs to collect."""
+    (nothing is written for 0 cookies, and a round with changes requested is worth 0) and `claimed_at` is set in the same transaction,
+    so a double click or a reload credits once. The project becomes approved, rejected or changes requested (after_claim). Only the
+    person's own submission, only a reviewed one. Returns the submission, None if there is nothing of theirs to collect."""
     project_services.lock_person(user)
     submission = Submission.objects.select_for_update().filter(pk=submission_id, project__user=user, status__in=rules.REVIEWED).first()
     if submission is None:
@@ -161,8 +184,9 @@ def claim(user, submission_id, *, now=None):
     return submission
 
 
+AFTER_CLAIM = {rules.APPROVED: project_rules.APPROVED, rules.CHANGES_REQUESTED: project_rules.CHANGES_REQUESTED, rules.REJECTED: project_rules.REJECTED}
+
+
 def after_claim(submission):
     """The project's status once the person has heard the result."""
-    if submission.status == rules.REJECTED:
-        return project_rules.REJECTED
-    return project_rules.APPROVED
+    return AFTER_CLAIM[submission.status]

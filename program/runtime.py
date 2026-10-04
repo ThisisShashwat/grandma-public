@@ -38,6 +38,8 @@ CONFIG = {
                       "Hosts a playable link may not be on (free tiers that fall asleep when idle, tunnels to a laptop, notebooks), one per line. A host also blocks its "
                       "subdomains: streamlit.app blocks myapp.streamlit.app.", "hosts"),
     "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes.", "megabytes"),
+    "MAX_ROUNDS": (3, "How many times one project may be handed in, counting the first time. When you ask for changes, the person fixes it and hands it in again as the next round; "
+                      "on the last round you can only approve or reject. Between 1 and 10.", "rounds"),
 
     "ORDER_SCREENSHOT_MAX_MB": (5, "The biggest cart or part screenshot a person may upload with an order, in megabytes.", "megabytes"),
     "ORDER_SCREENSHOT_MAX_SIDE": (6000, "The longest side of an order screenshot, in pixels. Anything bigger is refused.", "pixels"),
@@ -62,7 +64,7 @@ FIELDSETS = (
     ("Launch", ("LAUNCH", "FREE_ASKS")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
-    ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB")),
+    ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SLACK_WORKSPACE_URL", "SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
@@ -79,6 +81,7 @@ FIELDS = {
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
+    "rounds": ("django.forms.IntegerField", {"min_value": 1, "max_value": 10}),         # the ceiling is submissions.rules.MAX_ROUND_LIMIT (a test pins them)
     "pixels": ("django.forms.IntegerField", {"min_value": 500, "max_value": 10000}),
     "megapixels": ("django.forms.IntegerField", {"min_value": 1, "max_value": 40}),
     "workspace": ("pages.fields.WorkspaceField",),

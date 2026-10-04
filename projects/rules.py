@@ -3,10 +3,10 @@ decided here and projects/services.py only applies it. A project has no time lim
 Why each rule exists: docs/projects.md."""
 from typing import NamedTuple
 
-DEALING, BUILDING, SHIPPED, IN_REVIEW, APPROVED, REJECTED, ABANDONED = (
-    "dealing", "building", "shipped", "in_review", "approved", "rejected", "abandoned")
+DEALING, BUILDING, SHIPPED, IN_REVIEW, CHANGES_REQUESTED, APPROVED, REJECTED, ABANDONED = (
+    "dealing", "building", "shipped", "in_review", "changes_requested", "approved", "rejected", "abandoned")
 STATUSES = ((DEALING, "Talking to Grandma"), (BUILDING, "Building"), (SHIPPED, "Handed in"), (IN_REVIEW, "In review"),
-            (APPROVED, "Approved"), (REJECTED, "Rejected"), (ABANDONED, "Abandoned"))
+            (CHANGES_REQUESTED, "Changes requested"), (APPROVED, "Approved"), (REJECTED, "Rejected"), (ABANDONED, "Abandoned"))
 LABELS = dict(STATUSES)
 
 #: A person has at most one project in WORKING_STATUSES, and the database says so (the Project model's constraint). Dealing is
@@ -14,8 +14,9 @@ LABELS = dict(STATUSES)
 #: could be dealt, and re-dealt for free, by starting over.
 WORKING_STATUSES = (DEALING, BUILDING)
 
-#: Projects not yet finished (for admin filters and Project.active).
-ACTIVE_STATUSES = (DEALING, BUILDING, SHIPPED, IN_REVIEW)
+#: Projects not yet finished (for admin filters and Project.active). A project with changes requested is not finished, but it is not a
+#: working one either: the person may fix it while building another.
+ACTIVE_STATUSES = (DEALING, BUILDING, SHIPPED, IN_REVIEW, CHANGES_REQUESTED)
 
 
 class Offer(NamedTuple):

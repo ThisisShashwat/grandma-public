@@ -17,7 +17,7 @@ SESSION = "collect"
 
 #: The pages that matter, by URL name: a person with a result waiting at Grandma's is sent to her before any of them
 #: (submissions/middleware.py), on every visit, until they have collected it.
-PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "grandma", "submit", "project_edit", "project_demands")
+PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "grandma", "submit", "submit_fix", "project_edit", "project_demands")
 
 
 def outcome(submission):

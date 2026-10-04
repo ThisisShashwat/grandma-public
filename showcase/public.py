@@ -182,7 +182,7 @@ def external(label, url):
 
 
 def card(project, rows, maker, maker_id):
-    """One project as a card. `rows` are its visible ships; top gives the status, the ribbon shows if any ship earned one."""
+    """One project as a card. `rows` are its visible ships, the latest round first; top gives the status, the ribbon shows if any ship earned one."""
     top = rows[0]
     status = ship_status(top)
     return Card(
@@ -206,7 +206,7 @@ def profile_page(pk, number, cfg):
     shown = Project.objects.filter(user_id=pk).filter(Exists(visible.filter(project=OuterRef("pk"))))
     page = Paginator(shown.values("id", "name", "category__name", "subcategory__name").order_by("-id"), PAGE).get_page(number)
     by_project = defaultdict(list)
-    for row in visible.filter(project__in=[p["id"] for p in page]).values("project_id", "status", "ribbon", "claimed_at", "screenshot"):
+    for row in visible.filter(project__in=[p["id"] for p in page]).values("project_id", "status", "ribbon", "claimed_at", "screenshot").order_by("-round", "-id"):
         by_project[row["project_id"]].append(row)
     name = person["display_name"]
     return ProfilePage(
@@ -238,7 +238,7 @@ def project_page(pk, cfg):
     if project is None:
         return None
     rows = list(visible.filter(project_id=pk).values(
-        "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note"))
+        "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note").order_by("-round", "-id"))
     top = rows[0]
     status = ship_status(top)
     face, line = rules.SAYS[status]

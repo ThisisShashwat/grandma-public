@@ -24,9 +24,9 @@
         <p>Write it all on my note. Every box ticked, and ticked honestly. I check.</p>
       </div>
 
-      <form class="submit-note" method="post" enctype="multipart/form-data" action="{{ url('submit') }}">
+      <form class="submit-note" method="post" enctype="multipart/form-data" action="{{ action }}">
         {{ csrf_input }}
-        <h1>Hand it to Grandma</h1>
+        <h1>Hand it to Grandma{% if round %} again <small>(round {{ round }} of {{ max_rounds }})</small>{% endif %}</h1>
         <p class="submit-for"><b>{{ project_name }}</b></p>
         {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
         {% if form.errors %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}

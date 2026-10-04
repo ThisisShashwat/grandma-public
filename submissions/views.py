@@ -1,7 +1,8 @@
-"""/submit/ (a person hands their project to Grandma) and /grandma/collect/ (she hands the result back). Both are for one signed-in,
-onboarded person and touch only their own project: no address carries a project or submission id, so there is nothing to guess."""
+"""/submit/ (a person hands their building project to Grandma), /submit/<id>/ (they fix a project she asked changes of and hand it in
+again) and /grandma/collect/ (she hands the result back). All are for one signed-in, onboarded person and touch only their own
+project: the only id in an address is the project to fix, and it is only found among the person's own projects with changes requested."""
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -19,35 +20,53 @@ from talk.dialogue import End
 from talk.portraits import portrait
 
 MAX_FILES = 3           # the note takes one screenshot; the site-wide limit is higher because an order carries more (settings.py)
+STARTS_FROM = ("repo_url", "playable_url", "description", "recording_url", "ai_declaration_text")   # a fix starts from the last round's words
 
 
 @onboarded
 @never_cache
 @require_http_methods(["GET", "HEAD", "POST"])
-def submit(request):
-    """Grandma's note. Only a project being built can be handed in; anything else gets her saying why.
+def submit(request, pk=None):
+    """Grandma's note. Without an id only a project being built can be handed in; anything else gets her saying why. With the id of the
+    person's own project that has changes requested, the next round of it, the form starting from the last round's words.
     A hand-in that works goes to the dashboard."""
     if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
         return HttpResponseBadRequest("Too many files.")
-    project = services.shipping_project(request.user)
-    if project is None:
-        return not_now(request)
-    ship = services.ship_for(project)
-    if ship.problem:
-        return not_now(request, ship.problem)
     cfg = live()
-    form = SubmitForm(request.POST, request.FILES, cfg=cfg) if request.method == "POST" else SubmitForm(cfg=cfg)
+    project = services.shipping_project(request.user) if pk is None else services.fixing_project(request.user, pk)
+    if project is None:
+        if pk is not None:
+            raise Http404
+        return not_now(request)
+    ship = services.ship_for(project, cfg.MAX_ROUNDS)
+    if ship.problem:
+        return not_now(request, ship.problem) if pk is None else turned_back(request, ship.problem)
+    if request.method == "POST":
+        form = SubmitForm(request.POST, request.FILES, cfg=cfg)
+    else:
+        form = SubmitForm(cfg=cfg, initial=starts_from(project) if pk else None)
     if request.method == "POST" and form.is_valid():
         try:
-            services.submit(request.user, **form.cleaned_data)
+            services.submit(request.user, max_rounds=cfg.MAX_ROUNDS, project_id=pk, **form.cleaned_data)
         except ValidationError as error:
             form.add_error(None, error)
         else:
             request.session["handed_in"] = True
             return redirect("dashboard")
     return render(request, "pages/submit.html", {
-        "form": form, "checks": form.checks, "project_name": project.name,
+        "form": form, "checks": form.checks, "project_name": project.name, "action": request.path, "round": ship.number if pk else 0, "max_rounds": cfg.MAX_ROUNDS,
         "portrait": dict(zip(("file", "alt"), portrait("sideeye" if form.errors else "writing"))), "max_mb": cfg.SCREENSHOT_MAX_MB, "sleepers": form.blocked_hosts[:3]})
+
+
+def starts_from(project):
+    """The last round's description, links and AI text, as the form's starting values (the screenshot and the ticks are never carried over)."""
+    last = services.latest_round(project)
+    return {field: getattr(last, field) for field in STARTS_FROM} if last else None
+
+
+def turned_back(request, problem):
+    """A project with changes requested that cannot be handed in again (no round left): Grandma says so."""
+    return flow.page(request, title="Hand it in", kind="end", face="sideeye", then=reverse("dashboard"), lines=(problem,), step=End(button="To my dashboard"))
 
 
 def not_now(request, problem=""):

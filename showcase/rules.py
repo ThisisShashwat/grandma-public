@@ -16,8 +16,8 @@ def slug_of(name, fallback):
     return re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")[:MAX_SLUG].strip("-") or fallback
 
 
-IN_REVIEW, APPROVED, RIBBON, REJECTED = "in_review", "approved", "ribbon", "rejected"
-LABELS = {IN_REVIEW: "In review", APPROVED: "Approved", RIBBON: "Blue Ribbon", REJECTED: "Rejected"}
+IN_REVIEW, CHANGES_REQUESTED, APPROVED, RIBBON, REJECTED = "in_review", "changes_requested", "approved", "ribbon", "rejected"
+LABELS = {IN_REVIEW: "In review", CHANGES_REQUESTED: "Changes requested", APPROVED: "Approved", RIBBON: "Blue Ribbon", REJECTED: "Rejected"}
 
 
 def public_status(status, collected, ribbon):
@@ -27,6 +27,8 @@ def public_status(status, collected, ribbon):
         return IN_REVIEW
     if status == submission_rules.REJECTED:
         return REJECTED
+    if status == submission_rules.CHANGES_REQUESTED:
+        return CHANGES_REQUESTED
     return RIBBON if ribbon else APPROVED
 
 
@@ -34,6 +36,7 @@ def public_status(status, collected, ribbon):
 # to the whole world, and the maker is 13 to 18.
 SAYS = {
     IN_REVIEW: ("magnifier", "I'm still reading this one. Don't hover."),
+    CHANGES_REQUESTED: ("finger", "Nearly, dear. I've asked for a few changes."),
     APPROVED: ("approved", "Well done, dear. I checked it twice."),
     RIBBON: ("ribbon", "A Blue Ribbon. I do not hand those out."),
     REJECTED: ("sideeye", "Not this time. Everyone gets one of these."),
