@@ -6,6 +6,7 @@ Written DISABLED with the rest of Hackatime: 404 until HACKATIME_ENABLED is on a
 import logging
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponseNotAllowed
 from django.shortcuts import redirect, render, resolve_url
 from django.utils import timezone
@@ -18,7 +19,7 @@ from accounts.services import profile_of
 from pages.live import live
 from projects import rules as project_rules
 from submissions import services
-from submissions.script import HOURS_REFUSALS
+from submissions.script import HOURS_NOT_ENOUGH, HOURS_REFUSALS
 
 log = logging.getLogger(__name__)
 CHECK = "hackatime_check"          # the session key that carries the name, the project and the start of the window over to the callback
@@ -40,6 +41,16 @@ def note_block(cfg, user, project):
             "project": "" if project.status == project_rules.BUILDING else project.pk}
 
 
+def require_fresh(cfg, project, now=None):
+    """Before a hand-in: while hours are required, a check that found some must also be enough (hackatime.check_counts: long enough, newer than the
+    project's start or last hand-in, and recent), or ValidationError. No check, or one that found nothing, is left for services.submit to refuse."""
+    if not hackatime.required(cfg) or not project.tracked_seconds:
+        return
+    last = services.latest_round(project)
+    if not hackatime.check_counts(project.tracked_seconds, project.tracked_at, last.submitted_at if last else project.started_at, now or timezone.now()):
+        raise ValidationError(HOURS_NOT_ENOUGH)
+
+
 def refused(request, reason, back):
     """Grandma's page for a check that did not go through, with the way back to the note."""
     label, line = HOURS_REFUSALS[reason]
@@ -51,7 +62,7 @@ def to_check(request):
     wanted = request.POST.get("project", "")
     if not wanted:
         return services.shipping_project(request.user)
-    return services.fixing_project(request.user, int(wanted)) if wanted.isdigit() and len(wanted) <= 9 else None
+    return services.fixing_project(request.user, int(wanted)) if wanted.isascii() and wanted.isdigit() and len(wanted) <= 9 else None
 
 
 @onboarded

@@ -24,7 +24,12 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
 if not ADMIN_URL.endswith("/") or ADMIN_URL.startswith("/"):
     raise ImproperlyConfigured("ADMIN_URL must end with a slash and must not start with one, like admin/ or a-long-secret-word/.")
-SITE_URL = env("SITE_URL", default="http://localhost:8000")      # the public address, for links in messages sent outside a request (submissions/notices.py)
+SITE_URL = env("SITE_URL", default="http://localhost:8000")      # the public address, for links in messages sent outside a request (submissions/notices.py) and the redirect addresses of Hack Club and Hackatime
+_site = urlsplit(SITE_URL)
+if _site.scheme not in ("http", "https") or not _site.hostname or "@" in _site.netloc or _site.path not in ("", "/") or _site.query or _site.fragment:
+    raise ImproperlyConfigured("SITE_URL must be the bare address of the site, like https://grandma.example.com: http or https, a host, no path, query or login.")
+if not DEBUG and _site.scheme != "https":
+    raise ImproperlyConfigured("SITE_URL must start with https:// while DEBUG is off: Hack Club and Hackatime send people (and their codes) back to it.")
 SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's Slack bot (accounts/slack.py). A secret: environment only, never the admin or the database
 HCA_CLIENT_ID = env("HCA_CLIENT_ID", default="")                 # Sign in with Hack Club (accounts/hca.py). The id and the secret: environment only, never the admin or the database
 HCA_CLIENT_SECRET = env("HCA_CLIENT_SECRET", default="")
@@ -32,6 +37,9 @@ HCA_ISSUER = env("HCA_ISSUER", default="https://auth.hackclub.com")
 HACKATIME_CLIENT_ID = env("HACKATIME_CLIENT_ID", default="")             # Connecting a Hackatime account (accounts/hackatime.py). The id and the secret: environment only, never the admin or the database
 HACKATIME_CLIENT_SECRET = env("HACKATIME_CLIENT_SECRET", default="")
 HACKATIME_BASE_URL = env("HACKATIME_BASE_URL", default="https://hackatime.hackclub.com")
+for _name, _address in (("HCA_ISSUER", HCA_ISSUER), ("HACKATIME_BASE_URL", HACKATIME_BASE_URL)):
+    if not DEBUG and not _address.startswith("https://"):
+        raise ImproperlyConfigured(f"{_name} must start with https:// while DEBUG is off: codes and tokens travel to it.")
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -174,14 +182,15 @@ if env.bool("BEHIND_PROXY", default=False):     # set when a reverse proxy termi
 # environment only reports to the browser console, to look before blocking. Scripts: our own files and the libraries in templates/base.html,
 # each by its exact address (a bare host would allow any npm package on that CDN; tests/test_csp.py pins this list to the template). No inline
 # script or handler exists and eval is never allowed. style-src-attr lets the style="--x: 36" attributes (custom properties) through and
-# nothing else inline except one hashed <style> (below). form-action also names the Hackatime host: Chrome applies it to the redirect after a form POST, and the hours check
-# posts, then goes to Hackatime. Sign in with Hack Club and the Hackatime connect are plain links, so they need nothing here.
+# nothing else inline except one hashed <style> (below). form-action also names the Hackatime host and the Hack Club Auth host: Chrome applies it to the redirect
+# after a form POST, and the hours check posts, goes to Hackatime and, for somebody signed out there, on to Hack Club to sign in (not verified in a browser:
+# it needs live credentials). Sign in with Hack Club and the Hackatime connect are plain links, so they need nothing here.
 CSP_REPORT_ONLY = env.bool("CSP_REPORT_ONLY", default=False)
 CSP_SCRIPTS = [f"https://cdn.jsdelivr.net/npm/{file}" for file in (
     "gsap@3.15.0/dist/gsap.min.js", "gsap@3.15.0/dist/ScrollTrigger.min.js", "gsap@3.15.0/dist/Draggable.min.js",
     "rough-notation@0.5.1/lib/rough-notation.iife.js", "canvas-confetti@1.9.4/dist/confetti.browser.js")]
 ROUGH_NOTATION_STYLE = "'sha256-a2IHEXu1qFG5AB5vTDZCiFizZFFc0ZNcwdq6s6vt3Og='"      # the one <style> rough-notation 0.5.1 adds itself (the draw-in keyframes): without it the marks stay invisible
-_hackatime = urlsplit(HACKATIME_BASE_URL)
+_hackatime, _hca = urlsplit(HACKATIME_BASE_URL), urlsplit(HCA_ISSUER)
 CSP_POLICY = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, *CSP_SCRIPTS],
@@ -193,7 +202,7 @@ CSP_POLICY = {
     "object-src": [CSP.NONE],
     "base-uri": [CSP.SELF],
     "frame-ancestors": [CSP.NONE],
-    "form-action": [CSP.SELF, f"{_hackatime.scheme}://{_hackatime.netloc}"],
+    "form-action": [CSP.SELF, f"{_hackatime.scheme}://{_hackatime.netloc}", f"{_hca.scheme}://{_hca.netloc}"],
 }
 SECURE_CSP = {} if CSP_REPORT_ONLY else CSP_POLICY
 SECURE_CSP_REPORT_ONLY = CSP_POLICY if CSP_REPORT_ONLY else {}

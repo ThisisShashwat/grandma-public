@@ -8,18 +8,19 @@ of onboarding is the old greyed-out button (accounts/script.py).
 Hackatime is asked for two scopes (profile read: `profile` cannot be left out) and we keep ONE fact: the person's Hackatime user id, so one Hackatime
 account cannot back two accounts here. The token is the danger (even a `profile` token can read the person's Hackatime API key, which can fake hours),
 so it is used for one call and revoked at once: never stored, never logged, never put in the session. The answer of that call carries emails: it is
-read in memory and dropped, nothing but the id leaves `read_identity`.
+read in memory and dropped, nothing but the id and the Slack ID (which is only compared with the Profile's, never stored) leaves `read_identity`.
 
 The same connection is made again, on purpose, at hand-in to count the hours of one Hackatime project (`seconds_of`, the "Check my hours" button of the
 submit note): connect, check it is the account that was connected, read ONE number, revoke. Nothing but that number leaves the module, and it is for
 reviewers only: a participant never sees it (docs/submissions.md).
 """
-from datetime import timezone
+from datetime import timedelta, timezone
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
+from django.views.decorators.debug import sensitive_variables
 
 from accounts.models import Profile
 from audit import services as audit
@@ -30,6 +31,8 @@ TIMEOUT_SECONDS = 5
 ID_MAX_LENGTH = 40
 NAME_MAX_LENGTH = 100                      # the longest Hackatime project name we ask about (Project.tracked_name, a test pins them together)
 MAX_SECONDS = 2**31 - 1                    # what the database column holds
+MIN_SECONDS = 600                          # when hours are required: a ten-minute floor, so one stray heartbeat is not "work" (code, not a setting)
+FRESH_FOR = timedelta(hours=24)            # when hours are required: a check older than this is made again
 
 oauth = OAuth()
 
@@ -64,21 +67,25 @@ def authorize_redirect(request, callback="connect_hackatime_callback"):
     return client().authorize_redirect(request, redirect_uri(callback))
 
 
+@sensitive_variables("token")
 def read_identity(token):
-    """The person's Hackatime user id as a string, from GET api/v1/authenticated/me, and nothing else: the answer has emails, a Slack ID and a GitHub name,
-    and none of it is kept. ASSUMED (research 3.3, from the docs and swagger, not run live): the body is a JSON object whose `id` is an integer. A missing,
-    empty, boolean or over-long id raises."""
+    """(the person's Hackatime user id as a string, their Slack ID or None), from GET api/v1/authenticated/me, and nothing else: the answer has emails and
+    a GitHub name, and none of it is kept (the Slack ID is only compared with the one on the Profile, never stored). ASSUMED (research 3.3, from the docs
+    and swagger, not run live): the body is a JSON object whose `id` is an integer and whose `slack_id` is text, null or missing. A missing, empty,
+    boolean or over-long id, or a Slack ID that is not text, raises."""
     response = client().get("api/v1/authenticated/me", token=token)
     response.raise_for_status()
-    value = response.json()["id"]
-    if isinstance(value, bool) or not isinstance(value, (int, str)):
+    body = response.json()
+    value, slack_id = body["id"], body.get("slack_id")
+    if isinstance(value, bool) or not isinstance(value, (int, str)) or not (slack_id is None or isinstance(slack_id, str)):
         raise ValueError
     hackatime_id = str(value).strip()
     if not 0 < len(hackatime_id) <= ID_MAX_LENGTH:
         raise ValueError
-    return hackatime_id
+    return hackatime_id, slack_id or None
 
 
+@sensitive_variables("token")
 def revoke(token):
     """Ask Hackatime to forget the token (POST oauth/revoke with the token and the app's id and secret, form encoded). Best effort: it never raises, because
     a failure here must not undo a connection that worked. ASSUMED (research 3.2): the endpoint takes these three fields and answers 200 whatever happens."""
@@ -89,8 +96,9 @@ def revoke(token):
         pass
 
 
+@sensitive_variables("token")
 def identity_of(request):
-    """The Hackatime user id of the connection the person has just made, or None when anything at all went wrong (a refusal at Hackatime, a stale or
+    """(Hackatime user id, Slack ID or None) of the connection the person has just made, or None when anything at all went wrong (a refusal at Hackatime, a stale or
     forged state, a bad code, no network, an answer in a shape we do not know). Whatever happened, a token that was handed over is revoked here, and
     dropped: it never leaves this function."""
     try:
@@ -105,14 +113,17 @@ def identity_of(request):
         revoke(token)
 
 
-def link(profile, hackatime_id):
+def link(profile, hackatime_id, slack_id=None):
     """Connect this Profile to this Hackatime account: True, or False to refuse. Refused: an id that already belongs to another Profile, a Profile
-    already connected to a different id (it stays put, so a banned or unlucky account cannot be swapped for a clean one), an inactive user. The same
-    id again is fine. The Profile row is locked, and the audit entry is written in the same transaction (nothing about Hackatime goes in it)."""
+    already connected to a different id (it stays put, so a banned or unlucky account cannot be swapped for a clean one), an inactive user, and a
+    Hackatime account that names another Slack ID than the one on the Profile (`slack_id` is only compared, never stored; a missing one on either side
+    passes: it is a signal, not proof). The same id again is fine. The Profile row is locked, and the audit entry is written in the same transaction
+    (nothing about Hackatime goes in it)."""
     with transaction.atomic():
         stored = Profile.objects.select_for_update().select_related("user").get(pk=profile.pk)
         taken = Profile.objects.filter(hackatime_user_id=hackatime_id).exclude(pk=stored.pk).exists()
-        if taken or not stored.user.is_active or stored.hackatime_user_id not in (None, hackatime_id):
+        somebody_else = bool(slack_id and stored.slack_id and slack_id != stored.slack_id)
+        if taken or somebody_else or not stored.user.is_active or stored.hackatime_user_id not in (None, hackatime_id):
             return False
         stored.hackatime_user_id, stored.hackatime_connected = hackatime_id, True
         stored.save(update_fields=["hackatime_user_id", "hackatime_connected"])
@@ -132,12 +143,13 @@ def stamp(moment):
     return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+@sensitive_variables("token")
 def project_seconds(token, name, start, end):
     """The seconds Hackatime has recorded for the project called `name` between `start` and `end` (datetimes), from
     GET api/v1/authenticated/projects?projects=NAME&start=&end=&include_archived=true. Nothing else of the answer is kept. ASSUMED (research 3.3 and 3.4,
     from the docs and the source, never run live): the body is a JSON object with a `projects` list of objects with a `name` and a `total_seconds` (a
     number), the name is matched exactly, and a project with no time in the window is simply missing (so 0). A bad name, a body in another shape, a
-    negative, boolean or huge number raises."""
+    negative, boolean or huge number, or more seconds than the window is long (so the window was ignored), raises."""
     cleaned = clean_name(name)
     if cleaned is None or cleaned != name:
         raise ValueError
@@ -153,9 +165,18 @@ def project_seconds(token, name, start, end):
     seconds = found[0]
     if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= MAX_SECONDS:
         raise ValueError
+    if seconds > (end - start).total_seconds():                    # a window cannot hold more time than it is long: Hackatime ignored start and end
+        raise ValueError
     return int(seconds)
 
 
+def check_counts(seconds, checked_at, since, now):
+    """Whether a stored check may back a hand-in while hours are required: at least MIN_SECONDS, made after `since` (when the project started, or was
+    last handed in, so an old check cannot carry over to a later round) and no more than FRESH_FOR ago. Nothing stored (None) never counts."""
+    return bool(seconds and seconds >= MIN_SECONDS and checked_at and since < checked_at <= now and now - checked_at <= FRESH_FOR)
+
+
+@sensitive_variables("token")
 def seconds_of(request, expected_id, name, start, end):
     """The seconds for one Hackatime project of the connection the person has just made, or None when anything at all went wrong (a refusal, a stale or
     forged state, a bad code, no network, an answer in a shape we do not know, or a Hackatime account that is not the one they connected: their
@@ -165,7 +186,7 @@ def seconds_of(request, expected_id, name, start, end):
     except Exception:
         return None
     try:
-        if read_identity(token) != expected_id:
+        if read_identity(token)[0] != expected_id:
             return None
         return project_seconds(token, name, start, end)
     except Exception:

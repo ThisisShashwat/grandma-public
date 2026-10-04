@@ -66,9 +66,12 @@ CONFIG = {
                                    "Off lets in anyone whose Slack ID matches an account."),
     "HACKATIME_ENABLED": (False, "Make the Hackatime step of onboarding real and mandatory: people connect their Hackatime account and cannot go on until they have. "
                                  "It needs the environment values (HACKATIME_CLIENT_ID, HACKATIME_CLIENT_SECRET, HACKATIME_BASE_URL; the id and secret are never set here). "
+                                 "While it is on, a person whose connection fails (wrong credentials, a wrong redirect address, Hackatime down, no Hackatime account) cannot finish onboarding: "
+                                 "test with a fresh person before leaving it on. "
                                  "Off (the default) keeps the greyed-out button and lets people carry on."),
     "HACKATIME_REQUIRED": (False, "A project cannot be handed in without checked Hackatime hours: the person has to press Check my hours on the note, "
-                                  "and Hackatime must have seen some time on that project. It needs HACKATIME_ENABLED on (and does nothing without it). "
+                                  "and the check must show at least ten minutes on that project, made after it started (and after its last hand-in) and within the last 24 hours. "
+                                  "It needs HACKATIME_ENABLED on (and does nothing without it). "
                                   "Off (the default) lets people hand in with or without a check; a check that was made is still kept and shown to reviewers."),
 
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),

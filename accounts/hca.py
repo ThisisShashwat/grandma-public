@@ -50,15 +50,24 @@ def redirect_uri():
 
 
 def authorize_redirect(request):
-    """The redirect to Hack Club, with the state, nonce and PKCE challenge saved in the session."""
-    return client().authorize_redirect(request, redirect_uri())
+    """The redirect to Hack Club, with the state, nonce and PKCE challenge saved in the session. `prompt=login` (documented by Hack Club, research 2.3)
+    makes it ask the person to sign in again: logging out here cannot end their Hack Club session (it has no end_session_endpoint), so on a shared
+    computer the next person would otherwise be signed in as the last one."""
+    return client().authorize_redirect(request, redirect_uri(), prompt="login")
+
+
+def claims_options():
+    """What the id token must say on top of the library's own checks (signature, expiry, nonce, `azp`): the configured issuer (with or without a
+    trailing slash), and OUR client id among its audience. Giving options replaces the library's default issuer check, so the issuer is here too."""
+    issuer = settings.HCA_ISSUER.rstrip("/")
+    return {"iss": {"essential": True, "values": [issuer, issuer + "/"]}, "aud": {"essential": True, "values": [settings.HCA_CLIENT_ID]}}
 
 
 def userinfo_of(request):
     """The four claims we use from the sign-in the person has just finished, or None when anything at all went wrong (a refusal at Hack Club, a
-    stale or forged state, a bad code, a failed signature or nonce, no id token, no network). The token is dropped here."""
+    stale or forged state, a bad code, a failed signature, issuer, audience or nonce, no id token, no network). The token is dropped here."""
     try:
-        userinfo = client().authorize_access_token(request)["userinfo"]
+        userinfo = client().authorize_access_token(request, claims_options=claims_options())["userinfo"]
         return {key: userinfo.get(key) for key in CLAIMS}
     except Exception:
         return None
