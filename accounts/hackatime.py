@@ -9,8 +9,8 @@ Hackatime is asked for two scopes (profile read: `profile` cannot be left out) a
 encrypted at rest (HACKATIME_TOKEN_KEYS). Never logged, never shown, never in the admin, never in the session. The answer of that call carries emails:
 it is read in memory and dropped, nothing but the id and the Slack ID (which is only compared with the Profile's, never stored) leaves `read_identity`.
 
-The stored token reads the time server side (`read`, `list_projects`, `total_seconds`). When checking hours from the submit note, the person picks
-projects and their time is read without any redirect to Hackatime. When Hackatime rejects the token, they are asked to reconnect.
+The stored token reads the time server side (`read`, `list_projects`, `list_all_time`, `total_seconds`). When checking hours from the submit note, the person picks
+projects (only ones made after they spoke to Grandma: `ineligible`) and their time is read without any redirect to Hackatime. When Hackatime rejects the token, they are asked to reconnect.
 """
 from datetime import timedelta, timezone
 from typing import NamedTuple
@@ -29,11 +29,12 @@ NAME = "hackatime"
 SCOPE = "profile read"
 TIMEOUT_SECONDS = 5
 ID_MAX_LENGTH = 40
-NAME_MAX_LENGTH = 100                      # the longest Hackatime project name we ask about (the per name limit is enforced by clean_name)
+NAME_MAX_LENGTH = 255                      # the longest Hackatime project name we list and ask about (the per name limit is enforced by clean_name)
 MAX_SECONDS = 2**31 - 1                    # what the database column holds
 MIN_SECONDS = 600                          # when hours are required: a ten-minute floor, so one stray heartbeat is not "work" (code, not a setting)
 FRESH_FOR = timedelta(hours=24)            # when hours are required: a check older than this is made again
 MAX_PROJECTS = 10                          # the most Hackatime projects one hand-in may count
+EARLIER_TOLERANCE = timedelta(minutes=10)  # a project counts as made after the talk with Grandma when it has at most this much time before the project's start (owner, 2026-10-05)
 
 
 class TokenUnreadable(Exception):
@@ -237,7 +238,7 @@ def drop_token(profile):
 
 
 def clean_name(value):
-    """A Hackatime project name as typed, trimmed, or None when it cannot be one: 1 to 100 characters, nothing unprintable (no control characters or line
+    """A Hackatime project name as typed, trimmed, or None when it cannot be one: 1 to 255 characters, nothing unprintable (no control characters or line
     breaks), and no comma (the API takes a comma separated list, so such a name could never be asked for exactly)."""
     name = value.strip() if isinstance(value, str) else ""
     return name if 0 < len(name) <= NAME_MAX_LENGTH and name.isprintable() and "," not in name else None
@@ -290,43 +291,60 @@ def read(profile, path, params=None):
     return body
 
 
+def listed_rows(body, most=MAX_SECONDS):
+    """The (name, seconds) pairs of the well formed rows of an api/v1/authenticated/projects answer, in the answer's order. A name is kept when it is text,
+    not blank, at most NAME_MAX_LENGTH characters and printable: a comma is fine here, the name is listed and only clean_name decides what can be asked
+    for. Seconds must be a number (not a bool) from 0 to `most` (and never above MAX_SECONDS). A body without a projects list raises Unreadable."""
+    rows = body.get("projects")
+    if not isinstance(rows, list):
+        raise Unreadable
+    pairs = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name, seconds = row.get("name"), row.get("total_seconds")
+        if not (isinstance(name, str) and name.strip() and len(name) <= NAME_MAX_LENGTH and name.isprintable()):
+            continue
+        if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= min(most, MAX_SECONDS):
+            continue
+        pairs.append((name, int(seconds)))
+    return pairs
+
+
 @sensitive_variables("token")
 def list_projects(profile, start, end):
     """Every Hackatime project that has recorded time in the window [start, end].
     Calls GET api/v1/authenticated/projects with params start, end, include_archived="true".
     Returns a list of (name, seconds) tuples sorted by seconds descending then name, capped at 200 rows.
-    A row without a valid name passing clean_name unchanged, or without valid total_seconds (not bool, 0 <= s <= MAX_SECONDS,
-    not more than the window is long), is skipped. A body without a projects list raises Unreadable."""
+    A row without a name or valid total_seconds (see listed_rows, and not more than the window is long) is skipped.
+    A body without a projects list raises Unreadable."""
     params = {
         "start": stamp(start),
         "end": stamp(end),
         "include_archived": "true",
     }
-    body = read(profile, "api/v1/authenticated/projects", params=params)
-    rows = body.get("projects")
-    if not isinstance(rows, list):
-        raise Unreadable
+    pairs = listed_rows(read(profile, "api/v1/authenticated/projects", params=params), (end - start).total_seconds())
+    pairs.sort(key=lambda item: (-item[1], item[0]))
+    return pairs[:200]
 
-    window_seconds = (end - start).total_seconds()
-    result = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        name = row.get("name")
-        cleaned = clean_name(name)
-        if cleaned is None or cleaned != name:
-            continue
-        seconds = row.get("total_seconds")
-        if isinstance(seconds, bool) or not isinstance(seconds, (int, float)):
-            continue
-        if not (0 <= seconds <= MAX_SECONDS):
-            continue
-        if seconds > window_seconds:
-            continue
-        result.append((name, int(seconds)))
 
-    result.sort(key=lambda item: (-item[1], item[0]))
-    return result[:200]
+@sensitive_variables("token")
+def list_all_time(profile):
+    """{name: seconds} of every Hackatime project, all time: GET api/v1/authenticated/projects with only include_archived="true" (without `projects`,
+    `start` or `end` it returns all-time totals, research hackatime-token-storage 3 A). Rows are validated as in list_projects, with no window to
+    compare with, and capped at 500. A body without a projects list raises Unreadable."""
+    body = read(profile, "api/v1/authenticated/projects", params={"include_archived": "true"})
+    return dict(listed_rows(body)[:500])
+
+
+def ineligible(profile, listed):
+    """The names in `listed` (the window's (name, seconds) rows) that are older than the project: more than EARLIER_TOLERANCE of recorded time before the
+    window opened. Hackatime has no "created at", so a project made after the person spoke to Grandma is one with next to no time before then: its
+    all-time seconds minus its seconds in the window. A name missing from the all-time list counts as new (a rollup can lag a brand new project).
+    One read (list_all_time); raises what it raises."""
+    everything = list_all_time(profile)
+    limit = EARLIER_TOLERANCE.total_seconds()
+    return {name for name, seconds in listed if everything.get(name, seconds) - seconds > limit}
 
 
 @sensitive_variables("token")
