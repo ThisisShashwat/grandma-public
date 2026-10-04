@@ -13,6 +13,8 @@ def says(status):
         return "clipboard", "Building? Good. I'm watching. I always am."
     if status in (rules.SHIPPED, rules.IN_REVIEW):
         return "magnifier", "I'm reading what you handed in. Don't hover."
+    if status == rules.CHANGES_REQUESTED:
+        return "finger", "Nearly, dear. Fix what I asked for and bring it back to me."
     if status == rules.APPROVED:
         return "approved", "Well done, dear. Shall we have another go? My jar is full of demands."
     if status == rules.REJECTED:

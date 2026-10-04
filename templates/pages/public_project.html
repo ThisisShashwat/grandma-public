@@ -27,7 +27,7 @@
     {% for s in page.ships %}
     <article class="pub-ship" aria-labelledby="ship-{{ loop.index }}">
       {% if s.ribbon %}{{ pub.ribbon() }}{% endif %}
-      <h2 id="ship-{{ loop.index }}">What they handed in {{ pub.stamp(s.status, s.status_label) }}</h2>
+      <h2 id="ship-{{ loop.index }}">What they handed in{% if page.ships|length > 1 %}, round {{ s.round }}{% endif %} {{ pub.stamp(s.status, s.status_label) }}</h2>
       {% if s.screenshot %}<img class="pub-ship-shot" src="{{ s.screenshot }}" alt="Screenshot of {{ page.name }}" loading="lazy">{% endif %}
       <p class="pub-text">{{ s.description }}</p>
       {% if s.links %}<p class="actions">{% for link in s.links %}{{ pub.out(link) }}{% endfor %}</p>{% endif %}

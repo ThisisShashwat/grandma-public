@@ -27,8 +27,9 @@ STARTS_FROM = ("repo_url", "playable_url", "description", "recording_url", "ai_d
 @never_cache
 @require_http_methods(["GET", "HEAD", "POST"])
 def submit(request, pk=None):
-    """Grandma's note. Without an id only a project being built can be handed in; anything else gets her saying why. With the id of the
-    person's own project that has changes requested, the next round of it, the form starting from the last round's words.
+    """Grandma's note. Without an id only a project being built can be handed in; with none being built, the person's only project with
+    changes requested sends them to its page, anything else gets her saying why. With the id of the person's own project that has
+    changes requested, the next round of it, the form starting from the last round's words.
     A hand-in that works goes to the dashboard."""
     if sum(len(files) for _, files in request.FILES.lists()) > MAX_FILES:
         return HttpResponseBadRequest("Too many files.")
@@ -37,7 +38,8 @@ def submit(request, pk=None):
     if project is None:
         if pk is not None:
             raise Http404
-        return not_now(request)
+        sole = services.sole_fixing_project(request.user)
+        return redirect("submit_fix", pk=sole.pk) if sole else not_now(request)
     ship = services.ship_for(project, cfg.MAX_ROUNDS)
     if ship.problem:
         return not_now(request, ship.problem) if pk is None else turned_back(request, ship.problem)
@@ -96,6 +98,6 @@ def collect(request):
     submission = handover.current(request)
     if submission is None:
         return redirect("dashboard")
-    steps = handover.dialogue(submission)
-    return flow.run(request, steps, store=handover.Store(submission, steps), finish=lambda request, answers: None, then=reverse("dashboard"),
+    steps = handover.dialogue(live(), submission)
+    return flow.run(request, steps, store=handover.Store(submission, steps), finish=lambda request, answers: None, then=handover.then(submission),
                     title="Grandma has something for you")

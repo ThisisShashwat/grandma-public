@@ -97,12 +97,19 @@ def project_demands(request):
     return flow.run(request, steps, store=store, finish=lambda request, answers: None, then=reverse("project"), title="Talk to Grandma")
 
 
+def fixing(user):
+    """The person's latest project when it has changes requested (nothing is being worked on), else None."""
+    latest = services.latest_project(user)
+    return latest if latest is not None and latest.status == rules.CHANGES_REQUESTED else None
+
+
 @onboarded
 @never_cache
 @require_safe
 def project(request):
-    """The person's own project: the working project if they have one, else an empty state when other projects exist.
-    Nobody has anything to show before they have talked to Grandma, and a hand that is still on the table goes back to the conversation."""
+    """The person's own project: the working project if they have one, else their latest if it has changes requested (with what to
+    change), else an empty state when other projects exist. Nobody has anything to show before they have talked to Grandma, and a hand
+    that is still on the table goes back to the conversation."""
     working = services.working_project(request.user)
     if working is not None and working.status == rules.DEALING:
         return redirect("grandma")
@@ -112,11 +119,12 @@ def project(request):
     request.session.pop("talk:grandma", None)          # the send-off has been seen
     request.session.pop("talk:project_edit", None)
     request.session.pop("talk:project_demands", None)
-    context = {"others": others}
-    if working is not None:
+    shown = working or fixing(request.user)
+    context = {"others": [row for row in others if shown is None or row.id != shown.id]}
+    if shown is not None:
         context.update({
-            "project": working, "status": rules.LABELS[working.status],
-            "notes": notes.notes(services.kept_demands(working)), "can_start_another": False})
+            "project": shown, "status": rules.LABELS[shown.status], "change_note": services.change_note(shown) if shown.status == rules.CHANGES_REQUESTED else "",
+            "notes": notes.notes(services.kept_demands(shown)), "can_start_another": False})
     else:
         context.update({
             "project": None, "can_start_another": True})

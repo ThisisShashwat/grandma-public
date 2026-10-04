@@ -42,6 +42,11 @@
     </p>
     {% elif project.status in ("in_review", "shipped") %}
     <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>
+    {% elif project.status == "changes_requested" %}
+    <h2 class="project-fix">What I asked you to change</h2>
+    {% if change_note %}<blockquote class="slip-note">{{ change_note }}</blockquote>{% endif %}
+    <p class="project-later">Nearly there, dear. Fix it whenever you like and hand it back to me. There is no clock.</p>
+    <p class="actions"><a class="btn btn--big" href="{{ url('submit_fix', args=[project.id]) }}">Fix it</a></p>
     {% endif %}
   </div>
 </section>
@@ -69,6 +74,7 @@
           <h3 class="other-project-name">{{ op.name }}</h3>
           <span class="stamp" data-status="{{ op.status }}">{{ op.status_label }}</span>
         </div>
+        {% if op.status == "changes_requested" %}<div class="other-project-actions"><a class="btn btn--plain" href="{{ url('submit_fix', args=[op.id]) }}">Fix it</a></div>{% endif %}
       </li>
       {% endfor %}
     </ul>

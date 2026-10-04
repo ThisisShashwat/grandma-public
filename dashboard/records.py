@@ -13,18 +13,22 @@ class Says:
 
 @dataclass(frozen=True)
 class ProjectCard:
+    id: int
     name: str
     idea: str
     where: str          # "Web, Website"
     status: str         # the project's status key, for the chip's colour
     status_label: str
     notes: tuple        # the kept demands as projects.notes.Note records
-    action: str         # what the card offers: ship (the Ship it button), reading (it is with Grandma), resume (a hand is on her table), start (nothing in progress)
+    action: str         # what the card offers: ship (the Ship it button), reading (it is with Grandma), fix (changes were asked for), resume (a hand is on her table), start (nothing in progress)
+    note: str = ""      # what the reviewer asked to change (the public note), for a project with changes requested
 
 
 @dataclass(frozen=True)
 class SubmissionRow:
     project: str
+    round: int          # which time the project was handed in
+    rounds: int         # how many times it has been handed in so far: "round 2" is only worth saying when this is more than 1
     when: str
     status: str         # handed_in, waiting, approved or rejected (what the person may know)
     status_label: str

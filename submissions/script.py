@@ -14,6 +14,8 @@ class Outcome:
     cookies: int
     has_note: bool
     mood: str          # the face of her mood, from the payout scale (rules.mood)
+    changes: bool = False      # the reviewer asked for changes: nothing paid, and the person can fix it and hand it in again
+    goes_left: int = 0         # hand-ins still allowed after this round (MAX_ROUNDS minus the round): 1 means the next one is the last go
 
 
 def conversation(outcome):
@@ -22,6 +24,8 @@ def conversation(outcome):
     note = Say(face=outcome.mood if outcome.approved else "sideeye",
                lines=("The reviewer left you a note. I'll read it out, since you can't be trusted to.", "“{note}”") if outcome.has_note
                else ("The reviewer left you no note at all.", "From a reviewer, that is practically a hug."))
+    if outcome.changes:
+        return [opening, *changes(outcome)]
     return [opening, note, *(approved(outcome) if outcome.approved else rejected())]
 
 
@@ -39,6 +43,22 @@ def approved(outcome):
 def rejected():
     return [Say(face="nose-up", button="I understand", lines=("It's a no this time, {display_name}. No cookies.", "Don't sulk. Fix it, or build me something new and bring it here.")),
             End(face="shush", button="To my dashboard", lines=("Chin up.", "The jar is always open, and so am I. Sort of."))]
+
+
+def changes(outcome):
+    """The note is what she wants changed, then no cookies yet and how many goes are left; the step that hands over (the claim) is "I'll fix it"."""
+    note = Say(face="finger", lines=("The reviewer would like some things changed, {display_name}. I'll read it out, since you can't be trusted to.", "“{note}”"))
+    hand_over = Say(face="sideeye", button="I'll fix it", lines=(
+        "No cookies for this round, dear. Not yet.", "Fix it whenever you like, there is no clock, and bring it back to me.", goes_left_line(outcome.goes_left)))
+    return [note, hand_over, End(face="clipboard", button="To the fix page", lines=("Take your time.", "I'll be here when it's ready."))]
+
+
+def goes_left_line(goes_left):
+    if goes_left > 1:
+        return f"You have {goes_left} goes left."
+    if goes_left == 1:
+        return "The next one is your last go. After that I say yes or no, and nothing in between."
+    return "There are no goes left, dear. That was the last one."
 
 
 # /submit/ when there is nothing to hand in (submissions/views.py not_now)

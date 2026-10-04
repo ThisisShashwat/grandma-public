@@ -6,6 +6,8 @@ services.claim (once, whatever happens: a double click, a reload, two tabs).
 The claim happens inside the store's save, before the person's place in the session moves on, so a failure can never leave
 someone standing at the last page with nothing handed over. Until a submission is claimed the person cannot be past the step that
 claims it, whatever the session says."""
+from django.urls import reverse
+
 from accounts.services import profile_of
 from projects.conversation import cookies
 from submissions import rules, script, services
@@ -20,15 +22,22 @@ SESSION = "collect"
 PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "grandma", "submit", "submit_fix", "project_edit", "project_demands")
 
 
-def outcome(submission):
+def outcome(submission, max_rounds):
     approved = submission.status == rules.APPROVED
     mood = rules.mood(services.tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon) if approved else "sideeye"
     return script.Outcome(approved=approved, ribbon=approved and submission.ribbon,
-                          cookies=submission.cookies_awarded or 0, has_note=bool(submission.public_note.strip()), mood=mood)
+                          cookies=submission.cookies_awarded or 0, has_note=bool(submission.public_note.strip()), mood=mood,
+                          changes=submission.status == rules.CHANGES_REQUESTED, goes_left=max_rounds - submission.round)
 
 
-def dialogue(submission):
-    return script.conversation(outcome(submission))
+def dialogue(cfg, submission):
+    """The steps for this result, for the admin settings in `cfg` (pages.live.live(): MAX_ROUNDS says how many goes are left)."""
+    return script.conversation(outcome(submission, cfg.MAX_ROUNDS))
+
+
+def then(submission):
+    """Where the send-off leads: the fix page of a project with changes requested, else the dashboard."""
+    return reverse("submit_fix", args=[submission.project_id]) if submission.status == rules.CHANGES_REQUESTED else reverse("dashboard")
 
 
 def answers(submission):

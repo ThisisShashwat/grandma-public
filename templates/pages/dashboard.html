@@ -60,6 +60,7 @@
           <li class="dash-other-row">
             <span class="dash-other-name">{{ op.name }}</span>
             <span class="stamp" data-status="{{ op.status }}">{{ op.status_label }}</span>
+            {% if op.status == "changes_requested" %}<a href="{{ url('submit_fix', args=[op.id]) }}">Fix it</a>{% endif %}
           </li>
           {% endfor %}
         </ul>
@@ -79,6 +80,11 @@
         <p class="dash-where">{{ project.where }}</p>
         <p class="dash-idea">{{ project.idea }}</p>
 
+        {% if project.note %}
+        <h3>What I asked you to change</h3>
+        <blockquote class="slip-note">{{ project.note }}</blockquote>
+        {% endif %}
+
         <h3>{{ "Your demand" if project.notes|length == 1 else "Your demands" }}</h3>
         <ul class="minis">
           {% for n in project.notes %}
@@ -92,6 +98,7 @@
 
         <p class="actions">
           {% if project.action == "ship" %}<a class="btn btn--big" href="{{ url('submit') }}">Ship it</a>
+          {% elif project.action == "fix" %}<a class="btn btn--big" href="{{ url('submit_fix', args=[project.id]) }}">Fix it</a>
           {% elif project.action == "resume" %}<a class="btn" href="{{ url('grandma') }}">Finish talking to Grandma</a>
           {% elif project.action == "start" %}<a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a>{% endif %}
           {% if project.action != "resume" %}<a class="btn btn--plain" href="{{ url('project') }}">Open my project</a>{% endif %}

@@ -5,7 +5,7 @@ has handed it over."""
 from zoneinfo import ZoneInfo
 
 from django.core.paginator import Paginator
-from django.db.models import Sum
+from django.db.models import Count, Sum
 from django.urls import reverse
 
 from accounts.services import profile_of
@@ -49,9 +49,9 @@ def waiting_cookies(user):
 
 
 def project_card(project):
-    action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.SHIPPED: "reading", rules.DEALING: "resume"}.get(project.status, "start")
+    action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.SHIPPED: "reading", rules.DEALING: "resume", rules.CHANGES_REQUESTED: "fix"}.get(project.status, "start")
     return records.ProjectCard(
-        name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
+        id=project.id, note=project_services.change_note(project) if action == "fix" else "", name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
         status=project.status, status_label=rules.LABELS[project.status],
         notes=tuple(notes.notes(project_services.kept_demands(project))), action=action)
 
@@ -67,7 +67,7 @@ def submission_row(submission, zone):
         status, label = submission.status, submission_rules.LABELS[submission.status]
     approved = collected and submission.status == submission_rules.APPROVED
     return records.SubmissionRow(
-        project=submission.project.name, when=day(submission.submitted_at, zone), status=status,
+        project=submission.project.name, round=submission.round, rounds=submission.rounds, when=day(submission.submitted_at, zone), status=status,
         status_label=label, cookies=submission.cookies_awarded if approved else None, ribbon=approved and submission.ribbon,
         note=submission.public_note.strip() if collected else "")
 
@@ -101,7 +101,8 @@ def my_orders(user):
 
 
 def mine(user):
-    return Submission.objects.filter(project__user=user).select_related("project")
+    """The person's submissions, newest first (spelled out: the count of rounds groups the rows, and a grouped query ignores the model's ordering)."""
+    return Submission.objects.filter(project__user=user).select_related("project").annotate(rounds=Count("project__submissions")).order_by("-submitted_at", "-id")
 
 
 def entries(user):
@@ -114,14 +115,14 @@ def build(user):
     project = project_services.working_project(user) or project_services.latest_project(user)
     card = project_card(project) if project else None
     face, line = mood.says(project.status if project else None)
-    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED), limit=5)
+    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.CHANGES_REQUESTED), limit=5)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),
         submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
         history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count(),
         orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count(),
-        other_projects=tuple(other_list))
+        other_projects=tuple(row for row in other_list if not (card and row.id == card.id)))
 
 
 def paged(queryset, number, make):

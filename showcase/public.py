@@ -82,6 +82,7 @@ class Link:
 
 @dataclass(frozen=True)
 class Ship:
+    round: int          # which time it was handed in; the page says "round 2" only when the project has more than one
     status: str
     status_label: str
     ribbon: bool
@@ -144,11 +145,13 @@ def people():
 
 def ships(show_rejected):
     """The ships that may be shown: a shown person's, of a project staff have not abandoned (abandoning pulls a project off the
-    pages), and not a rejected one the maker has already heard about when the setting hides those. A project that was never
+    pages), and when the setting hides rejections, of no project whose rejection the maker has already heard about (every round of it
+    goes, or an earlier round with changes requested would be left standing for a project that is finished). A project that was never
     handed in has no ship, so it is never shown."""
     rows = Submission.objects.filter(project__user__is_active=True, project__user__profile__onboarded_at__isnull=False)
     rows = rows.exclude(project__status=project_rules.ABANDONED)
-    return rows if show_rejected else rows.exclude(status=submission_rules.REJECTED, claimed_at__isnull=False)
+    heard_no = Submission.objects.filter(project=OuterRef("project"), status=submission_rules.REJECTED, claimed_at__isnull=False)
+    return rows if show_rejected else rows.exclude(Exists(heard_no))
 
 
 def ribboned(visible):
@@ -224,21 +227,21 @@ def ship(row):
     status = ship_status(row)
     note = row["public_note"].strip() if row["claimed_at"] is not None else ""
     return Ship(
-        status=status, status_label=rules.LABELS[status], ribbon=status == rules.RIBBON,
+        round=row["round"], status=status, status_label=rules.LABELS[status], ribbon=status == rules.RIBBON,
         description=row["description"], screenshot=picture(row["screenshot"]), note=note,
         links=external("Try it", row["playable_url"]) + external("The code", row["repo_url"]) + external("Recording", row["recording_url"]))
 
 
 def project_page(pk, cfg):
     """A project's page, or None when there is nothing to show (unknown, never handed in, abandoned, a hidden rejection, a person
-    who may not be shown)."""
+    who may not be shown). The status is the latest round's; the rounds are listed oldest first."""
     visible = ships(cfg.SHOW_REJECTED_PUBLICLY)
     project = Project.objects.filter(pk=pk).filter(Exists(visible.filter(project=OuterRef("pk")))).values(
         "id", "name", "idea", "category__name", "subcategory__name", "user_id", "user__profile__display_name").first()
     if project is None:
         return None
     rows = list(visible.filter(project_id=pk).values(
-        "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note").order_by("-round", "-id"))
+        "round", "status", "ribbon", "claimed_at", "screenshot", "description", "playable_url", "repo_url", "recording_url", "public_note").order_by("-round", "-id"))
     top = rows[0]
     status = ship_status(top)
     face, line = rules.SAYS[status]
@@ -249,7 +252,7 @@ def project_page(pk, cfg):
         maker=maker, maker_path=profile_path(project["user_id"], maker), status=status, status_label=rules.LABELS[status],
         ribbon=any(ship_status(row) == rules.RIBBON for row in rows), says=Says(file, alt, line),
         demands=tuple(demand(d) for d in ProjectDemand.objects.filter(project_id=pk).values("demand__name", "demand__tier", "demand__rule").order_by("order")),
-        ships=tuple(ship(row) for row in rows))
+        ships=tuple(ship(row) for row in reversed(rows)))
 
 
 def wall_page(number, cfg):

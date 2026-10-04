@@ -32,6 +32,12 @@ def fixing_project(user, project_id):
     return Project.objects.filter(pk=project_id, user=user, status=project_rules.CHANGES_REQUESTED).first()
 
 
+def sole_fixing_project(user):
+    """The person's project with changes requested when there is exactly one (where /submit/ sends them), else None."""
+    found = list(Project.objects.filter(user=user, status=project_rules.CHANGES_REQUESTED)[:2])
+    return found[0] if len(found) == 1 else None
+
+
 def latest_round(project):
     """The newest round this project has handed in (the one a fix starts from), or None."""
     return project.submissions.order_by("-round", "-id").first()

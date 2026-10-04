@@ -6,7 +6,7 @@
 {% macro submission(s) -%}
 <li class="slip" data-status="{{ s.status }}">
   <p class="slip-top"><span class="stamp" data-status="{{ s.status }}">{{ s.status_label }}</span>{% if s.ribbon %} <span class="stamp stamp--ribbon">Blue Ribbon</span>{% endif %}</p>
-  <p class="slip-name"><b>{{ s.project }}</b> <span>{{ s.when }}</span></p>
+  <p class="slip-name"><b>{{ s.project }}</b> <span>{% if s.rounds > 1 %}round {{ s.round }}, {% endif %}{{ s.when }}</span></p>
   {% if s.cookies %}<p class="slip-cookies">Grandma gave you {{ cookies(s.cookies) }}.</p>{% endif %}
   {% if s.note %}<blockquote class="slip-note">{{ s.note }}</blockquote>{% endif %}
 </li>

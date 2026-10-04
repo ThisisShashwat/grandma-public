@@ -45,6 +45,13 @@ def other_projects(user, statuses=None, limit=30):
     ]
 
 
+def change_note(project):
+    """What the reviewer asked to change, once Grandma has told the person: the public note of the project's latest handed-over round.
+    Read through the reverse name `submissions`, so this layer never imports the app that sits above it."""
+    note = project.submissions.filter(claimed_at__isnull=False).order_by("-round", "-id").values_list("public_note", flat=True).first()
+    return (note or "").strip()
+
+
 def dealing_project(user):
     """The project whose hand is on the table (not yet confirmed), or None."""
     return Project.objects.filter(user=user, status=rules.DEALING).select_related("category").first()
