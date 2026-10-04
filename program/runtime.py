@@ -105,7 +105,6 @@ FIELDS = {
     "rounds": ("django.forms.IntegerField", {"min_value": 1, "max_value": 10}),         # the ceiling is submissions.rules.MAX_ROUND_LIMIT (a test pins them)
     "pixels": ("django.forms.IntegerField", {"min_value": 500, "max_value": 10000}),
     "megapixels": ("django.forms.IntegerField", {"min_value": 1, "max_value": 40}),
-    "workspace": ("pages.fields.WorkspaceField",),
     "leaderboard_size": ("django.forms.IntegerField", {"min_value": 1, "max_value": 500}),
     "tutorial_depth": ("django.forms.ChoiceField", {"choices": DEPTHS}),
 }

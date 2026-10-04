@@ -158,11 +158,11 @@ Add upgrade grants until the grant covers it. Upgrades are never sold alone, onl
 ## Account
 
 ::: faq How do I get an account?
-Use the Sign up button on the home page. Accounts are made by hand, so if yours is not there yet, ask in <span data-slack="help"></span>. There is no reset button either: if you forget your password, ask there too.
+Press Sign in and sign in with Hack Club. Your account is made the first time you do. While the program is in beta you also have to be let in: ask in <span data-slack="help"></span>. There is no password to forget.
 :::
 
 ::: faq Who can see my projects?
-Everybody. Your display name, your Slack ID, your projects, what you hand in and what a reviewer asked you to change are public. Your region and time zone are not. Put nothing in a project that you would not put on a wall.
+Everybody. Your display name, your projects, what you hand in, what a reviewer asked you to change and, once you have collected a result from Grandma, how many hours Hackatime tracked and how many hours the reviewer approved are public. Your Slack ID, region and time zone are not. Put nothing in a project that you would not put on a wall.
 :::
 
 ::: faq Who can read the changes a reviewer asked for?

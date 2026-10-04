@@ -18,8 +18,9 @@ class ProfileInline(admin.StackedInline):
 
 
 class UserAdmin(BaseUserAdmin):
-    """Django's user admin plus the Profile. Accounts are made here for now (no signup page): username and password
-    only, the person fills in the rest at /welcome/."""
+    """Django's user admin plus the Profile. Accounts are made by the first Hack Club sign-in (accounts/hca.py),
+    staff are given the `is_staff` tick by hand in the admin (docs/owner.md 2026-10-05), a development account can still
+    be made in the admin, and the person fills in the rest at /welcome/."""
     inlines = [ProfileInline]
 
     def get_inline_instances(self, request, obj=None):

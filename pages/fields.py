@@ -2,7 +2,6 @@
 import json
 import re
 from datetime import datetime
-from urllib.parse import urlsplit
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -38,19 +37,6 @@ class LinkField(forms.CharField):
         value = super().clean(value).strip()
         if value and not value.startswith("mailto:"):
             _web_url(value)
-        return value
-
-
-class WorkspaceField(forms.CharField):
-    """The Slack workspace's address: http or https and a host, nothing after it (a public profile adds /team/ and the Slack ID).
-    Saved without a trailing slash."""
-
-    def clean(self, value):
-        value = super().clean(value).strip().rstrip("/")
-        _web_url(value)
-        parts = urlsplit(value)
-        if parts.path or parts.query or parts.fragment or "@" in parts.netloc:
-            raise ValidationError("Just the address, like https://yourteam.slack.com, with nothing after it.")
         return value
 
 

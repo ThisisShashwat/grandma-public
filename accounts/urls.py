@@ -3,7 +3,9 @@ from django.urls import path
 
 from . import views
 
-# No signup and no password reset: accounts are made in the admin for now (docs/accounts.md).
+# Accounts are made by the first Hack Club sign-in (accounts/hca.py), staff are given the `is_staff` tick by hand in
+# the admin (docs/owner.md 2026-10-05), a development account can still be made in the admin, and the person fills in
+# the rest at /welcome/.
 urlpatterns = [
     path("login/", views.Login.as_view(), name="login"),
     path("login/hackclub/", views.login_hackclub, name="login_hackclub"),               # Sign in with Hack Club: 404 until it is switched on (accounts/hca.py)
