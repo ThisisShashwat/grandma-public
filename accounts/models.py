@@ -27,7 +27,9 @@ class Profile(models.Model):
                                               help_text="True once they have connected a Hackatime account. Only the connect callback sets it (accounts/hackatime.py).")
     hackatime_user_id = models.CharField("Hackatime user ID", max_length=40, null=True, blank=True, unique=True, editable=False,
                                          help_text="The id of the Hackatime account they connected, so one Hackatime account backs only one account here. Only the connect callback "
-                                                   "sets it. Nothing else about them is kept from Hackatime, and no token.")
+                                                   "sets it. Nothing else about them is kept from Hackatime except the encrypted token below.")
+    hackatime_token = models.TextField(blank=True, default="", editable=False,
+                                       help_text="The Hackatime access token, ENCRYPTED with the keys in HACKATIME_TOKEN_KEYS. Empty when they have not connected or the token was dropped. Only accounts/hackatime.py reads or writes it; it is never shown anywhere.")
     hca_sub = models.CharField("Hack Club Auth ID", max_length=100, null=True, blank=True, unique=True, editable=False,
                                help_text="The stable id Hack Club Auth gives this person (its sub claim). The first Hack Club sign-in makes the account and sets it "
                                          "(accounts/hca.py). Nothing else about them is kept from Hack Club.")

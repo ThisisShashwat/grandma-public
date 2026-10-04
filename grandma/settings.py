@@ -37,6 +37,19 @@ HCA_ISSUER = env("HCA_ISSUER", default="https://auth.hackclub.com")
 HACKATIME_CLIENT_ID = env("HACKATIME_CLIENT_ID", default="")             # Connecting a Hackatime account (accounts/hackatime.py). The id and the secret: environment only, never the admin or the database
 HACKATIME_CLIENT_SECRET = env("HACKATIME_CLIENT_SECRET", default="")
 HACKATIME_BASE_URL = env("HACKATIME_BASE_URL", default="https://hackatime.hackclub.com")
+
+
+def validate_hackatime_token_keys(keys):
+    from cryptography.fernet import Fernet
+    for key in keys:
+        try:
+            Fernet(key)
+        except Exception:
+            raise ImproperlyConfigured("HACKATIME_TOKEN_KEYS contains an invalid Fernet key.")
+
+
+HACKATIME_TOKEN_KEYS = env.list("HACKATIME_TOKEN_KEYS", default=[])          # comma separated Fernet keys, newest first, environment only, never derived from SECRET_KEY, never in the admin or the database
+validate_hackatime_token_keys(HACKATIME_TOKEN_KEYS)
 for _name, _address in (("HCA_ISSUER", HCA_ISSUER), ("HACKATIME_BASE_URL", HACKATIME_BASE_URL)):
     if not DEBUG and not _address.startswith("https://"):
         raise ImproperlyConfigured(f"{_name} must start with https:// while DEBUG is off: codes and tokens travel to it.")

@@ -12,7 +12,9 @@ class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
     max_num = 1
+    # hackatime_token is editable=False and omitted here on purpose: it must never appear in the admin.
     readonly_fields = ("hackatime_connected", "hackatime_user_id", "hca_sub", "hca_checked_at", "beta_access")        # the Hack Club fields are set only by the sign-in (accounts/hca.py), the Hackatime ones only by the connect callback (accounts/hackatime.py); beta access is given under Profiles, where every change is recorded
+
 
 
 class UserAdmin(BaseUserAdmin):
@@ -35,8 +37,10 @@ class ProfileAdmin(admin.ModelAdmin):
     list_select_related = ("user",)
     ordering = ("user__username",)
     actions = ["give_access", "take_access_away", "unlink_hack_club", "unlink_hackatime_account"]
+    # hackatime_token is editable=False and omitted here on purpose: it must never appear in the admin.
     fields = ("user", "display_name", "slack_id", "region", "timezone", "expertise", "onboarded_at", "tutorial_done_at", "beta_access")
     readonly_fields = tuple(name for name in fields if name != "beta_access")
+
 
     def has_add_permission(self, request):
         return False

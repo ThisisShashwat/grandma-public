@@ -148,15 +148,16 @@ def connect_hackatime(request):
 @never_cache
 @require_GET
 def connect_hackatime_callback(request):
-    """Where Hackatime sends the person back. The library checks the state and the code, we read the Hackatime user id and revoke the token at once
-    (accounts/hackatime.py), then link it to this person's Profile. No token is kept. Back to the safe `next`, else to where they were."""
+    """Where Hackatime sends the person back. The library checks the state and the code, we read the Hackatime user id,
+    seal the token (accounts/hackatime.py), then link it to this person's Profile. Back to the safe `next`, else to where they were."""
     if not hackatime.enabled(live()):
         raise Http404
     target = request.session.pop(HACKATIME_NEXT, "")
-    identity = hackatime.identity_of(request)
-    if identity is None:
+    connection = hackatime.identity_of(request)
+    if connection is None:
         log.warning("hackatime connect failed")
         return hackatime_refused(request, "failed")
-    if not hackatime.link(profile_of(request.user), *identity):
+    if not hackatime.link(profile_of(request.user), connection.hackatime_id, connection.slack_id, connection.sealed):
+        hackatime.discard(connection.sealed)
         return hackatime_refused(request, "taken")
     return redirect(target or landing(request.user))

@@ -1,5 +1,6 @@
 from django.db import transaction
 
+from accounts import hackatime
 from accounts.models import Profile
 from audit import services as audit
 
@@ -23,8 +24,10 @@ def set_beta_access(profile, granted, *, by):
 
 
 def unlink_hca(profile, *, by):
-    """Staff clear a person's Hack Club link (a wrong identity, or a new one): the `sub` and the time of its last check, so the next sign-in links again.
-    Recorded, with no details (nothing from Hack Club goes in the log). Returns whether anything changed. `by` is the staff member."""
+    """Staff clear a person's Hack Club link (a wrong identity, or a new one): the `sub` and the time of its last check.
+    The person can then no longer sign in with Hack Club to this account (their Slack ID is taken by it); deactivating
+    the user is the normal way to cut someone off. Recorded, with no details (nothing from Hack Club goes in the log).
+    Returns whether anything changed. `by` is the staff member."""
     with transaction.atomic():
         stored = Profile.objects.select_for_update().select_related("user").get(pk=profile.pk)
         if stored.hca_sub is None and stored.hca_checked_at is None:
@@ -36,13 +39,21 @@ def unlink_hca(profile, *, by):
 
 
 def unlink_hackatime(profile, *, by):
-    """Staff clear a person's Hackatime link (the wrong account, or one that was banned): the id and the connected flag, so they can connect again.
-    Recorded, with no details. Returns whether anything changed. `by` is the staff member."""
+    """Staff clear a person's Hackatime link (the wrong account, or one that was banned): the id, the connected flag
+    and the stored token, so they can connect again. Recorded, with no details. Revokes the old token best effort
+    after the transaction commits. Returns whether anything changed. `by` is the staff member."""
     with transaction.atomic():
         stored = Profile.objects.select_for_update().select_related("user").get(pk=profile.pk)
-        if stored.hackatime_user_id is None and not stored.hackatime_connected:
+        if stored.hackatime_user_id is None and not stored.hackatime_connected and not stored.hackatime_token:
             return False
-        stored.hackatime_user_id, stored.hackatime_connected = None, False
-        stored.save(update_fields=["hackatime_user_id", "hackatime_connected"])
+        old_token = stored.hackatime_token
+        stored.hackatime_user_id, stored.hackatime_connected, stored.hackatime_token = None, False, ""
+        stored.save(update_fields=["hackatime_user_id", "hackatime_connected", "hackatime_token"])
         audit.record("profile.hackatime_unlink", actor=by, subject=stored.user, target=stored, details={})
+    if old_token:
+        try:
+            plain = hackatime.unseal(old_token)
+            hackatime.revoke({"access_token": plain})
+        except Exception:
+            pass
     return True
