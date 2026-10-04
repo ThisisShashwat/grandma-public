@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Pick Hackatime projects{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/submit.css') }}">
+{% endblock %}
+
+{% block main %}
+<section class="scene scene--sky submit-scene">
+  <div class="wrap submit">
+    <figure class="fig aside-fig submit-face">{{ art.img("grandma-magnifier.png", "Grandma squinting through a magnifying glass", none, false) }}</figure>
+
+    <div class="submit-main">
+      <div class="talk-bubble submit-bubble">
+        <p>Pick your Hackatime projects, dear.</p>
+        <p>Only time after you kept your demands counts.</p>
+      </div>
+
+      <form class="submit-note" method="post" action="{{ action }}">
+        {{ csrf_input }}
+        {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
+        <h1>Pick Hackatime projects</h1>
+        <p class="submit-for"><b>{{ project_name }}</b></p>
+
+        <fieldset class="submit-checks">
+          <legend>Your projects</legend>
+          {% if rows %}
+          <ul>
+            {% for row in rows %}
+            <li>
+              <label class="check">
+                <input type="checkbox" name="names" value="{{ row.name }}"{% if row.ticked %} checked{% endif %}>
+                <span>{{ row.name }} ({{ row.time }})</span>
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="nf-hint">I found no Hackatime projects with time in this window, dear.</p>
+          {% endif %}
+        </fieldset>
+
+        <p class="submit-actions">
+          <button class="btn btn--big">Count these</button>
+          <a class="btn btn--plain" href="{{ back_url }}">Back to my note</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

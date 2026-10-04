@@ -1,17 +1,16 @@
 """Connecting a Hackatime account (OAuth2, plain: not OpenID Connect). The only module that knows the library (Authlib's Django client). The facts it
 rests on and the reasons for each choice: docs/research/hackatime-and-hca.md (section 3 and 5).
 
-WRITTEN DISABLED, for the owner to review before he enables it: nothing here runs unless the HACKATIME_ENABLED admin setting is on AND HACKATIME_CLIENT_ID
-and HACKATIME_CLIENT_SECRET are in the environment (`enabled`), and the library is only set up the first time it is needed. Until then the Hackatime step
-of onboarding is the old greyed-out button (accounts/script.py).
+WRITTEN DISABLED, for the owner to review before he enables it: nothing here runs unless the HACKATIME_ENABLED admin setting is on, HACKATIME_CLIENT_ID
+and HACKATIME_CLIENT_SECRET are in the environment, and HACKATIME_TOKEN_KEYS is non-empty (`enabled`), and the library is only set up the first time
+it is needed. Until then the Hackatime step of onboarding is the old greyed-out button (accounts/script.py).
 
 Hackatime is asked for two scopes (profile read: `profile` cannot be left out) and we keep the person's Hackatime user id and the access token
 encrypted at rest (HACKATIME_TOKEN_KEYS). Never logged, never shown, never in the admin, never in the session. The answer of that call carries emails:
 it is read in memory and dropped, nothing but the id and the Slack ID (which is only compared with the Profile's, never stored) leaves `read_identity`.
 
-The same connection is made again, on purpose, at hand-in to count the hours of one Hackatime project (`seconds_of`, the "Check my hours" button of the
-submit note): connect, check it is the account that was connected, read ONE number, revoke. Nothing but that number leaves the module, and it is for
-reviewers only: a participant never sees it (docs/submissions.md).
+The stored token reads the time server side (`read`, `list_projects`, `total_seconds`). When checking hours from the submit note, the person picks
+projects and their time is read without any redirect to Hackatime. When Hackatime rejects the token, they are asked to reconnect.
 """
 from datetime import timedelta, timezone
 from typing import NamedTuple
@@ -62,7 +61,7 @@ oauth = OAuth()
 
 def enabled(cfg):
     """Is connecting Hackatime on? `cfg` is pages.live.live()."""
-    return bool(cfg.HACKATIME_ENABLED and settings.HACKATIME_CLIENT_ID and settings.HACKATIME_CLIENT_SECRET)
+    return bool(cfg.HACKATIME_ENABLED and settings.HACKATIME_CLIENT_ID and settings.HACKATIME_CLIENT_SECRET and getattr(settings, "HACKATIME_TOKEN_KEYS", None))
 
 
 def required(cfg):

@@ -72,7 +72,7 @@ HOURS_NOT_ENOUGH = "Check your hours again, dear. What Hackatime showed me last 
 # /hackatime/check/ when checking the hours does not go through (submissions/hours.py): one fixed label and sentence per case, nothing from Hackatime or the
 # request is ever repeated, and never a number of hours.
 HOURS_REFUSALS = {
-    "bad_name": ("What is it called?", "I need the name of your Hackatime project, dear. Just the name, as Hackatime shows it, with no commas."),
-    "taken": ("Already counted", "You have already used that Hackatime project for another of my projects, dear. One Hackatime project for each of them, or I'd count your time twice."),
-    "failed": ("That didn't work", "Something went wrong between me and Hackatime, dear, and nothing was saved. Be sure to pick the Hackatime account you gave me, then try again in a minute."),
+    "bad_name": ("Pick some projects", "Tick at least one of your Hackatime projects, dear, and no more than ten."),
+    "taken": ("Already counted", "One of those Hackatime projects is already counted for another of my projects, dear. Each one can back only one, or I'd count your time twice."),
+    "failed": ("That didn't work", "Something went wrong between me and Hackatime, dear, and nothing was saved. Try again in a minute."),
 }

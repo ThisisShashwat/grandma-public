@@ -1,28 +1,29 @@
-"""Checking Hackatime hours from the submit note (docs/submissions.md): "Check my hours" posts the name of a Hackatime project to /hackatime/check/, which
-keeps it (and the project, and when it started) in the session and sends the person to Hackatime; /hackatime/check/callback/ is where Hackatime sends
-them back. There accounts/hackatime.py reads the seconds of that project since the project started, and revokes the token; the seconds are kept on the
-project (services.record_hours) for services.submit to copy onto the submission. The number is for reviewers: no page here or on the note shows it.
-Written DISABLED with the rest of Hackatime: 404 until HACKATIME_ENABLED is on and the person has connected their account."""
+"""Checking Hackatime hours from the submit note (docs/submissions.md): "Check my hours" or "Pick projects" goes to /hackatime/check/,
+where the person picks their Hackatime projects. The stored encrypted token reads project lists and total seconds server side.
+When Hackatime rejects the token, the person is redirected to connect again.
+The numbers and names are kept on the project (services.record_hours) for services.submit to copy onto the submission.
+Written DISABLED with the rest of Hackatime: 404 until HACKATIME_ENABLED is on and credentials and token keys are present."""
 import logging
-from datetime import datetime
+from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
-from django.http import Http404, HttpResponseNotAllowed
+from django.http import Http404
 from django.shortcuts import redirect, render, resolve_url
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 
 from accounts import hackatime
 from accounts.access import onboarded
 from accounts.services import profile_of
 from pages.live import live
+from program import duration
 from projects import rules as project_rules
 from submissions import services
 from submissions.script import HOURS_NOT_ENOUGH, HOURS_REFUSALS
 
 log = logging.getLogger(__name__)
-CHECK = "hackatime_check"          # the session key that carries the name, the project and the start of the window over to the callback
 STATUS = {"bad_name": 400, "failed": 400, "taken": 403}
 
 
@@ -33,12 +34,24 @@ def note_url(project):
 
 def note_block(cfg, user, project):
     """What the submit note's Hackatime block shows, or None while Hackatime is switched off (the note then keeps its old greyed-out hint). Never a
-    number: only whether a check was made and whether it found any time."""
+    raw seconds number: only whether a check was made, names, count and time in words."""
     if not hackatime.enabled(cfg):
         return None
-    return {"connected": profile_of(user).hackatime_connected, "name": project.tracked_name, "checked": project.tracked_seconds is not None,
-            "found": bool(project.tracked_seconds), "required": hackatime.required(cfg),
-            "project": "" if project.status == project_rules.BUILDING else project.pk}
+    checked = project.tracked_seconds is not None
+    names = list(project.tracked_names)
+    is_building = project.status == project_rules.BUILDING
+    check_url = reverse("hackatime_check") if is_building else f"{reverse('hackatime_check')}?project={project.pk}"
+    return {
+        "connected": profile_of(user).hackatime_connected,
+        "names": names,
+        "checked": checked,
+        "found": bool(project.tracked_seconds),
+        "time": duration.text(project.tracked_seconds) if checked else "",
+        "count": len(names),
+        "required": hackatime.required(cfg),
+        "check_url": check_url,
+        "project": "" if is_building else project.pk,
+    }
 
 
 def require_fresh(cfg, project, now=None):
@@ -57,72 +70,110 @@ def refused(request, reason, back):
     return render(request, "pages/hackclub_refused.html", {"label": label, "line": line, "back_url": back, "back_label": "Back to my note"}, status=STATUS[reason])
 
 
-def to_check(request):
-    """The project a posted check is for: the one being built, or (the fix page posts its id) the person's own project with changes requested."""
-    wanted = request.POST.get("project", "")
+def to_check(user, wanted):
+    """The project a check is for: the one being built (when wanted is empty), or the person's own project with changes requested (digits only, at most 9 chars)."""
     if not wanted:
-        return services.shipping_project(request.user)
-    return services.fixing_project(request.user, int(wanted)) if wanted.isascii() and wanted.isdigit() and len(wanted) <= 9 else None
+        return services.shipping_project(user)
+    if isinstance(wanted, str) and wanted.isascii() and wanted.isdigit() and len(wanted) <= 9:
+        return services.fixing_project(user, int(wanted))
+    return None
+
+
+def connect_redirect(request, project=None):
+    """Redirect to the connect flow with a safe next returning to this page."""
+    path = request.get_full_path()
+    if project and project.status != project_rules.BUILDING and "project=" not in path:
+        sep = "&" if "?" in path else "?"
+        path = f"{path}{sep}{urlencode({'project': project.pk})}"
+    return redirect(f"{resolve_url('connect_hackatime')}?{urlencode({'next': path})}")
 
 
 @onboarded
 @never_cache
+@require_http_methods(["GET", "POST"])
 def check(request):
-    """Sends the person to Hackatime to have the hours of one project counted. POST only, with the CSRF token. 404 until Hackatime is switched on, for a
-    person who has not connected, and for a project that is not their own and ready to hand in. Only the name, the project and when it started are
-    kept (in the session) before leaving."""
-    profile = profile_of(request.user)
-    if not (hackatime.enabled(live()) and profile.hackatime_connected):
+    """Pick Hackatime projects and count their hours using the stored token.
+    GET: renders the picker with listed projects and times.
+    POST: validates chosen names and records hours from Hackatime."""
+    if not hackatime.enabled(live()):
         raise Http404
-    if request.method != "POST":
-        return HttpResponseNotAllowed(["POST"])
-    project = to_check(request)
+
+    profile = profile_of(request.user)
+    if not profile.hackatime_connected:
+        return connect_redirect(request)
+
+    if request.method == "GET":
+        project = to_check(request.user, request.GET.get("project", ""))
+        if project is None:
+            raise Http404
+
+        now = timezone.now()
+        start, end = hackatime.window(project, now)
+        try:
+            listed = hackatime.list_projects(profile, start, end)
+        except hackatime.Reconnect:
+            return connect_redirect(request, project)
+        except hackatime.Unreadable:
+            log.warning("hackatime check failed")
+            return refused(request, "failed", note_url(project))
+
+        tracked_set = set(project.tracked_names)
+        rows = []
+        listed_names = set()
+        for name, seconds in listed:
+            listed_names.add(name)
+            rows.append({
+                "name": name,
+                "time": duration.text(seconds),
+                "ticked": name in tracked_set,
+            })
+        for name in project.tracked_names:
+            if name not in listed_names:
+                rows.append({
+                    "name": name,
+                    "time": duration.text(0),
+                    "ticked": True,
+                })
+
+        context = {
+            "project_name": project.name,
+            "rows": rows,
+            "action": request.get_full_path(),
+            "back_url": note_url(project),
+            "project_id": "" if project.status == project_rules.BUILDING else project.pk,
+        }
+        return render(request, "pages/hackatime_pick.html", context)
+
+    # POST
+    project = to_check(request.user, request.POST.get("project", ""))
     if project is None:
         raise Http404
-    name = hackatime.clean_name(request.POST.get("name", ""))
-    if name is None:
-        return refused(request, "bad_name", note_url(project))
-    request.session[CHECK] = {"name": name, "project": project.pk, "start": project.started_at.isoformat()}
+
+    back = note_url(project)
+    names = request.POST.getlist("names")
+
+    if not (1 <= len(names) <= hackatime.MAX_PROJECTS) or len(set(names)) != len(names):
+        return refused(request, "bad_name", back)
+    if not all(hackatime.clean_name(name) == name for name in names):
+        return refused(request, "bad_name", back)
+
+    now = timezone.now()
+    start, end = hackatime.window(project, now)
     try:
-        return hackatime.authorize_redirect(request, "hackatime_check_callback")
-    except Exception:
-        log.warning("hackatime check failed")
-        return refused(request, "failed", note_url(project))
-
-
-def window_of(pending):
-    """(name, project id, start) from what `check` kept in the session, or None when the session has nothing, or not that."""
-    try:
-        name, project_id, start = pending["name"], int(pending["project"]), datetime.fromisoformat(pending["start"])
-    except (KeyError, TypeError, ValueError):
-        return None
-    return (name, project_id, start) if hackatime.clean_name(name) == name else None
-
-
-@onboarded
-@never_cache
-@require_GET
-def check_callback(request):
-    """Where Hackatime sends the person back. The library checks the state and the code; we read the seconds of the project from its start until now, check
-    it is the account they connected, and revoke the token at once (accounts/hackatime.py). Then the number is kept on the project, refused when the name
-    already backs another of theirs. Nothing is taken from this request, and no token is kept."""
-    profile = profile_of(request.user)
-    if not (hackatime.enabled(live()) and profile.hackatime_connected):
-        raise Http404
-    back = resolve_url("submit")
-    window = window_of(request.session.pop(CHECK, None))
-    if window is None:
+        seconds = hackatime.total_seconds(profile, names, start, end)
+    except hackatime.Reconnect:
+        return connect_redirect(request, project)
+    except (hackatime.Unreadable, ValueError):
         log.warning("hackatime check failed")
         return refused(request, "failed", back)
-    name, project_id, start = window
-    seconds = hackatime.seconds_of(request, profile.hackatime_user_id, name, start, timezone.now())
-    if seconds is None:
-        log.warning("hackatime check failed")
-        return refused(request, "failed", back)
+
     try:
-        project = services.record_hours(request.user, project_id, name, seconds)
+        recorded = services.record_hours(request.user, project.pk, names, seconds)
     except services.NameTaken:
         return refused(request, "taken", back)
-    if project is None:
+
+    if recorded is None:
+        log.warning("hackatime check failed")
         return refused(request, "failed", back)
-    return redirect(note_url(project))
+
+    return redirect(back)
