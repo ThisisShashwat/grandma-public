@@ -1,7 +1,8 @@
 import logging
 from functools import partial
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
@@ -47,6 +48,8 @@ class Login(LoginView):
                     url = f"{url}?{urlencode({'next': nxt})}"
                 return redirect(url)
             return HttpResponseNotAllowed(["GET", "HEAD"])
+        if not request.user.is_authenticated and not hca.enabled(live()) and not settings.PASSWORD_LOGIN:
+            raise Http404
         return super().dispatch(request, *args, **kwargs)
 
     def get_default_redirect_url(self):
@@ -84,7 +87,13 @@ def safe_next(request):
     service: the callback never takes a redirect target from its own request."""
     target = request.GET.get("next", "")
     safe = url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}, require_https=request.is_secure())
-    return target if safe else ""
+    if not safe:
+        return ""
+    login_path = reverse("login")
+    target_path = urlsplit(target).path
+    if target_path == login_path or target_path.startswith(login_path) or target_path == login_path.rstrip("/"):
+        return ""
+    return target
 
 
 def after_sign_in(target, user):

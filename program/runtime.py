@@ -57,8 +57,9 @@ CONFIG = {
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
                                    "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
 
-    "HCA_LOGIN": (False, "Shows the button and lets people sign in; the first sign-in makes their account, which stays outside the beta until staff give it access. "
-                         "Needs the three environment values (HCA_CLIENT_ID, HCA_CLIENT_SECRET, HCA_ISSUER; the id and secret are never set here)."),
+    "HCA_LOGIN": (False, "When on, /login/ redirects everybody straight to Hack Club (there is no password form), "
+                         "the first sign-in makes their account which stays outside the beta until staff give it access, "
+                         "and it needs the three environment values (HCA_CLIENT_ID, HCA_CLIENT_SECRET, HCA_ISSUER; the id and secret are never set here)."),
     "HCA_REQUIRE_ELIGIBLE": (True, "A person's first Hack Club sign-in must have ysws_eligible true or no account is made; later sign-ins are never re-checked. "
                                    "Off lets in anyone with a valid Slack ID on their first sign-in."),
     "HACKATIME_ENABLED": (False, "Make the Hackatime step of onboarding real and mandatory: people connect their Hackatime account and cannot go on until they have. "

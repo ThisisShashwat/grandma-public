@@ -24,6 +24,8 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
 if not ADMIN_URL.endswith("/") or ADMIN_URL.startswith("/"):
     raise ImproperlyConfigured("ADMIN_URL must end with a slash and must not start with one, like admin/ or a-long-secret-word/.")
+if not DEBUG and ADMIN_URL == "admin/":
+    raise ImproperlyConfigured("Set ADMIN_URL to a long secret path (ending with a trailing slash) in the environment before turning DEBUG off.")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")      # the public address, for links in messages sent outside a request (submissions/notices.py) and the redirect addresses of Hack Club and Hackatime
 _site = urlsplit(SITE_URL)
 if _site.scheme not in ("http", "https") or not _site.hostname or "@" in _site.netloc or _site.path not in ("", "/") or _site.query or _site.fragment:
@@ -161,6 +163,8 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 25
 # Login. With Hack Club sign-in on, /login/ redirects to Hack Club and there is no password form; the form exists only
 # while it is off. Axes guards the password forms that exist (development login, and the admin's own login for the superuser).
 # The lock is per (username, IP address) so one person's typos never lock out a school's shared address.
+# The public password form on /login/ exists only in development; production has none, the superuser uses the admin's own login page behind the secret admin address.
+PASSWORD_LOGIN = env.bool("PASSWORD_LOGIN", default=DEBUG)
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"

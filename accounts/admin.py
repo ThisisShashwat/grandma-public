@@ -31,9 +31,9 @@ class ProfileAdmin(admin.ModelAdmin):
     """Who is let in while BETA_MODE is on. The only thing edited here is beta access, by hand or with the two actions, and every change is
     recorded in the audit log (accounts.services.set_beta_access). One more action clears a Hackatime link (the only way to undo
     one), also recorded. Profiles are made by the site, never here, and not deleted here."""
-    list_display = ("user", "display_name", "beta_access", "staff")
+    list_display = ("user", "display_name", "slack_id", "beta_access", "staff")
     list_filter = ("beta_access", "user__is_staff")
-    search_fields = ("user__username", "display_name")
+    search_fields = ("user__username", "display_name", "slack_id")
     list_select_related = ("user",)
     ordering = ("user__username",)
     actions = ["give_access", "take_access_away", "unlink_hackatime_account"]
