@@ -4,7 +4,7 @@ from functools import partial
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect, render, resolve_url
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
@@ -77,6 +77,12 @@ def safe_next(request):
     return target if safe else ""
 
 
+def after_sign_in(target, user):
+    """Where a person goes once back from another service: the safe `next` kept in the session as a plain address (never as a URL name, which `redirect`
+    would try first and fail on a bare word), else where they belong."""
+    return HttpResponseRedirect(target) if target else redirect(landing(user))
+
+
 def hackclub_refused(request, reason):
     """Grandma's page for a Hack Club sign-in that did not go through: one fixed sentence per reason, nothing from the request or from Hack Club.
     Only a failure that is nobody's fault is a 400; a refusal is a 403."""
@@ -117,7 +123,7 @@ def login_hackclub_callback(request):
         log.warning("hack club sign-in refused: %s", reason)
         return hackclub_refused(request, reason)
     login(request, profile.user, backend="django.contrib.auth.backends.ModelBackend")
-    return redirect(target or landing(profile.user))
+    return after_sign_in(target, profile.user)
 
 
 def hackatime_refused(request, reason):
@@ -160,4 +166,4 @@ def connect_hackatime_callback(request):
     if not hackatime.link(profile_of(request.user), connection.hackatime_id, connection.slack_id, connection.sealed):
         hackatime.discard(connection.sealed)
         return hackatime_refused(request, "taken")
-    return redirect(target or landing(request.user))
+    return after_sign_in(target, request.user)
