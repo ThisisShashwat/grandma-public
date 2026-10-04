@@ -103,6 +103,19 @@ def fixing(user):
     return latest if latest is not None and latest.status == rules.CHANGES_REQUESTED else None
 
 
+#: A project in one of these has no public page yet (or any more). The rule is showcase/rules.py and showcase/public.py project_page: a page needs
+#: a handed-in ship, and staff pull an abandoned project off. Copied here on purpose: nothing may import showcase.
+NOT_PUBLIC = (rules.DEALING, rules.BUILDING, rules.ABANDONED)
+
+
+def share_url(request, project):
+    """The address of the project's public page, absolute, for the Share box; "" while the project has no public page. The bare route is
+    used because the server redirects /p/<id>/ to the canonical slug itself."""
+    if project.status in NOT_PUBLIC:
+        return ""
+    return request.build_absolute_uri(reverse("public_project_bare", kwargs={"pk": project.pk}))
+
+
 @onboarded
 @never_cache
 @require_safe
@@ -124,7 +137,7 @@ def project(request):
     if shown is not None:
         context.update({
             "project": shown, "status": rules.LABELS[shown.status], "change_note": services.change_note(shown) if shown.status == rules.CHANGES_REQUESTED else "",
-            "notes": notes.notes(services.kept_demands(shown)), "can_start_another": False})
+            "notes": notes.notes(services.kept_demands(shown)), "can_start_another": False, "share_url": share_url(request, shown)})
     else:
         context.update({
             "project": None, "can_start_another": True})

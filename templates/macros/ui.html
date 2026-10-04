@@ -7,6 +7,19 @@
 <span{% if cls %} class="{{ cls }}"{% endif %} data-annotate="{{ type }}" data-color="{{ mark_colors[type] }}">{{ text }}</span>
 {%- endmacro %}
 
+{# "Share this project" on both project pages (the maker's and the public one): a blue sticky note with the public address in a read only box
+   that selects itself on a click (the script, and CSS in some browsers), and a Copy link button that static/js/features/copy-link.js reveals and wires. Without JavaScript the box
+   is all there is (read only, selectable by hand), and it is enough. `url` is the absolute address of the public page. #}
+{% macro share(url) -%}
+<div class="share-note" data-copy-link>
+  <label class="share-title" for="share-url">Share this project</label>
+  <div class="share-row">
+    <input class="input share-input" id="share-url" type="text" readonly value="{{ url }}" autocomplete="off" spellcheck="false">
+    <button class="btn btn--plain share-copy" type="button" aria-live="polite" hidden>Copy link</button>
+  </div>
+</div>
+{%- endmacro %}
+
 {# one FAQ item; the answer goes between call and endcall. The exclusive accordion comes from name="faq". #}
 {% macro faq(question, file, alt) %}
 <details name="faq">

@@ -59,6 +59,14 @@ label.dnote-body { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
 .project-later { max-width: 40rem; margin: 2.5rem 0 0; font-size: 1.15rem; }
 .project-body .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1rem; margin-top: 2rem; }
 
+/* "Share this project" (the share macro in templates/macros/ui.html), on the maker's page and the public one: a blue sticky note, the address in a hand-drawn box, a Copy link button */
+.share-note { position: relative; display: grid; gap: 0.5rem; justify-self: start; width: min(100%, 38rem); padding: 1.5rem clamp(0.9rem, 3vw, 1.4rem) 1.1rem; background: var(--note-blue); border: 3px solid var(--ink); rotate: -0.5deg; }
+.project-body .share-note { margin-top: 2.5rem; }
+.share-title { font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }
+.share-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; }
+.share-input { flex: 1 1 14rem; width: auto; min-width: 0; font-size: 1.05rem; text-overflow: ellipsis; user-select: all; }   /* some browsers then select the whole address on a click even without script; the script does it for the rest */
+.share-copy { flex: none; min-height: 44px; font-size: 1.3rem; }
+
 /* My other projects section */
 .project-others-section { border-top: var(--line) solid var(--ink); padding-block: 2.5rem 3.5rem; }
 .project-others-section h2 { margin-top: 0; }

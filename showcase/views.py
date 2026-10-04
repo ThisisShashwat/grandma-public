@@ -39,7 +39,7 @@ def project(request, pk, slug=None):
     page = public.project_page(pk, cfg)
     if page is None:
         raise Http404
-    return canonical(request, page) or show(request, "pages/public_project.html", cfg, page=page)
+    return canonical(request, page) or show(request, "pages/public_project.html", cfg, page=page, share_url=request.build_absolute_uri(page.path))
 
 
 @require_safe
