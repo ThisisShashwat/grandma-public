@@ -84,6 +84,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "accounts.admin_gate.admin_gate",          # gates the admin address (docs/owner.md 2026-10-05)
     "submissions.middleware.CollectFirst",     # a result waiting at Grandma's goes before the pages that matter (docs/submissions.md)
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "pages.middleware.method_not_allowed_page",    # a plain 405 gets Grandma's page (after the session and auth, so the header knows who is here)
@@ -157,8 +158,9 @@ MEDIA_URL = "media/"
 PRIVATE_MEDIA_ROOT = Path(env("PRIVATE_MEDIA_ROOT", default=str(BASE_DIR / "private_media")))
 DATA_UPLOAD_MAX_NUMBER_FILES = 25
 
-# Login. Accounts are made in the admin (no signup). Axes locks a username from an address after repeated failures, on /login/ and
-# the admin alike. The lock is per (username, IP address) so one person's typos never lock out a school's shared address.
+# Login. With Hack Club sign-in on, /login/ redirects to Hack Club and there is no password form; the form exists only
+# while it is off. Axes guards the password forms that exist (development login, and the admin's own login for the superuser).
+# The lock is per (username, IP address) so one person's typos never lock out a school's shared address.
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"

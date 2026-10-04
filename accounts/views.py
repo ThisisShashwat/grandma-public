@@ -1,11 +1,13 @@
 import logging
 from functools import partial
+from urllib.parse import urlencode
 
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseNotAllowed, HttpResponseRedirect
 from django.shortcuts import redirect, render, resolve_url
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_safe
@@ -36,11 +38,19 @@ class Login(LoginView):
     authentication_form = LoginForm
     redirect_authenticated_user = True
 
+    def dispatch(self, request, *args, **kwargs):
+        if hca.enabled(live()) and not request.user.is_authenticated:
+            if request.method in ("GET", "HEAD"):
+                url = reverse("login_hackclub")
+                nxt = safe_next(request)
+                if nxt:
+                    url = f"{url}?{urlencode({'next': nxt})}"
+                return redirect(url)
+            return HttpResponseNotAllowed(["GET", "HEAD"])
+        return super().dispatch(request, *args, **kwargs)
+
     def get_default_redirect_url(self):
         return landing(self.request.user)
-
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs) | {"hackclub": hca.enabled(live())}
 
 
 @invited

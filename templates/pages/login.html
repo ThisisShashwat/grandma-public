@@ -25,10 +25,6 @@
         <p class="actions"><button class="btn">Let me in</button></p>
       </form>
 
-      {% if hackclub %}
-      <p class="actions login-hackclub"><a class="btn btn--plain" href="{{ url('login_hackclub') }}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in with Hack Club</a></p>
-      {% endif %}
-
       <p class="fine">No account? Grandma makes those herself. Ask in <a data-link="slack" {{ link_attrs("slack") }}>the Slack</a>.</p>
     </div>
     {{ art.fig("grandma-clipboard.png", "Grandma holding a clipboard, waiting", "aside-fig login-fig") }}

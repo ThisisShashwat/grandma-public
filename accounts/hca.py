@@ -6,8 +6,8 @@ HCA_CLIENT_SECRET are in the environment (`enabled`), and the library is only se
 
 A first Hack Club sign-in CREATES an account with an unusable password (never staff, never superuser) and attaches its Slack ID to the Profile.
 The gate (ysws_eligible is True) is checked at first login only: returning participants are never polled or re-checked, so aging out mid-program
-does not lock them out. A returning sign-in finds the account by `hca_sub` and signs in. Staff or superuser accounts are never signed in through
-Hack Club. Hack Club is asked for three scopes (openid, slack_id, verification_status) and we keep two fields: the stable `sub` id and the time
+does not lock them out. A returning sign-in finds the account by `hca_sub` and signs in. Staff and superusers may sign in this way; the admin itself
+is gated separately (accounts/admin_gate.py). Hack Club is asked for three scopes (openid, slack_id, verification_status) and we keep two fields: the stable `sub` id and the time
 of the last sign-in. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
 """
 import hashlib
@@ -87,8 +87,8 @@ def check(userinfo, require_eligible):
 
 
 def may_sign_in(user):
-    """Active, never staff or superuser (the admin is not opened with Hack Club)."""
-    return bool(user.is_active and not user.is_staff and not user.is_superuser)
+    """Active users may sign in (staff and superusers included; the admin is gated separately, accounts/admin_gate.py)."""
+    return bool(user.is_active)
 
 
 def username_for(sub):
