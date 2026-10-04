@@ -48,7 +48,7 @@ def approved(outcome):
 
 
 def rejected():
-    return [Say(face="nose-up", button="I understand", lines=("It's a no this time, {display_name}. No cookies.", "Don't sulk. Fix it, or build me something new and bring it here.")),
+    return [Say(face="nose-up", button="I understand", lines=("It's a no this time, {display_name}. No cookies.", "Don't sulk. Build me something new and bring it here.")),
             End(face="shush", button="To my dashboard", lines=("Chin up.", "The jar is always open, and so am I. Sort of."))]
 
 

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from accounts.models import Profile
-from accounts.services import set_beta_access, unlink_hackatime, unlink_hca
+from accounts.services import set_beta_access, unlink_hackatime
 
 User = get_user_model()
 
@@ -29,14 +29,14 @@ class UserAdmin(BaseUserAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     """Who is let in while BETA_MODE is on. The only thing edited here is beta access, by hand or with the two actions, and every change is
-    recorded in the audit log (accounts.services.set_beta_access). Two more actions clear a Hack Club or a Hackatime link (the only way to undo
+    recorded in the audit log (accounts.services.set_beta_access). One more action clears a Hackatime link (the only way to undo
     one), also recorded. Profiles are made by the site, never here, and not deleted here."""
     list_display = ("user", "display_name", "beta_access", "staff")
     list_filter = ("beta_access", "user__is_staff")
     search_fields = ("user__username", "display_name")
     list_select_related = ("user",)
     ordering = ("user__username",)
-    actions = ["give_access", "take_access_away", "unlink_hack_club", "unlink_hackatime_account"]
+    actions = ["give_access", "take_access_away", "unlink_hackatime_account"]
     # hackatime_token is editable=False and omitted here on purpose: it must never appear in the admin.
     fields = ("user", "display_name", "slack_id", "region", "timezone", "expertise", "onboarded_at", "tutorial_done_at", "beta_access")
     readonly_fields = tuple(name for name in fields if name != "beta_access")
@@ -67,17 +67,10 @@ class ProfileAdmin(admin.ModelAdmin):
     def take_access_away(self, request, queryset):
         self.change_access(request, queryset, False)
 
-    def unlink(self, request, queryset, unlink_one, what):
-        changed = sum(unlink_one(profile, by=request.user) for profile in queryset)
-        self.message_user(request, f"{what} unlinked from {changed} {'person' if changed == 1 else 'people'}.")
-
-    @admin.action(description="Unlink Hack Club account", permissions=["change"])
-    def unlink_hack_club(self, request, queryset):
-        self.unlink(request, queryset, unlink_hca, "Hack Club")
-
     @admin.action(description="Unlink Hackatime account", permissions=["change"])
     def unlink_hackatime_account(self, request, queryset):
-        self.unlink(request, queryset, unlink_hackatime, "Hackatime")
+        changed = sum(unlink_hackatime(profile, by=request.user) for profile in queryset)
+        self.message_user(request, f"Hackatime unlinked from {changed} {'person' if changed == 1 else 'people'}.")
 
 
 admin.site.unregister(User)

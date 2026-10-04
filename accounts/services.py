@@ -24,21 +24,6 @@ def set_beta_access(profile, granted, *, by):
     return True
 
 
-def unlink_hca(profile, *, by):
-    """Staff clear a person's Hack Club link (a wrong identity, or a new one): the `sub` and the time of its last check.
-    The person can then no longer sign in with Hack Club to this account (their Slack ID is taken by it); deactivating
-    the user is the normal way to cut someone off. Recorded, with no details (nothing from Hack Club goes in the log).
-    Returns whether anything changed. `by` is the staff member."""
-    with transaction.atomic():
-        stored = Profile.objects.select_for_update().select_related("user").get(pk=profile.pk)
-        if stored.hca_sub is None and stored.hca_checked_at is None:
-            return False
-        stored.hca_sub = stored.hca_checked_at = None
-        stored.save(update_fields=["hca_sub", "hca_checked_at"])
-        audit.record("profile.hca_unlink", actor=by, subject=stored.user, target=stored, details={})
-    return True
-
-
 @sensitive_variables()
 def unlink_hackatime(profile, *, by):
     """Staff clear a person's Hackatime link (the wrong account, or one that was banned): the id, the connected flag
