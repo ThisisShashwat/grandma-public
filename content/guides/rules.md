@@ -67,4 +67,4 @@ In rare cases, such as cheating or spam, a project is turned down for good, with
 Reviewers check these. Grandma checks the reviewers.
 :::
 
-Which broken rules get changes requested and which are turned down for good is the reviewer's call, and Grandma checks the reviewers.
+Which broken rules get changes requested and which are turned down for good is the reviewer's call.
