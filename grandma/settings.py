@@ -21,6 +21,7 @@ if not DEBUG and SECRET_KEY.startswith("dev-only"):      # the key in .env.examp
     raise ImproperlyConfigured("SECRET_KEY is the public development key from .env.example. Make a long random one (the command is in .env.example) before turning DEBUG off.")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+LIVE_CACHE_SECONDS = env.int("LIVE_CACHE_SECONDS", default=15)     # how long pages.live.live() keeps the admin settings in memory; 0 = ask the database every time (the tests)
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
 if not ADMIN_URL.endswith("/") or ADMIN_URL.startswith("/"):
     raise ImproperlyConfigured("ADMIN_URL must end with a slash and must not start with one, like admin/ or a-long-secret-word/.")
