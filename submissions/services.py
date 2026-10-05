@@ -18,6 +18,7 @@ from submissions.models import Submission
 
 NOTHING_TO_SHIP = "You have nothing to hand in right now, dear. Only a project you are building."
 CHECK_YOUR_HOURS = "Check your hours first, dear. I won't take it until Hackatime has shown me some time on this project. Use the Check my hours button on the note."
+UNFIT_NOTES = "One of the notes you kept doesn't suit this kind of project, dear. Swap it with Change my demands on your project page. Stuck? Ask the staff in the Slack."
 OWN_PROJECT = "You cannot review your own project. Ask another reviewer."
 REVIEW_FIELDS = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note", "reviewed_by", "reviewed_at", "cookies_awarded")
 
@@ -69,6 +70,13 @@ def waiting(user):
             .select_related("project").order_by("reviewed_at", "id").first())
 
 
+def check_notes(project):
+    """Refuses a hand-in that holds a kept note which does not suit the project's category and subcategory. An edit already drops such notes,
+    so this only catches what staff changed in the admin (a project's kind, a demand's exclusions). Reads only."""
+    if project_services.unfit_kept(project).exists():
+        raise ValidationError(UNFIT_NOTES)
+
+
 def check_hours(project, *, hackatime_required=False, hours_check=None):
     """The hours refusals of a hand-in, as a ValidationError with a sentence: `hours_check` (hours.require_fresh over this project) and, while
     hours are required, a check that found some. Reads only: submit runs it on the locked, re-read project, the form on the loaded one
@@ -83,7 +91,8 @@ def check_hours(project, *, hackatime_required=False, hours_check=None):
 def submit(user, *, project_id=None, hackatime_required=False, hours_check=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
     """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
     changes requested, as the next round (a reviewer already granted it, whatever MAX_ROUNDS says now). The project becomes `in_review`.
-    ValidationError (a sentence for the person) when there is nothing to hand in or no round left.
+    ValidationError (a sentence for the person) when there is nothing to hand in, no round left, or a kept note does not suit the project's
+    category and subcategory (check_notes).
     One at a time: a second click finds the project already in review. The Hackatime hours the project has been checked for (and the name they are
     under) are copied onto the submission as they are now, and stay as they were; `hackatime_required` (hackatime.required(cfg), read once per request)
     refuses a project with no checked hours, which is a ValidationError too. `hours_check`, when given, is called with the locked, re-read project (so
@@ -97,6 +106,7 @@ def submit(user, *, project_id=None, hackatime_required=False, hours_check=None,
     ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)
+    check_notes(project)
     check_hours(project, hackatime_required=hackatime_required, hours_check=hours_check)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text,
