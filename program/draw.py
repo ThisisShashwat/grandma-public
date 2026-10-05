@@ -16,11 +16,14 @@ class Card(NamedTuple):
     tier: int
     categories: frozenset      # ids of the categories it can be dealt for
     conflicts: frozenset       # ids of the cards it may never share a hand with
+    excluded: frozenset = frozenset()      # ids of the subcategories it can NOT be dealt for (none: it fits every subcategory of its categories)
 
 
-def fits(card, category):
-    """Can this card be dealt for this category? No category means any."""
-    return category is None or category in card.categories
+def fits(card, category, subcategory=None):
+    """Can this card be dealt for this category and subcategory? THE rule of what a project may hold (docs/projects.md "Switching the
+    category or the subcategory"): the category is one of the card's and the subcategory is not one it excludes. No category means any;
+    no subcategory is excluded by nothing. projects/services.py `eligible_demands` is the same rule as a query, and a test pins the two."""
+    return category is None or (category in card.categories and subcategory not in card.excluded)
 
 
 def clashes(card, hand):
@@ -28,10 +31,10 @@ def clashes(card, hand):
     return any(card.id in held.conflicts or held.id in card.conflicts for held in hand)
 
 
-def candidates(cards, hand, category):
+def candidates(cards, hand, category, subcategory=None):
     """What may still go into the hand, in a fixed order (so a seeded generator always deals the same notes)."""
     held = {card.id for card in hand}
-    return sorted((c for c in cards if fits(c, category) and c.id not in held and not clashes(c, hand)), key=lambda c: c.id)
+    return sorted((c for c in cards if fits(c, category, subcategory) and c.id not in held and not clashes(c, hand)), key=lambda c: c.id)
 
 
 def pick(options, rng):
@@ -41,12 +44,12 @@ def pick(options, rng):
     return rng.choice([card for card in options if card.tier == tier])
 
 
-def deal(cards, size, rng, category=None):
-    """The ids of up to `size` cards for `category`, in the order dealt. A smaller pool (or one that runs out because of
-    clashes) simply gives a smaller hand."""
+def deal(cards, size, rng, category=None, subcategory=None):
+    """The ids of up to `size` cards for `category` and `subcategory`, in the order dealt. A smaller pool (or one that runs out because
+    of clashes) simply gives a smaller hand."""
     hand = []
     while len(hand) < size:
-        options = candidates(cards, hand, category)
+        options = candidates(cards, hand, category, subcategory)
         if not options:
             break
         hand.append(pick(options, rng))
@@ -59,10 +62,11 @@ def varies(pool, size):
     return len(pool) > size or any(clashes(card, [other for other in pool if other.id != card.id]) for card in pool)
 
 
-def can_change(cards, hand, size, category=None):
+def can_change(cards, hand, size, category=None, subcategory=None):
     """Could another deal show a different hand from `hand`, the ids the person now holds? No when every deal for this category
-    holds the same notes and they already hold them all (category Other has three notes for a hand of six), or when nothing fits."""
-    pool = [card for card in cards if fits(card, category)]
+    and subcategory holds the same notes and they already hold them all (category Other has three notes for a hand of six), or when
+    nothing fits."""
+    pool = [card for card in cards if fits(card, category, subcategory)]
     return bool(pool) and (varies(pool, size) or set(hand) != {card.id for card in pool})
 
 
