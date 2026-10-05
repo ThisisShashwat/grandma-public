@@ -39,15 +39,25 @@ class DemandAdmin(admin.ModelAdmin):
     list_display = ("name", "tier", "fits", "clashes_with", "active")
     list_filter = ("tier", "active", "categories")
     search_fields = ("name", "grandma_line", "rule")
-    filter_horizontal = ("categories", "conflicts")
-    fields = ("name", "grandma_line", "rule", "tier", "categories", "conflicts", "active")
+    filter_horizontal = ("categories", "excluded_subcategories", "conflicts")
+    fields = ("name", "grandma_line", "rule", "tier", "categories", "excluded_subcategories", "conflicts", "active")
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("categories", "conflicts")
+        return super().get_queryset(request).prefetch_related("categories", "conflicts", "excluded_subcategories")
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        """A subcategory is listed as 'Category: name', so fetch the category with it (one query, not one per choice)."""
+        if db_field.name == "excluded_subcategories":
+            kwargs["queryset"] = Subcategory.objects.select_related("category")
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     @admin.display(description="fits")
     def fits(self, obj):
-        return ", ".join(c.name for c in obj.categories.all())
+        """Its categories, each with the subcategories it can not be dealt for: 'Web (not Browser extension), Software (not Mobile app)'."""
+        skipped = {}
+        for sub in obj.excluded_subcategories.all():
+            skipped.setdefault(sub.category_id, []).append(sub.name)
+        return ", ".join(c.name + (f" (not {', '.join(skipped[c.id])})" if c.id in skipped else "") for c in obj.categories.all())
 
     @admin.display(description="never with")
     def clashes_with(self, obj):
