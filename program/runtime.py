@@ -33,6 +33,8 @@ CONFIG = {
     "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing. "
                         "It also sets how many free asks the fridge on the home page offers.", "redeals_free"),
     "REDEAL_COST": (10, "Cookies a re-deal costs once the free ones are used up. Whole cookies, 0 makes them all free.", "cookies"),
+    "DEALING_EXPIRY_DAYS": (7, "How many days a hand may sit on Grandma's table, never confirmed, before the project is given up (it becomes abandoned and its person may start "
+                               "another). Counted from when the hand was dealt. A project already being built is never touched. Whole days, 1 to 90.", "expiry_days"),
 
     "SUBMISSION_CHECKS": (submission.default_checks_json(),
                           'The boxes a person must tick before they can hand a project in, as JSON: a list of {"key": "...", "text": "..."}. '
@@ -86,7 +88,7 @@ CONFIG = {
 FIELDSETS = (
     ("Launch", ("LAUNCH", "BETA_MODE")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_BOARD", "LINK_CONTACT")),
-    ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
+    ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST", "DEALING_EXPIRY_DAYS")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
@@ -103,6 +105,7 @@ FIELDS = {
     "deal_size": ("django.forms.IntegerField", {"min_value": 3, "max_value": 28}),
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
+    "expiry_days": ("django.forms.IntegerField", {"min_value": 1, "max_value": 90}),
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "regions": ("pages.fields.RegionsField",),

@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services import profile_of
-from projects import notes, rules, script, services
+from projects import expiry, notes, rules, script, services
 from projects.models import Demand
 from projects.validators import validate_idea, validate_project_name
 from talk.dialogue import Deal, End, State
@@ -48,6 +48,7 @@ def deal_step(user, cfg):
 
 def dialogue(cfg, user):
     """The whole conversation as a list of steps, for the admin settings in `cfg` (pages.live.live()) and this person."""
+    expiry.expire_stale(user, days=cfg.DEALING_EXPIRY_DAYS)         # a hand left on the table for too long is gone before anything reads it
     return [
         *script.INTRO,
         replace(script.ASK_IDEA, validators=(validate_idea,)), script.SAID_IDEA,
