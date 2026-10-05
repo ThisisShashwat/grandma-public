@@ -5,6 +5,8 @@ import unicodedata
 
 from django.core.exceptions import ValidationError
 
+from projects import rules
+
 
 def plain_text(value):
     """Only characters you can see: no control, format (zero width, bidi), private use or unassigned characters, and no
@@ -29,5 +31,5 @@ def validate_complaint_line(value):
 
 
 def validate_complaint_text(value):
-    """What a complaint says: the same, with line breaks allowed."""
-    validate_complaint_line(value.replace("\n", " "))
+    """What a complaint says: the same, with line breaks allowed (a browser sends them as CRLF)."""
+    validate_complaint_line(rules.tidy(value).replace("\n", " "))

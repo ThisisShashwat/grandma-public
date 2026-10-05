@@ -1,8 +1,9 @@
-"""Talk to Grandma (/grandma/, /grandma/again/) and the person's project (/project/). Every page here is for one signed-in,
-onboarded person and shows only their own project: no URL carries a project id, so there is nothing to guess (no IDOR)."""
+"""Talk to Grandma (/grandma/, /grandma/again/), the person's project (/project/) and the complaints box (/complaints/). Every page here
+is for one signed-in, onboarded person and shows only their own project: no URL carries a project id, so there is nothing to guess (no IDOR)."""
 import random
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -12,11 +13,15 @@ from accounts.access import onboarded
 from ledger import services as ledger
 from ledger.rules import InsufficientCookies
 from pages.live import live
+from projects import complaints as complaint_service
 from projects import conversation, notes, rules, script, services
+from projects.forms import ComplaintForm
 from talk import flow
 from talk.dialogue import fill
+from talk.portraits import portrait
 
 RNG = random.SystemRandom()      # the draw must not be predictable; tests swap in a seeded generator
+PILE = ("grandma-complaints.png", "Grandma buried under a mountain of complaint notes")          # the complaints page: her under the notes
 
 
 @onboarded
@@ -143,3 +148,23 @@ def project(request):
         context.update({
             "project": None, "can_start_another": True})
     return render(request, "pages/project.html", context)
+
+
+@onboarded
+@never_cache
+@require_http_methods(["GET", "HEAD", "POST"])
+def complaints(request):
+    """Send Grandma a complaint, a suggestion for a new demand. POST then redirect, so a refresh never sends it twice; the redirect lands
+    on the thank you, shown once. Nothing sent here is ever shown to anybody but staff."""
+    form = ComplaintForm(request.POST) if request.method == "POST" else ComplaintForm()
+    if request.method == "POST" and form.is_valid():
+        try:
+            complaint_service.send_complaint(request.user, **form.cleaned_data)
+        except ValidationError as error:
+            form.add_error(None, error)
+        else:
+            request.session["complaint_sent"] = True
+            return redirect("complaints")
+    sent = request.method == "GET" and request.session.pop("complaint_sent", False)
+    file, alt = portrait("smug") if sent else portrait("sideeye") if form.errors else PILE
+    return render(request, "pages/complaints.html", {"form": form, "sent": sent, "portrait": {"file": file, "alt": alt}})

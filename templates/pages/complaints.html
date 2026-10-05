@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Send Grandma a complaint{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/submit.css') }}">
+{% endblock %}
+
+{# The complaints box (projects/views.py complaints): a suggestion for a new demand. Grandma's note again (submit.css), the form only validates and
+   every field is drawn here by hand. What is sent is private: staff read it in the admin, so this page says only that, and never shows anyone's
+   complaints back. After sending, the same address shows the thank you once. #}
+{% macro oops(name) -%}
+{% if form[name].errors %}<p class="oops" id="err-{{ name }}" role="alert">{% for message in form[name].errors %}{{ message }} {% endfor %}</p>{% endif %}
+{%- endmacro %}
+
+{% block main %}
+<section class="scene scene--sky submit-scene">
+  <div class="wrap submit">
+    <figure class="fig aside-fig submit-face">{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
+
+    <div class="submit-main">
+      {% if sent %}
+      <div class="talk-bubble submit-bubble">
+        <p>Hmph. Another complaint. I've put it on the pile, dear.</p>
+        <p>I read every one. Eventually.</p>
+      </div>
+      <p class="actions">
+        <a class="btn" href="{{ url('complaints') }}">Send another</a>
+        <a class="btn btn--plain" href="{{ url('dashboard') }}">Back to my dashboard</a>
+      </p>
+      {% else %}
+      <div class="talk-bubble submit-bubble">
+        <p>A complaint, dear? Lovely. I do enjoy those.</p>
+        <p>Tell me what else I should demand. If it's annoying enough, it might go in my jar.</p>
+      </div>
+
+      <form class="submit-note" method="post" action="{{ url('complaints') }}">
+        {{ csrf_input }}
+        <h1>Send Grandma a complaint</h1>
+        {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
+        {% if form.errors %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
+
+        <div class="nf">
+          <label class="nf-label" for="title">What is it called?</label>
+          <input class="input" id="title" name="title" maxlength="60" required autocomplete="off"
+                 placeholder="No Mouse" value="{{ form['title'].value() or '' }}"{% if form['title'].errors %} aria-invalid="true" aria-describedby="err-title"{% endif %}>
+          {{ oops("title") }}
+          <p class="nf-hint">The name of the demand, like the ones on my fridge. Sixty characters at the very most.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="text">What should I demand, and why is it annoying?</label>
+          <textarea class="input" id="text" name="text" rows="5" maxlength="500" required
+                    placeholder="Everything has to work with the keyboard alone. Mice are a crutch."{% if form['text'].errors %} aria-invalid="true" aria-describedby="err-text"{% endif %}>{{ form['text'].value() or '' }}</textarea>
+          {{ oops("text") }}
+          <p class="nf-hint">Plain words, dear. Five hundred characters at the very most.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="example">A project it would fit <small>(if you have one)</small></label>
+          <input class="input" id="example" name="example" maxlength="200" autocomplete="off"
+                 placeholder="A recipe app that never needs a click" value="{{ form['example'].value() or '' }}"{% if form['example'].errors %} aria-invalid="true" aria-describedby="err-example"{% endif %}>
+          {{ oops("example") }}
+        </div>
+
+        <p class="submit-actions"><button class="btn btn--big">Send it to Grandma</button></p>
+        <p class="nf-hint">Only I and my helpers read these, dear. I can't promise a reply.</p>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

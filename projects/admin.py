@@ -1,12 +1,13 @@
 """The staff side of projects. Categories, subcategories and demands are edited here (they were seeded once from program/content;
 the database is the truth from then on). A project cannot be made here: only Talk to Grandma makes one, so it always comes after
-talking to her. Staff can read every project and abandon one, which frees its owner to start another."""
+talking to her. Staff can read every project and abandon one, which frees its owner to start another. Complaints (suggestions for new
+demands) are read here, by staff only, and their status is the one thing staff set."""
 from django.contrib import admin
 from django.db import transaction
 
 from audit import services as audit
 from projects import rules, services
-from projects.models import Category, Demand, Project, ProjectDemand, Subcategory
+from projects.models import Category, Complaint, Demand, Project, ProjectDemand, Subcategory
 
 
 class SubcategoryInline(admin.TabularInline):
@@ -107,3 +108,29 @@ class ProjectAdmin(admin.ModelAdmin):
                 )
             count += 1
         self.message_user(request, f"Abandoned {count} projects.")
+
+
+@admin.register(Complaint)
+class ComplaintAdmin(admin.ModelAdmin):
+    """What a person typed is read only, and nothing can be added or deleted: a complaint is made only by the person (projects/complaints.py)
+    and kept. Staff set the status, here or in the list."""
+    list_display = ("created_at", "user", "title", "status")
+    list_editable = ("status",)
+    list_filter = ("status",)
+    list_select_related = ("user",)
+    search_fields = ("title", "text")
+    fields = ("user", "title", "text", "example", "created_at", "status")
+    readonly_fields = ("user", "title", "text", "example", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        """A changed status is audited, inside the admin's own transaction, with the save."""
+        old_status = form.initial.get("status")
+        super().save_model(request, obj, form, change)
+        if "status" in form.changed_data:
+            audit.record("complaint.admin_status", actor=request.user, subject=obj.user, target=obj, details={"from": old_status, "to": obj.status})
