@@ -16,7 +16,7 @@ REVIEW_CHOICES = tuple((status, "Ask for changes" if status == CHANGES_REQUESTED
 
 #: The most hours a reviewer can approve in one go. A typo guard (a stray extra zero is hundreds of cookies), not a payout rule:
 #: the calculator's slider ends at 60. Raise it here if a real project ever needs more.
-MAX_HOURS = Decimal(100)
+MAX_HOURS = Decimal(300)
 
 #: The hard ceiling of the MAX_ROUNDS setting (program/runtime.py, which cannot import this) and of Submission.round: a typo guard.
 MAX_ROUND_LIMIT = 10
