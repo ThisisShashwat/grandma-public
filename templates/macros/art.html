@@ -2,7 +2,7 @@
    `pos` is the style text of a placed figure, the same "--x: 6; --y: 4; --w: 72" that dev mode (?dev) prints. #}
 
 {% macro img(file, alt, size=none, lazy=true) -%}
-<img src="{{ static('assets/' ~ file) }}" alt="{{ alt }}"{% if size %} width="{{ size[0] }}" height="{{ size[1] }}"{% endif %}{% if lazy %} loading="lazy"{% endif %}>
+<img src="{{ art_src(file) }}" alt="{{ alt }}"{% if size %} width="{{ size[0] }}" height="{{ size[1] }}"{% endif %}{% if lazy %} loading="lazy"{% endif %}>
 {%- endmacro %}
 
 {# a figure placed on a .stage; `face` marks one of Grandma's ten pay faces #}
