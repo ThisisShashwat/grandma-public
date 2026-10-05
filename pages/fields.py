@@ -11,6 +11,7 @@ from program import submission
 
 ISO_WITH_ZONE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})")
 _web_url = URLValidator(schemes=["http", "https"])
+SITE_PATH = re.compile(r"/(?![/\\])[^\s\\\x00-\x1f]*")          # one leading slash (not // and not /\, which browsers read as another site), no whitespace or backslash
 
 
 class LaunchField(forms.CharField):
@@ -28,14 +29,15 @@ class LaunchField(forms.CharField):
 
 
 class LinkField(forms.CharField):
-    """Empty (a placeholder link), a web link, or a mailto: link. Never javascript: or data: (the links sit in every header)."""
+    """Empty (a placeholder link), a web link, a mailto: link, or a path on this site like /login/. Never javascript: or data:
+    (the links sit in every header)."""
 
     def __init__(self, **kwargs):
         super().__init__(required=False, max_length=500, **kwargs)
 
     def clean(self, value):
         value = super().clean(value).strip()
-        if value and not value.startswith("mailto:"):
+        if value and not value.startswith("mailto:") and not SITE_PATH.fullmatch(value):
             _web_url(value)
         return value
 

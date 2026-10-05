@@ -19,7 +19,8 @@ CONFIG = {
                         "submitting and orders. Everybody else is sent to a page saying the kitchen is open to a few testers. Give access in the admin under Profiles. "
                         "Switch it off at the public launch."),
 
-    "LINK_SIGNUP": ("", "Where the Sign up buttons go (a form). Empty means a placeholder link that goes nowhere.", "link"),
+    "LINK_SIGNUP": ("/login/", "Where the Sign up buttons go. The default /login/ is the Hack Club sign-in, whose first sign-in makes the account. "
+                              "A web link, a mailto: link or a path on this site starting with / is accepted. Empty means a placeholder link that goes nowhere.", "link"),
     "LINK_SLACK": ("", "The Slack join link.", "link"),
     "LINK_SLACK_GRANDMA": ("", "The #grandma channel in Slack, where people chat. Empty means the guides show the name as plain text, not a link.", "link"),
     "LINK_SLACK_HELP": ("", "The #grandma-help channel in Slack, where people ask for help. Empty means the guides show the name as plain text, not a link. "
