@@ -18,11 +18,7 @@ Here is each input that counts toward your total, dear:
 - **Grandma loved it:** a bonus when your project is exceptionally neat and well made.
 - **Huge project:** a bonus for building past Grandma's hours threshold (see the numbers table below).
 - **Blue Ribbon:** a bonus for exceptional work that earns a spot on the wall.
-- **Held a Blue Ribbon before:** a small permanent bonus on later projects if you already earned one earlier.
-
-::: note
-Not decided yet: the exact bonus for having held a Blue Ribbon before.
-:::
+- **Held a Blue Ribbon before:** the same bonus as the Blue Ribbon, on every later project once you have earned one. It is never counted twice, so a ribbon project made by a ribbon holder gets it once.
 
 ## The exact formula
 
@@ -34,7 +30,7 @@ Here is the exact formula with all the current numbers Grandma uses, dear.
 
 You can work out your cookies with three simple steps:
 
-1. **Find x:** Add up the tier value of each demand you kept, plus any bonuses that apply (Grandma loved it, huge project, Blue Ribbon, or having held a ribbon before). If the sum goes above the largest x in the table, use the largest x instead.
+1. **Find x:** Add up the tier value of each demand you kept, plus any bonuses that apply (Grandma loved it, huge project, or the Blue Ribbon, which also applies if you held one before, counted once). If the sum goes above the largest x in the table, use the largest x instead.
 2. **Calculate the multiplier:** Put your x into Grandma's curve formula. A standard calculator with an exponent key (`e` to the power) is enough to do this yourself.
 3. **Calculate your cookies:** Multiply what one plain hour is worth by your multiplier and your approved hours.
 

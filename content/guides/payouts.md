@@ -24,7 +24,7 @@ Not every hour is worth the same. Each hour is multiplied by how much Grandma ap
 - **More demands and spicier demands** raise it.
 - **Grandma loved it:** a really cool, well made project raises it.
 - **Huge project:** a project of 20 hours or more raises it.
-- **A Blue Ribbon** raises it a little more. Holding one will also raise it a little on every later project, details to come. [All about the ribbon](/guides/blue-ribbon/).
+- **A Blue Ribbon** raises it a little more, and holding one keeps that bonus on every later project. [All about the ribbon](/guides/blue-ribbon/).
 
 Pick no demand and Grandma is furious, which is why every project has at least one. See [the cookie formula](/guides/cookie-formula/) for the exact sum behind the multiplier.
 

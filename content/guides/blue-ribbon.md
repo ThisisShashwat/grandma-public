@@ -13,10 +13,6 @@ A project earns one when it is huge and also very, very good. It is rare on purp
 ## What you get
 
 - **A bigger bonus** on that project's cookies. It is part of the [payout maths](/guides/payouts/), so you can see it in the calculator.
-- **A permanent small bonus.** Once you hold a ribbon, every project you ship after it earns a little more, for good.
-- **A slightly better-value Pantry.** Ribbon holders will get into a shop with slightly better prices. [The Pantry guide](/guides/shop-and-grants/) has the rest.
+- **The same bonus on every later project, for good.** Earn one ribbon and every project you ship after it gets that bonus too. It is counted once and never stacked: a ribbon project made by someone who already holds one still gets it only once.
+- **Exclusive Pantry items.** Ribbon holders can see and buy a few items that nobody else can.
 - **A spot on Grandma's wall.** Your project gets pinned up where everybody can see it.
-
-::: note
-Details to come: how big the permanent bonus is, and what the better-value Pantry looks like. Grandma is still deciding, and she does not like being rushed.
-:::
