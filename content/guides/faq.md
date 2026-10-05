@@ -34,7 +34,7 @@ No, the project must be created AFTER you have asked grandma.
 :::
 
 ::: faq What kinds of projects count?
-All kinds of technical projects, as long as they're open-source.
+All kinds of technical projects, as long as the code is public.
 :::
 
 ::: faq Is this legit?
@@ -60,7 +60,7 @@ As many as you like. You can have only one project in the works at a time (talki
 :::
 
 ::: faq How long do I have for a project?
-As long as it takes. Half an hour or ten days, nobody is timing you. The program as a whole will have an end, and the date is not decided yet.
+As long as it takes. Half an hour or ten days, nobody is timing you. The program as a whole will have an end, and Grandma will announce the date well before it.
 :::
 
 ::: faq Can I ship the same project twice?
@@ -102,7 +102,7 @@ Yes, when it is real work on your project: reading, trying things, getting stuck
 :::
 
 ::: faq When do I get my cookies?
-After a reviewer has checked your project and your hours. Grandma tells you each result herself and hands them over, one project at a time, the next time you visit. How long the review takes is not decided yet.
+After a reviewer has checked your project and your hours. Grandma tells you each result herself and hands them over, one project at a time, the next time you visit. Projects are reviewed in the order they are handed in, and there is no fixed date.
 :::
 
 ## AI

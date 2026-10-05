@@ -68,8 +68,4 @@ The screenshot shows what it looks like. The short recording shows it working, s
 
 Your repository must be public, with a README. A licence is a nice idea but not a must.
 
-::: note
-Not decided yet: whether a project must be open source with a licence. The FAQ says "open-source", and for now a public repository with a README is what Grandma checks.
-:::
-
 Stuck on something? Ask in <span data-slack="help"></span>.
