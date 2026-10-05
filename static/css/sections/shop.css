@@ -77,3 +77,6 @@
 
 /* the way to get a grant: only for a signed-in, onboarded person (orders/) */
 .get-btn { margin-top: 0.3rem; font-size: 1.4rem; }
+
+/* the home page's peek (templates/sections/pantry_peek.html) reuses everything above; this is the gap before its link */
+.peek-more { margin: 2.5rem 0 0; }

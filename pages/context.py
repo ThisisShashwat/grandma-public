@@ -54,4 +54,5 @@ def context(request):
         "site": config.SITE, "footer": config.FOOTER, "link": partial(link, urls), "link_attrs": partial(link_attrs, urls),
         "site_data": site_data(cfg), "pool": POOL, "tiers": TIERS, "levels": LEVELS, "faces": FACES,
         "free_asks": cfg.REDEALS_FREE,
+        "home_peek_count": cfg.HOME_PEEK_COUNT if cfg.HOME_PANTRY_PEEK else 0,     # how many Pantry items the home page shows, 0 = the switch is off
     }

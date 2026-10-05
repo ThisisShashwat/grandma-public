@@ -1,9 +1,15 @@
 {% extends "base.html" %}
+{# The Pantry peek: switched on by the admin setting HOME_PANTRY_PEEK (default off, then nothing below renders and the page is as it always was).
+   `peek` is the shop's first few items (shop/peek.py), empty when the switch is off or the shop has nothing to show. #}
+{% set peek = pantry_peek(home_peek_count) %}
 
 {% block styles %}
 {% for name in ["hero", "how", "fridge", "pay", "faq", "cta", "hackclub"] %}
 <link rel="stylesheet" href="{{ static('css/sections/' ~ name ~ '.css') }}">
 {% endfor %}
+{% if peek %}
+<link rel="stylesheet" href="{{ static('css/sections/shop.css') }}">
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -15,6 +21,8 @@
 {% include "sections/how.html" %}
 {% include "sections/demands.html" %}
 {% include "sections/pay.html" %}
+{# THE ONE LINE TO MOVE: the next line is where the Pantry peek sits. Cut it and paste it between any two sections (the owner decides where). #}
+{% if peek %}{% include "sections/pantry_peek.html" %}{% endif %}
 {% include "sections/faq.html" %}
 {% include "sections/cta.html" %}
 {% include "sections/hackclub.html" %}

@@ -1,0 +1,15 @@
+{% import "macros/shop.html" as shopui %}
+{# The home page's peek into the Pantry (off by default, admin setting HOME_PANTRY_PEEK). `peek` is a tuple of shop.catalog.Product: public fields only.
+   The cards are the Pantry's own (macros/shop.html, static/css/sections/shop.css, linked by home.html while the peek is on). #}
+<section class="scene" id="pantry-peek">
+  <div class="wrap">
+    <h2>A peek in the Pantry</h2>
+    <p class="sub">A few things Grandma keeps on her shelves. Cookies pay for every one.</p>
+    <ul class="items">
+      {% for p in peek %}
+      <li>{{ shopui.card(p) }}</li>
+      {% endfor %}
+    </ul>
+    <p class="peek-more"><a class="btn" href="{{ url('shop') }}">See the whole Pantry</a></p>
+  </div>
+</section>
