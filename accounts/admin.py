@@ -1,9 +1,12 @@
-from django.contrib import admin
+from constance.admin import Config, ConstanceAdmin
+from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
+from accounts import switches
 from accounts.models import Profile
 from accounts.services import set_beta_access, unlink_hackatime
+from pages.live import live
 
 User = get_user_model()
 
@@ -76,3 +79,16 @@ class ProfileAdmin(admin.ModelAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
+
+
+class SettingsAdmin(ConstanceAdmin):
+    """The settings page (Constance), with a warning for every switch that is on while its environment values are missing."""
+
+    def changelist_view(self, request, extra_context=None):
+        for sentence in switches.problems(live()):
+            messages.warning(request, sentence)
+        return super().changelist_view(request, extra_context)
+
+
+admin.site.unregister([Config])
+admin.site.register([Config], SettingsAdmin)
