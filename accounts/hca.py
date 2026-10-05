@@ -7,10 +7,12 @@ HCA_CLIENT_SECRET are in the environment (`enabled`), and the library is only se
 A first Hack Club sign-in CREATES an account with an unusable password (never staff, never superuser) and attaches its Slack ID to the Profile.
 The gate (ysws_eligible is True) is checked at first login only: returning participants are never polled or re-checked, so aging out mid-program
 does not lock them out. A returning sign-in finds the account by `hca_sub` and signs in. Staff and superusers may sign in this way; the admin itself
-is gated separately (accounts/admin_gate.py). Hack Club is asked for three scopes (openid, slack_id, verification_status) and we keep three fields: the stable `sub` id, the Slack ID (private, never shown on a
-public page) and the time of the last sign-in. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
+is gated separately (accounts/admin_gate.py). Hack Club is asked for four scopes (openid, slack_id, verification_status, email) and we keep four fields: the stable `sub` id, the Slack ID and the
+email (both private, never shown on a public page; the email because Ari, HQ's review tool, requires it on every ship) and the time of the last sign-in. The email is kept current on every
+sign-in; a missing or malformed one never blocks anything and is never invented. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
 """
 import hashlib
+import re
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
@@ -24,10 +26,12 @@ from accounts.slack import is_member_id
 from audit import services as audit
 
 NAME = "hackclub"
-SCOPE = "openid slack_id verification_status"
+SCOPE = "openid slack_id verification_status email"
 TIMEOUT_SECONDS = 5
-CLAIMS = ("sub", "slack_id", "verification_status", "ysws_eligible")
+CLAIMS = ("sub", "slack_id", "verification_status", "ysws_eligible", "email")
 SUB_MAX_LENGTH = 100
+EMAIL_MAX_LENGTH = 254
+EMAIL_SHAPE = re.compile(r"[^@\s]+@[^@\s]+")
 
 oauth = OAuth()
 
@@ -65,7 +69,7 @@ def claims_options():
 
 
 def userinfo_of(request):
-    """The four claims we use from the sign-in the person has just finished, or None when anything at all went wrong (a refusal at Hack Club, a
+    """The five claims we use from the sign-in the person has just finished, or None when anything at all went wrong (a refusal at Hack Club, a
     stale or forged state, a bad code, a failed signature, issuer, audience or nonce, no id token, no network). The token is dropped here."""
     try:
         userinfo = client().authorize_access_token(request, claims_options=claims_options())["userinfo"]
@@ -86,6 +90,15 @@ def check(userinfo, require_eligible):
     return True, None
 
 
+def clean_email(value):
+    """The `email` claim made fit to keep (stripped, lowercased), or "" for anything else: not a string, over 254 characters, not exactly one @ with
+    something on both sides, or whitespace inside. Never an error and never invented: a missing address blocks nothing."""
+    if not isinstance(value, str):
+        return ""
+    email = value.strip().lower()
+    return email if len(email) <= EMAIL_MAX_LENGTH and EMAIL_SHAPE.fullmatch(email) else ""
+
+
 def may_sign_in(user):
     """Active users may sign in (staff and superusers included; the admin is gated separately, accounts/admin_gate.py)."""
     return bool(user.is_active)
@@ -96,17 +109,24 @@ def username_for(sub):
     return "hca_" + hashlib.sha256(sub.encode()).hexdigest()[:32]
 
 
-def sign_in(profile):
-    """Sign in a returning person: check they may sign in, update the check time, and record the login."""
+def sign_in(profile, email=""):
+    """Sign in a returning person: check they may sign in, update the check time, keep the email current and record the login. A present email
+    that differs from the stored one replaces it (they may change it at Hack Club; `hca_sub` stays the identity) and is audited as a profile
+    update naming the field only, never the address. A missing one leaves the stored one alone."""
     if not may_sign_in(profile.user):
         return None, "no_account"
+    changed = ["email"] if email and email != profile.email else []
+    if changed:
+        profile.email = email
     profile.hca_checked_at = timezone.now()
-    profile.save(update_fields=["hca_checked_at"])
+    profile.save(update_fields=["hca_checked_at", *changed])
+    if changed:
+        audit.record("profile.update", actor=profile.user, subject=profile.user, target=profile, details={"fields": changed})
     audit.record("accounts.hca_login", actor=profile.user, subject=profile.user, target=profile, details={"created": False})
     return profile, None
 
 
-def create(sub, slack_id):
+def create(sub, slack_id, email=""):
     """Create a user and profile for a first-time Hack Club sign-in, and record the login."""
     # create_user without a password creates an account with an unusable password on purpose.
     user = get_user_model().objects.create_user(username=username_for(sub))
@@ -114,6 +134,7 @@ def create(sub, slack_id):
         user=user,
         hca_sub=sub,
         slack_id=slack_id,
+        email=email,
         hca_checked_at=timezone.now(),
     )
     audit.record("accounts.hca_login", actor=user, subject=user, target=profile, details={"created": True})
@@ -129,10 +150,11 @@ def identify(userinfo, require_eligible):
     if not isinstance(sub, str) or not 0 < len(sub) <= SUB_MAX_LENGTH:
         return None, "no_account"
 
+    email = clean_email(userinfo.get("email"))
     with transaction.atomic():
         profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
         if profile is not None:
-            return sign_in(profile)
+            return sign_in(profile, email)
 
         ok, reason = check(userinfo, require_eligible)
         if not ok:
@@ -141,10 +163,10 @@ def identify(userinfo, require_eligible):
         slack_id = userinfo.get("slack_id")
         try:
             with transaction.atomic():
-                profile = create(sub, slack_id)
+                profile = create(sub, slack_id, email)
                 return profile, None
         except IntegrityError:
             profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
             if profile is not None:
-                return sign_in(profile)
+                return sign_in(profile, email)
             return None, "no_account"
