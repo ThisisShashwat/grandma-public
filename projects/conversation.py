@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services import profile_of
+from accounts.validators import validate_polite_name
 from projects import expiry, notes, rules, script, services
 from projects.models import Demand
 from projects.validators import validate_idea, validate_project_name
@@ -52,7 +53,7 @@ def dialogue(cfg, user):
     return [
         *script.INTRO,
         replace(script.ASK_IDEA, validators=(validate_idea,)), script.SAID_IDEA,
-        replace(script.ASK_NAME, validators=(validate_project_name,)), script.SAID_NAME,
+        replace(script.ASK_NAME, validators=(validate_project_name, validate_polite_name)), script.SAID_NAME,
         replace(script.ASK_CATEGORY, choices=lambda answers: services.category_choices()),
         replace(script.ASK_SUBCATEGORY, choices=lambda answers: services.subcategory_choices(answers.get("category")),
                 when=lambda answers: bool(services.subcategory_choices(answers.get("category")))),
@@ -65,7 +66,7 @@ def edit_dialogue(project):
     """The 5-step conversation to edit a working project's idea, name, category, and subcategory."""
     return [
         replace(script.EDIT_IDEA, validators=(validate_idea,)),
-        replace(script.EDIT_NAME, validators=(validate_project_name,)),
+        replace(script.EDIT_NAME, validators=(validate_project_name, validate_polite_name)),
         replace(script.ASK_CATEGORY, lines=script.EDIT_CATEGORY_LINES, choices=lambda answers: services.category_choices()),
         replace(script.ASK_SUBCATEGORY, choices=lambda answers: services.subcategory_choices(answers.get("category")),
                 when=lambda answers: bool(services.subcategory_choices(answers.get("category")))),

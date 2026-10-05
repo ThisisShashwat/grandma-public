@@ -12,3 +12,4 @@ pillow>=12.3
 Authlib>=1.8
 requests>=2.34
 cryptography>=45
+better-profanity==0.7.0

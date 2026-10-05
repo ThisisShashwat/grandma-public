@@ -2,7 +2,7 @@
 Who sees which part is decided in accounts/onboarding.py; how a step is built is talk/dialogue.py."""
 from django.urls import reverse
 
-from accounts.validators import suggested_timezones, validate_display_name, validate_slack_id, validate_timezone
+from accounts.validators import suggested_timezones, validate_display_name, validate_polite_name, validate_slack_id, validate_timezone
 from program.content.expertise import EXPERTISE
 from program.content.regions import REGIONS
 from talk.dialogue import AskChoice, AskText, End, Say
@@ -18,7 +18,7 @@ SOFTWARE_ONLY = Say(face="finger", lines=(
     "Websites, apps, games, tools, bots, anything made of code. Nothing you have to plug in or solder."))
 
 QUESTIONS = [
-    AskText(key="display_name", face="writing", label="Your name", validators=(validate_display_name,), max_length=30, button="That's me",
+    AskText(key="display_name", face="writing", label="Your name", validators=(validate_display_name, validate_polite_name), max_length=30, button="That's me",
             attrs={"autocomplete": "nickname", "autocapitalize": "words", "spellcheck": "false"}, lines=(
                 "First things first. What should I call you, dear?",
                 "Pick a name you don't mind other people seeing. It goes on my wall.")),
