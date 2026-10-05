@@ -155,7 +155,7 @@ def holds_ribbon(submission):
 
 def cookies_for(submission):
     """What this submission's saved review is worth in cookies (rules.award over the demands the project kept, with the permanent
-    ribbon holder bonus when the person already holds a ribbon)."""
+    ribbon term when the person already holds a ribbon, counted once if this review has the ribbon too)."""
     return rules.award(submission.status, tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon,
                        holds_ribbon(submission))
 

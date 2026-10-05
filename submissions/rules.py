@@ -68,7 +68,7 @@ def newly_asked_for_changes(was, status):
 def award(status, tiers, hours, quality, ribbon, ribbon_holder=False):
     """The cookies a review is worth, a whole number: the payout formula for an approved submission, nothing for anything else.
     `tiers` are the tiers of the demands the person kept; `ribbon_holder` is whether they already held a Blue Ribbon from an earlier
-    submission (the permanent bonus, payout.CONFIG["ribbon_holder"], 0.0 until the owner sets it). Rounded the way the page rounds
+    submission (the permanent bonus: the same ribbon term, counted once with `ribbon`, never twice). Rounded the way the page rounds
     (payout.shown)."""
     if status != APPROVED or not hours:
         return 0
