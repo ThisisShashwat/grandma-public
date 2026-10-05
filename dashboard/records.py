@@ -22,6 +22,7 @@ class ProjectCard:
     notes: tuple        # the kept demands as projects.notes.Note records
     action: str         # what the card offers: ship (the Ship it button), reading (it is with Grandma), fix (changes were asked for), resume (a hand is on her table), start (nothing in progress)
     note: str = ""      # what the reviewer asked to change (the public note), for a project with changes requested
+    working: bool = False   # being worked on now (dealing or building): the card's heading says "building" only then
 
 
 @dataclass(frozen=True)

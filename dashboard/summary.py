@@ -49,7 +49,7 @@ def project_card(project):
     return records.ProjectCard(
         id=project.id, note=project_services.change_note(project) if action == "fix" else "", name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
         status=project.status, status_label=rules.LABELS[project.status],
-        notes=tuple(notes.notes(project_services.kept_demands(project))), action=action)
+        notes=tuple(notes.notes(project_services.kept_demands(project))), action=action, working=project.status in rules.WORKING_STATUSES)
 
 
 def submission_row(submission, zone):

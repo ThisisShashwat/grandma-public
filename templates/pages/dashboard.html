@@ -68,7 +68,7 @@
 <section class="scene dash-body">
   <div class="wrap dash-grid">
     <section class="dash-project" aria-labelledby="dash-project-title">
-      <h2 id="dash-project-title">{{ "What you're building" if project else "No project yet" }}</h2>
+      <h2 id="dash-project-title">{{ "No project yet" if not project else "What you're building" if project.working else "Your latest project" }}</h2>
       {% if project %}
       <div class="dash-card">
         <p class="dash-where">{{ project.where }}</p>
