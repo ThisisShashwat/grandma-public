@@ -43,7 +43,7 @@
         {% else %}
         {% if hackatime.connected %}
         <div class="nf">
-          <label class="nf-label">Hackatime</label>
+          <span class="nf-label">Hackatime</span>
           <p class="nf-hint" id="hackatime-hint">
             {%- if hackatime.checked -%}
               {%- if hackatime.found %}Hackatime showed me {{ hackatime.time }} on {{ hackatime.count }} {% if hackatime.count == 1 %}project{% else %}projects{% endif %}, dear.
@@ -58,7 +58,7 @@
         </div>
         {% else %}
         <div class="nf">
-          <label class="nf-label" for="hackatime">Hackatime project name</label>
+          <span class="nf-label">Hackatime project name</span>
           <p class="nf-hint" id="hackatime-hint">I can't look at your hours until you have given me your Hackatime, dear.{% if hackatime.required %} I won't take it until I have.{% endif %}</p>
           <p><a class="btn btn--plain" href="{{ url('connect_hackatime') }}?next={{ action }}">Connect Hackatime</a></p>
         </div>
