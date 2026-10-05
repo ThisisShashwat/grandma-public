@@ -1,11 +1,15 @@
 {% import "macros/art.html" as art %}
-{# The Pantry's header band: Grandma and her jar, one line of copy, and a note: guests are told to sign in, a signed-in person sees their jar. #}
+{# The Pantry's header band: Grandma and her jar, one line of copy, and a note: guests are told to sign in, a signed-in person who cannot spend yet (not let in, or not finished at /welcome/) is told so, and a person who can sees their jar. `held` is "beta", "welcome" or "" (shop/views.py standing). #}
 <section class="scene scene--sky pantry-head">
   <div class="wrap split">
     <div>
       <h1>The Pantry</h1>
       <p class="lede">Everything on these shelves costs cookies. Look all you like, dear, but wipe your hands first.</p>
-      {% if jar is none %}
+      {% if held == "welcome" %}
+      <p class="guest-note"><b>Not just yet, dear</b>Finish talking to me first, dear, and then you may spend.</p>
+      {% elif held == "beta" %}
+      <p class="guest-note"><b>Not just yet, dear</b>I will open the shelves to you when I have let you in.</p>
+      {% elif jar is none %}
       <p class="guest-note"><b>Browsing as a guest</b>Sign in to spend cookies.</p>
       {% else %}
       <p class="guest-note"><b>In your jar</b>{{ "{:,}".format(jar) }} {{ "cookie" if jar == 1 else "cookies" }}. Pick a grant, show me the cart, and I'll pay.</p>
