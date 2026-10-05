@@ -7,7 +7,7 @@
   <meta name="description" content="{{ site.description }}">
   <meta property="og:title" content="{{ site.name }}">
   <meta property="og:description" content="{{ site.og_description }}">
-  <meta property="og:image" content="{{ site.og_image }}">
+  {% if site.og_image %}<meta property="og:image" content="{{ site.og_image }}">{% endif %}
   <meta name="theme-color" content="{{ site.theme_color }}">
   <link rel="icon" href="{{ static('assets/favicon.png') }}">
 

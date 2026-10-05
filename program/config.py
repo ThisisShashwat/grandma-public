@@ -2,9 +2,9 @@
 
 SITE = {
     "name": "Help Grandma Out",
-    "description": "[TODO: one sentence about the program]",
-    "og_description": "[TODO: same sentence]",
-    "og_image": "[TODO: absolute URL of a 1200 by 630 image]",
+    "description": "Build any project under a nitpicky Grandma's annoying demands and earn cookies for your hours. A Hack Club program for teens 13 to 18.",
+    "og_description": "Build any project under a nitpicky Grandma's annoying demands and earn cookies for your hours. A Hack Club program for teens 13 to 18.",
+    "og_image": "",
     "theme_color": "#c8a2d8",
 }
 
