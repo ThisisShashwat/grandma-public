@@ -55,7 +55,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         ("Review", {"fields": REVIEW, "description": "Set the status and, for an approval, the hours that count. Ask for changes needs a public note that says what "
                                                      "to change (it is public, like Grandma's other notes), and cannot be used on the last round. Reject is final: for cheating or spam. "
                                                      "Grandma tells the person the public note in her voice and hands over the cookies when they next visit. "
-                                                     "The person never sees the hours or the internal note. The hours are your own number: what Hackatime says (above) is evidence, never filled in for you."}),
+                                                     "The person never sees the internal note. Once they have collected, the approved hours and the tracked time are public, in words, on the project page. The hours are your own number: what Hackatime says (above) is evidence, never filled in for you."}),
         ("Result", {"fields": RESULT}),
     )
     readonly_fields = PARTICIPANT + RESULT

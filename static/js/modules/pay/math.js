@@ -1,4 +1,4 @@
-/* Grandma's payout maths, browser twin of grandma/payout.py (which holds the constants and the frozen formula).
+/* Grandma's payout maths, browser twin of program/payout.py (which holds the constants and the frozen formula).
    Pure functions, no page needed: `config` is payout.CONFIG as JSON (data.pay).
      const pay = createPay(data.pay);
      pay.cookies({ tiers: [2, 3], hours: 24, quality: true, ribbon: false })   // cookies for those hours

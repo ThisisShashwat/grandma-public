@@ -4,7 +4,7 @@ service layer (services.py) only applies it. Cookie amounts are whole numbers, n
 EARNING, SPENDING, REFUND, ADJUSTMENT = "earning", "spending", "refund", "adjustment"
 KINDS = ((EARNING, "Earning"), (SPENDING, "Spending"), (REFUND, "Refund"), (ADJUSTMENT, "Adjustment"))
 GAINS = (EARNING, REFUND)             # always a positive amount; spending is always negative; an adjustment is either
-MAX_ADJUSTMENT = 100_000              # a typo guard for a staff correction (a stray zero is a fortune), about 16 times the biggest possible award (6013): raise it here if a real correction needs more
+MAX_ADJUSTMENT = 100_000              # a typo guard for a staff correction (a stray zero is a fortune), about 5 times the biggest possible award (18038: 300 hours, the most the hours cap allows, with a full stack of bonuses): raise it here if a real correction needs more
 
 
 class InsufficientCookies(Exception):

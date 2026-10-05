@@ -48,7 +48,7 @@ class Subcategory(models.Model):
 
 
 class Demand(models.Model):
-    """One of Grandma's notes. The 28 starting ones were seeded from program/content (docs/projects.md); staff edit them here.
+    """One of Grandma's notes. The 18 starting ones were seeded from program/content (docs/projects.md); staff edit them here.
     The home page's fridge still reads the Python list, not this table."""
 
     name = models.CharField(max_length=40, unique=True)
