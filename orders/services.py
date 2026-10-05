@@ -22,6 +22,7 @@ from orders import rules
 from orders.models import Order, OrderLine
 from projects import services as project_services
 from shop.models import ShopItem
+from submissions.services import holds_ribbon_user
 
 GONE = "That isn't on my shelf any more, dear."
 NEEDS_PROOF = "Show me what you're buying, dear: the link and a screenshot of the cart."
@@ -31,11 +32,12 @@ BAD_PAGE = "That page has gone stale, dear. Open it again."
 
 # reads the pages use
 
-def gettable(slug):
-    """The base grant with this slug, active: an upgrade is never sold alone, so one gets None. Upgrades come along as `live_upgrades`."""
-    item = ShopItem.objects.filter(slug=slug, active=True, base_item__isnull=True).first()
+def gettable(slug, ribbon=False):
+    """The base grant with this slug, active: an upgrade is never sold alone, so one gets None. Upgrades come along as `live_upgrades`.
+    A ribbon only grant (or upgrade) is found only when `ribbon` says the person holds a Blue Ribbon: for anybody else it is None, like an unknown slug."""
+    item = ShopItem.objects.visible(ribbon).filter(slug=slug, base_item__isnull=True).first()
     if item is not None:
-        item.live_upgrades = list(item.upgrades.filter(active=True))
+        item.live_upgrades = list(item.upgrades.visible(ribbon))
     return item
 
 
@@ -61,9 +63,10 @@ def line_of(item, quantity, upgrade=False):
     return rules.Line(item.pk, quantity, item.effective_cookies, item.usd_value, upgrade)
 
 
-def locked_items(item_id):
-    """The base grant (active, never an upgrade) and its active upgrades, rows locked, by id. (None, {}) when the grant is gone."""
-    rows = list(ShopItem.objects.select_for_update().filter(Q(pk=item_id) | Q(base_item_id=item_id), active=True).order_by("pk"))
+def locked_items(item_id, ribbon):
+    """The base grant (active, never an upgrade) and its active upgrades, rows locked, by id. (None, {}) when the grant is gone, or is ribbon
+    only and the person holds no Blue Ribbon (`ribbon`): it is gone for them, whatever the browser said."""
+    rows = list(ShopItem.objects.select_for_update().visible(ribbon).filter(Q(pk=item_id) | Q(base_item_id=item_id)).order_by("pk"))
     base = next((row for row in rows if row.pk == item_id and row.base_item_id is None), None)
     return base, {row.pk: row for row in rows if base and row.base_item_id == base.pk}
 
@@ -103,7 +106,7 @@ def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, product_url=
     placed = Order.objects.filter(user=user, nonce=nonce).first()
     if placed:
         return placed
-    base, upgrade_items = locked_items(item_id)
+    base, upgrade_items = locked_items(item_id, holds_ribbon_user(user))
     refuse(None if base else GONE)
     proves = base.kind == ShopItem.Kind.GRANT
     counts = chosen_upgrades(base, upgrade_items, upgrades or {})

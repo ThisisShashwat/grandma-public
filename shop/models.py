@@ -51,6 +51,14 @@ class RateClass(models.Model):
         return payout.CONFIG["cookies_per_usd"] * self.markup
 
 
+class ShopItemQuerySet(models.QuerySet):
+    def visible(self, ribbon):
+        """What a person may see and buy: the active items, and the ribbon only ones only when they hold a Blue Ribbon (`ribbon`).
+        For anybody else a ribbon only item does not exist: this is the one place that says so."""
+        items = self.filter(active=True)
+        return items if ribbon else items.filter(ribbon_only=False)
+
+
 class ShopItem(models.Model):
     class Kind(models.TextChoices):
         GRANT = "grant", "Card grant"
@@ -87,7 +95,10 @@ class ShopItem(models.Model):
         help_text="Set this to make the item an UPGRADE of that base grant: it tops up the same card and is never sold alone.",
     )
     active = models.BooleanField(default=True)
+    ribbon_only = models.BooleanField(default=False, help_text="Only people who hold a Blue Ribbon can see and buy this item. Everybody else does not know it exists.")
     sort_order = models.PositiveSmallIntegerField(default=0)
+
+    objects = ShopItemQuerySet.as_manager()
 
     class Meta:
         ordering = ["sort_order", "name"]

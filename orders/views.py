@@ -16,6 +16,7 @@ from ledger import services as ledger
 from orders import forms, services, sheet
 from orders.models import Order
 from pages.live import live
+from submissions.services import holds_ribbon_user
 from talk.portraits import portrait
 
 ORDERED = "Ordered, dear. Your cookies are in my pocket. I'll look at the cart before I pay a penny."
@@ -56,7 +57,7 @@ def order_page(request, item):
 @never_cache
 @require_http_methods(["GET", "HEAD", "POST"])
 def get_grant(request, slug):
-    item = services.gettable(slug)
+    item = services.gettable(slug, holds_ribbon_user(request.user))      # a ribbon only grant is a plain 404 for anybody without a Blue Ribbon
     if item is None:
         raise Http404
     return order_page(request, item)

@@ -86,9 +86,10 @@ def _shelves(products):
     return tuple(Shelf(*shelf) for shelf in shelves if shelf[3])
 
 
-def build():
-    """The whole public shop. The only function the views call."""
-    upgrades = Prefetch("upgrades", ShopItem.objects.filter(active=True), to_attr="live_upgrades")
-    items = ShopItem.objects.filter(active=True, base_item__isnull=True).prefetch_related(upgrades)
+def build(*, ribbon=False):
+    """The shop as one viewer may see it. The only function the views call. `ribbon` says the viewer holds a Blue Ribbon: only then do the
+    ribbon only items (and ribbon only upgrades) appear. Nothing is cached, so one viewer's shelves never reach another."""
+    upgrades = Prefetch("upgrades", ShopItem.objects.visible(ribbon), to_attr="live_upgrades")
+    items = ShopItem.objects.visible(ribbon).filter(base_item__isnull=True).prefetch_related(upgrades)
     products = [_product(item) for item in items]
     return Catalog(shelves=_shelves(products))

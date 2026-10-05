@@ -146,11 +146,20 @@ def tiers_of(project):
     return [demand.tier for demand in project_services.kept_demands(project)]
 
 
+def collected_ribbons(user_id):
+    """The submissions of this person that give them a Blue Ribbon: approved with the ribbon (any project, any ship) and handed over by
+    Grandma. One that is still waiting at her does not count. The one definition of holding a ribbon."""
+    return Submission.objects.filter(project__user_id=user_id, status=rules.APPROVED, ribbon=True, claimed_at__isnull=False)
+
+
 def holds_ribbon(submission):
-    """Whether the person who made this submission already held a Blue Ribbon before it: an EARLIER submission of theirs (any project,
-    any ship) that was approved with the ribbon and that Grandma has handed over. One that is still waiting at her does not count."""
-    return Submission.objects.filter(project__user_id=submission.project.user_id, status=rules.APPROVED, ribbon=True,
-                                     claimed_at__isnull=False, pk__lt=submission.pk).exists()
+    """Whether the person who made this submission already held a Blue Ribbon before it: an EARLIER collected ribbon of theirs."""
+    return collected_ribbons(submission.project.user_id).filter(pk__lt=submission.pk).exists()
+
+
+def holds_ribbon_user(user):
+    """Whether this person holds a Blue Ribbon now (staff only if they hold one themselves). A signed out visitor never does."""
+    return user.is_authenticated and collected_ribbons(user.pk).exists()
 
 
 def cookies_for(submission):

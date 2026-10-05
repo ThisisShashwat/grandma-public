@@ -6,6 +6,7 @@ from accounts.access import has_access
 from accounts.models import Profile
 from ledger import services as ledger
 from pages.live import live
+from submissions.services import holds_ribbon_user
 
 from . import catalog
 
@@ -20,9 +21,10 @@ def jar_of(user):
 
 @require_safe
 def shop(request):
-    """The public Pantry. Someone who is signed in and let in also sees their jar, so that response is never cached; a visitor's page is unchanged."""
-    jar = jar_of(request.user)
-    response = render(request, "pages/shop.html", {"shop": catalog.build(), "jar": jar})
-    if jar is not None:
+    """The public Pantry. Someone who is signed in and let in also sees their jar, and a Blue Ribbon holder also sees the ribbon only items:
+    those responses are never cached; a visitor's page is unchanged (the ribbon only items are not on it at all)."""
+    jar, ribbon = jar_of(request.user), holds_ribbon_user(request.user)
+    response = render(request, "pages/shop.html", {"shop": catalog.build(ribbon=ribbon), "jar": jar})
+    if jar is not None or ribbon:
         add_never_cache_headers(response)
     return response
