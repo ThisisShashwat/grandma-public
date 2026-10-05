@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 
 from program import submission
+from program.content import regions
 
 ISO_WITH_ZONE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})")
 _web_url = URLValidator(schemes=["http", "https"])
@@ -65,5 +66,16 @@ class HostsField(forms.CharField):
     def clean(self, value):
         try:
             return "\n".join(submission.parse_hosts(super().clean(value)))
+        except ValueError as error:
+            raise ValidationError(str(error)) from None
+
+
+class RegionsField(forms.CharField):
+    """The regions people can pick in onboarding, one `CODE: Label` per line (program/content/regions.py says what a good list is). Saved tidily formatted."""
+    widget = forms.Textarea(attrs={"rows": 9, "cols": 50})
+
+    def clean(self, value):
+        try:
+            return "\n".join(f"{code}: {label}" for code, label in regions.parse(super().clean(value)))
         except ValueError as error:
             raise ValidationError(str(error)) from None

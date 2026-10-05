@@ -7,6 +7,7 @@ maths, the footer's Hack Club links, the site name) stay in payout.py and config
 grandma/settings.py hands CONFIG, FIELDS and FIELDSETS to constance. Read values with pages.live.live().
 """
 from program import submission
+from program.content import regions
 from program.tutorial import DEPTHS
 
 # key: (default, help text shown in the admin, optional name of a field in FIELDS)
@@ -71,6 +72,10 @@ CONFIG = {
                                   "It needs HACKATIME_ENABLED on (and does nothing without it). "
                                   "Off (the default) lets people hand in with or without a check; a check that was made is still kept and shown to reviewers."),
 
+    "REGIONS": (regions.default_text(), "Where a person can say they live, asked once in onboarding: one per line as CODE: Label, shown in this order. "
+                                        "A code is two capital letters or digits (people keep their code if you rename its label). At least two lines, and the XX line "
+                                        "(the catch-all, XX: Somewhere else) must stay.", "regions"),
+
     "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
     "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
     "TUTORIAL_FOR_SOME": ("second", "What someone who has shipped a project or two sees.", "tutorial_depth"),
@@ -87,6 +92,7 @@ FIELDSETS = (
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Notifications", ("SLACK_NOTIFICATIONS",)),
     ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED")),
+    ("Onboarding questions", ("REGIONS",)),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )
 
@@ -99,6 +105,7 @@ FIELDS = {
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
+    "regions": ("pages.fields.RegionsField",),
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
     "rounds": ("django.forms.IntegerField", {"min_value": 1, "max_value": 10}),         # the ceiling is submissions.rules.MAX_ROUND_LIMIT (a test pins them)
     "pixels": ("django.forms.IntegerField", {"min_value": 500, "max_value": 10000}),

@@ -8,9 +8,17 @@ from accounts import hackatime, script
 from accounts.models import FILLED_IN
 from accounts.services import profile_of
 from audit import services as audit
+from program.content import regions
 from program.tutorial import offers_skip, parts
 from talk.dialogue import State
 from talk.store import SessionStore
+
+
+def check(profile):
+    """The model's own rules, its constraints and the unique Slack ID. The region is not held to the model's static `choices`: the dialogue's choice
+    already checked it against the live REGIONS setting (program/content/regions.py), whose labels staff may change."""
+    profile.full_clean(exclude=["user", "region"], validate_constraints=False)
+    profile.validate_constraints(exclude=["user"])
 
 
 def depth_for(expertise, cfg):
@@ -27,12 +35,19 @@ def asks_to_skip(cfg):
     return lambda answers: offers_skip(cfg.TUTORIAL_ENABLED, depth_for(answers.get("expertise"), cfg))
 
 
+def question(step, cfg, slack_known):
+    """One question as this site runs it now: the Slack ID is skipped when it is already known, and the regions come from the admin setting."""
+    key = getattr(step, "key", None)
+    if key == "slack_id":
+        return replace(step, when=lambda answers: not slack_known)
+    if key == "region":
+        return replace(step, choices=regions.regions(cfg.REGIONS))
+    return step
+
+
 def dialogue(cfg, hackatime_connected=False, slack_known=False):
     """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, and whether their Slack ID is already known."""
-    questions = [
-        replace(step, when=lambda answers: not slack_known) if getattr(step, "key", None) == "slack_id" else step
-        for step in script.QUESTIONS
-    ]
+    questions = [question(step, cfg, slack_known) for step in script.QUESTIONS]
     return [
         *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(hackatime.enabled(cfg), hackatime_connected),
         replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
@@ -49,7 +64,7 @@ def finish(cfg, request, answers):
     profile.onboarded_at = profile.onboarded_at or timezone.now()
     if cfg.TUTORIAL_ENABLED:
         profile.tutorial_done_at = profile.tutorial_done_at or profile.onboarded_at
-    profile.full_clean(exclude=["user"])
+    check(profile)
     with transaction.atomic():
         profile.save()
         if first_time:
@@ -75,7 +90,7 @@ class ProfileStore(SessionStore):
         for key in FILLED_IN:
             if key in state.answers:
                 setattr(profile, key, state.answers[key])
-        profile.full_clean(exclude=["user"])        # the model's own rules and the unique Slack ID; raises before anything is stored
+        check(profile)        # raises before anything is stored
         with transaction.atomic():
             profile.save()
             if changed:
