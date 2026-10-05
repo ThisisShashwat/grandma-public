@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from accounts import hackatime, script
 from accounts.models import FILLED_IN
+from accounts.validators import canonical_timezone
 from accounts.services import profile_of
 from audit import services as audit
 from program.content import regions
@@ -86,10 +87,11 @@ class ProfileStore(SessionStore):
 
     def save(self, request, state):
         profile = profile_of(request.user)
-        changed = [key for key in FILLED_IN if key in state.answers and getattr(profile, key) != state.answers[key]]
+        answers = {key: canonical_timezone(value) if key == "timezone" else value for key, value in state.answers.items()}
+        changed = [key for key in FILLED_IN if key in answers and getattr(profile, key) != answers[key]]
         for key in FILLED_IN:
-            if key in state.answers:
-                setattr(profile, key, state.answers[key])
+            if key in answers:
+                setattr(profile, key, answers[key])
         check(profile)        # raises before anything is stored
         with transaction.atomic():
             profile.save()

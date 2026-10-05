@@ -37,9 +37,25 @@ def timezone_names():
     return available_timezones()
 
 
+# Zones that were renamed. Browsers (Chrome on Windows says Asia/Calcutta) and older machines still use the old name, and a newer Linux
+# leaves the old names out of its tz database (Ubuntu and Debian moved them to tzdata-legacy), so both spellings are accepted and the
+# new one is what gets stored.
+RENAMED_ZONES = {
+    "Asia/Calcutta": "Asia/Kolkata", "Asia/Katmandu": "Asia/Kathmandu", "Asia/Saigon": "Asia/Ho_Chi_Minh", "Asia/Rangoon": "Asia/Yangon",
+    "Asia/Dacca": "Asia/Dhaka", "Asia/Thimbu": "Asia/Thimphu", "Asia/Ulan_Bator": "Asia/Ulaanbaatar", "Asia/Macao": "Asia/Macau",
+    "Europe/Kiev": "Europe/Kyiv", "America/Buenos_Aires": "America/Argentina/Buenos_Aires", "Atlantic/Faeroe": "Atlantic/Faroe",
+    "Pacific/Truk": "Pacific/Chuuk", "Pacific/Ponape": "Pacific/Pohnpei", "America/Godthab": "America/Nuuk",
+}
+
+
+def canonical_timezone(value):
+    """The current name of a zone: the renamed ones map to the new name, everything else is unchanged."""
+    return RENAMED_ZONES.get(value, value)
+
+
 def validate_timezone(value):
-    """An IANA zone name such as Asia/Kolkata. Checked against the zones that exist, never opened as a path."""
-    if value not in timezone_names():
+    """An IANA zone name such as Asia/Kolkata (or its old name). Checked against the zones that exist, never opened as a path."""
+    if canonical_timezone(value) not in timezone_names():
         raise ValidationError("I don't know that time zone. Use a name like Asia/Kolkata or Europe/Berlin.")
 
 
