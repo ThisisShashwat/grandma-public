@@ -135,6 +135,9 @@ DATABASES = {"default": env.db("DATABASE_URL") if env("DATABASE_URL", default=""
 # ledger/services.py cannot interleave with another writer. (On Postgres select_for_update does this job.)
 if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
     DATABASES["default"].setdefault("OPTIONS", {})["transaction_mode"] = "IMMEDIATE"
+else:      # a network database: keep each connection for a while instead of a new TLS handshake per request, and drop a dead one before use
+    DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
