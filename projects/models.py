@@ -1,4 +1,5 @@
-"""Projects: the categories people pick from, Grandma's demands (the notes in her jar) and the projects built around them.
+"""Projects: the categories people pick from, Grandma's demands (the notes in her jar), the projects built around them and the
+complaints people send her about new ones.
 
 All of it is edited in the Django admin (projects/admin.py). Nothing here deals or charges: the draw is program/draw.py and
 everything that changes a project is projects/services.py. Layers: program <- rules.py <- models.py <- services.py.
@@ -11,7 +12,7 @@ from django.db.models import Q
 from program.content.demands import LEVELS, TIERS
 from program.draw import MAX_KEEP
 from projects import rules
-from projects.validators import validate_idea, validate_project_name
+from projects.validators import validate_complaint_line, validate_complaint_text, validate_idea, validate_project_name
 
 
 class Category(models.Model):
@@ -131,3 +132,21 @@ class ProjectDemand(models.Model):
 
     def __str__(self):
         return f"{self.project}: {self.demand}"
+
+
+class Complaint(models.Model):
+    """A person's suggestion for a new demand, sent at /complaints/. PRIVATE: only staff read it, in the admin (which also sets its status);
+    no page, board or count of it is ever public. Made only by projects/complaints.py, which enforces the lengths and the daily limit."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="complaints")
+    title = models.CharField(max_length=rules.TITLE_MAX, validators=[validate_complaint_line], help_text="The name of the demand they suggest.")
+    text = models.CharField(max_length=rules.TEXT_MAX, validators=[validate_complaint_text], help_text="What Grandma should demand, and why it is annoying.")
+    example = models.CharField(max_length=rules.EXAMPLE_MAX, blank=True, validators=[validate_complaint_line], help_text="A project it would fit, if they gave one.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=rules.COMPLAINT_STATUSES, default=rules.NEW)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return self.title

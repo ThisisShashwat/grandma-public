@@ -20,3 +20,14 @@ def validate_project_name(value):
 def validate_idea(value):
     if value != value.strip() or not 5 <= len(value) <= 200 or not plain_text(value) or not any(c.isalnum() for c in value):
         raise ValidationError("A sentence will do, dear: five to two hundred plain characters.")
+
+
+def validate_complaint_line(value):
+    """A complaint's title or example: visible characters only, a letter or digit in it, and nothing but the ordinary space."""
+    if not plain_text(value) or not any(c.isalnum() for c in value):
+        raise ValidationError("Plain words, dear: nothing invisible.")
+
+
+def validate_complaint_text(value):
+    """What a complaint says: the same, with line breaks allowed."""
+    validate_complaint_line(value.replace("\n", " "))

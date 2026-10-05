@@ -1,6 +1,7 @@
 """The project rules as plain functions: statuses and what the next re-deal costs. No Django import, no database, so the maths is
 decided here and projects/services.py only applies it. A project has no time limit (docs/projects.md), so there is no clock here.
 Why each rule exists: docs/projects.md."""
+from datetime import timedelta
 from typing import NamedTuple
 
 DEALING, BUILDING, SHIPPED, IN_REVIEW, CHANGES_REQUESTED, APPROVED, REJECTED, ABANDONED = (
@@ -29,3 +30,19 @@ def offer(redeals_used, free, cost):
     """The next re-deal of a project that has used `redeals_used` of them: free while the free ones last, then `cost` cookies."""
     free_left = max(0, free - redeals_used)
     return Offer(number=redeals_used + 1, free_left=free_left, cost=0 if free_left else cost)
+
+
+# Complaints: a person's suggestion for a new demand, read by staff only (docs/projects.md "Complaints").
+NEW, READ, USED, DECLINED = "new", "read", "used", "declined"
+COMPLAINT_STATUSES = ((NEW, "New"), (READ, "Read"), (USED, "Used"), (DECLINED, "Declined"))
+
+TITLE_MAX, TEXT_MAX, EXAMPLE_MAX = 60, 500, 200          # characters: the demand's name, what and why, one project it would fit
+
+#: At most this many complaints per person in any rolling COMPLAINT_WINDOW. A code constant, not an admin setting: it is spam control.
+COMPLAINT_LIMIT = 5
+COMPLAINT_WINDOW = timedelta(hours=24)
+
+
+def tidy(text):
+    """Trimmed, with the CRLF line breaks a browser sends made plain LF ones."""
+    return text.replace("\r\n", "\n").replace("\r", "\n").strip()
