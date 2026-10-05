@@ -75,7 +75,6 @@ class Paged:
 class Summary:
     name: str
     balance: int
-    waiting: int            # cookies awarded but not yet collected: the person's current pay
     project: ProjectCard | None
     says: Says
     submissions: tuple      # the latest few

@@ -27,12 +27,6 @@
     </div>
 
     <div class="dash-notes">
-      <section class="dash-note dash-note--pink" aria-labelledby="dash-waiting">
-        <h2 id="dash-waiting">Waiting at Grandma's</h2>
-        <p class="dash-big"><b>{{ dash.waiting }}</b> <span>{{ "cookie" if dash.waiting == 1 else "cookies" }}</span></p>
-        <p class="dash-small">{% if dash.waiting %}Awarded, not collected. Come and see me.{% else %}Nothing waiting. When I've read your work, your cookies wait for you here.{% endif %}</p>
-      </section>
-
       <section class="dash-note dash-note--blue" aria-labelledby="dash-now">
         <h2 id="dash-now">My project</h2>
         {% if project %}

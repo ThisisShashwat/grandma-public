@@ -5,7 +5,7 @@ has handed it over."""
 from zoneinfo import ZoneInfo
 
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum
+from django.db.models import Count
 from django.urls import reverse
 
 from accounts.services import profile_of
@@ -42,12 +42,6 @@ def day(moment, zone):
 def says(face, line):
     file, alt = portrait(face)
     return records.Says(face_file=file, face_alt=alt, line=line)
-
-
-def waiting_cookies(user):
-    """Cookies awarded and not yet handed over: reviewed and approved, not collected."""
-    total = Submission.objects.filter(project__user=user, status=submission_rules.APPROVED, claimed_at__isnull=True).aggregate(total=Sum("cookies_awarded"))["total"]
-    return total or 0
 
 
 def project_card(project):
@@ -123,7 +117,7 @@ def build(user):
     other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.CHANGES_REQUESTED), limit=6)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
-        name=profile.display_name, balance=ledger.balance(user), waiting=waiting_cookies(user), project=card, says=says(face, line),
+        name=profile.display_name, balance=ledger.balance(user), project=card, says=says(face, line),
         submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
         history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count(),
         orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count(),

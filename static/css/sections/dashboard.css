@@ -29,7 +29,6 @@
 .dash-note:nth-child(3n+1) { rotate: -0.9deg; }
 .dash-note:nth-child(3n+2) { rotate: 0.7deg; }
 .dash-note:nth-child(3n+3) { rotate: -0.4deg; }
-.dash-note--pink { background: var(--note-pink); }
 .dash-note--blue { background: var(--note-blue); }
 .dash-note h2 { margin: 0 0 0.3rem; font-size: 1.7rem; }
 .dash-name { margin: 0; font-family: var(--display); font-size: 2rem; line-height: 1; overflow-wrap: anywhere; }
