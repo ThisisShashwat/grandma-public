@@ -53,6 +53,19 @@ def deal(cards, size, rng, category=None):
     return [card.id for card in hand]
 
 
+def varies(pool, size):
+    """Could two deals from this pool hold different notes? Yes when more notes fit than a hand holds, or when two of them clash (a
+    hand must then leave one of the two out). A small pool without clashes is dealt whole every time."""
+    return len(pool) > size or any(clashes(card, [other for other in pool if other.id != card.id]) for card in pool)
+
+
+def can_change(cards, hand, size, category=None):
+    """Could another deal show a different hand from `hand`, the ids the person now holds? No when every deal for this category
+    holds the same notes and they already hold them all (category Other has three notes for a hand of six), or when nothing fits."""
+    pool = [card for card in cards if fits(card, category)]
+    return bool(pool) and (varies(pool, size) or set(hand) != {card.id for card in pool})
+
+
 def keeps_fit(kept, hand):
     """Is this a legal choice? One to three distinct notes, every one of them in the hand that was dealt."""
     kept = set(kept)

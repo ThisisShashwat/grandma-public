@@ -28,7 +28,9 @@ def cookies(amount):
 
 def again_for(project, cfg):
     """What the Deal step's "deal again" button needs: the next re-deal's number, how many free ones are left, its price, and
-    where the button goes."""
+    where the button goes. None (no button) when another deal could not change the hand."""
+    if not services.can_redeal(project, cfg.DEAL_SIZE):
+        return None
     return rules.offer(project.redeals_used, cfg.REDEALS_FREE, cfg.REDEAL_COST)._asdict() | {"url": reverse("grandma_again")}
 
 
@@ -38,12 +40,12 @@ def deal_step(user, cfg):
     fitting = services.hand_demands(project) if project else []
     hand = notes.notes(fitting) if fitting else []
     has_category_demands = Demand.objects.filter(categories=project.category, active=True).exists() if project else False
+    again = again_for(project, cfg) if project else None
     if not hand:
         lines = script.NO_FITTING_NOTES if has_category_demands else script.EMPTY_JAR
     else:
-        lines = script.DEAL.lines
-    return replace(script.DEAL, lines=lines, notes=lambda: hand,
-                   again=(lambda: again_for(project, cfg)) if (hand or has_category_demands) and project else None,
+        lines = script.DEAL.lines if again else script.DEAL_NO_AGAIN
+    return replace(script.DEAL, lines=lines, notes=lambda: hand, again=(lambda: again) if again else None,
                    edit_url=reverse("project_edit"))
 
 

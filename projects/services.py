@@ -21,6 +21,7 @@ from projects.records import ProjectRow
 NOT_ON_THE_TABLE = "That isn't on my table, dear. Pick one, two or three of the notes I dealt you."
 NOT_DEALING = "There's nothing to keep, dear. You don't have a hand of mine on the go."
 ALREADY_STARTED = "You've already started, dear. I'm not letting you swap now."
+NOTHING_NEW = "That is everything I have for you, dear."
 
 
 def working_project(user):
@@ -94,6 +95,12 @@ def hand_demands(project):
     return [by_id[i] for i in project.hand if i in by_id]
 
 
+def can_redeal(project, size):
+    """Could another deal change the notes this project shows? Not for a kind with so few demands that every hand is the same
+    (Other): that re-deal is never offered and never charged (program.draw.can_change)."""
+    return draw.can_change(cards(), [d.id for d in hand_demands(project)], size, project.category_id)
+
+
 def kept_demands(project):
     return [row.demand for row in project.kept.select_related("demand")]
 
@@ -142,11 +149,14 @@ def redeal(user, *, expect, free, cost, size, rng):
     """Replace the hand. `expect` is the number of the re-deal the person was shown (1 for the first): a request that does not
     match the counter is a double click or a replay and changes nothing. The first `free` re-deals cost nothing, then each costs
     `cost` cookies through the ledger, under a key made from the project and the re-deal number. Raises
-    ledger.rules.InsufficientCookies (and changes nothing) when they cannot pay. Returns the project, None if there is no hand."""
+    ledger.rules.InsufficientCookies (and changes nothing) when they cannot pay, and ValidationError (NOTHING_NEW, nothing charged,
+    nothing written) when no deal could differ from the hand they hold. Returns the project, None if there is no hand."""
     lock_person(user)
     project = locked_project(user, *rules.WORKING_STATUSES)
     if project is None:
         return None
+    if not can_redeal(project, size):
+        raise ValidationError(NOTHING_NEW)
     next_one = rules.offer(project.redeals_used, free, cost)
     if expect != next_one.number:
         return project

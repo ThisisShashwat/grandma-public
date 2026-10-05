@@ -48,6 +48,8 @@ def again(request):
     project = services.working_project(request.user)
     if project is None:
         return redirect("grandma")
+    if not services.can_redeal(project, cfg.DEAL_SIZE):
+        return nothing_new(request)                            # no deal could differ (Other): never asked for, never charged
     offer = rules.offer(project.redeals_used, cfg.REDEALS_FREE, cfg.REDEAL_COST)
     if request.method == "POST":
         if request.POST.get("expect") != str(offer.number):
@@ -58,10 +60,18 @@ def again(request):
             services.redeal(request.user, expect=offer.number, free=cfg.REDEALS_FREE, cost=cfg.REDEAL_COST, size=cfg.DEAL_SIZE, rng=RNG)
         except InsufficientCookies:
             return redirect("grandma_again")                   # that page says so in her voice
+        except ValidationError:
+            return nothing_new(request)                        # the same refusal, if the jar changed since the check above
         return redirect("grandma")
     if not offer.cost:
         return redirect("grandma")
     return confirmation(request, offer)
+
+
+def nothing_new(request):
+    """Grandma has no other hand for this kind of project: her say so, a way back, nothing charged or changed."""
+    return flow.page(request, title="Talk to Grandma", kind="end", face=script.NOTHING_NEW.face, then=reverse("grandma"),
+                     lines=[services.NOTHING_NEW], step=script.NOTHING_NEW)
 
 
 def confirmation(request, offer):

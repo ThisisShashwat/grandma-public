@@ -36,6 +36,8 @@ DEAL = Deal(key="keep", face="note", notes=list, lines=(
     "Right, {display_name}. Hold still while I rummage in the jar.",
     "There. The little face on each note is how I'd feel about you taking it. The happier I look, the more I think of you.",
     "Keep one, two or three. Don't like them? Ask me to deal again."))
+DEAL_NO_AGAIN = (*DEAL.lines[:-1], "Keep one, two or three. That's all I have for that kind of project, dear.")     # no button to deal again (conversation.py)
+NOTHING_NEW = End(face="sideeye", button="Back to my notes")       # the page of a refused re-deal: she says services.NOTHING_NEW
 EMPTY_JAR = ("My jar is empty for that kind of project, dear, which is not your fault.", "Tell the staff in the Slack. Somebody forgot to fill it.")
 
 
