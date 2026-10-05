@@ -19,7 +19,7 @@ CONFIG = {
                         "submitting and orders. Everybody else is sent to a page saying the kitchen is open to a few testers. Give access in the admin under Profiles. "
                         "Switch it off at the public launch."),
 
-    "LINK_SIGNUP": ("/login/", "Where the Sign up buttons go. The default /login/ is the Hack Club sign-in, whose first sign-in makes the account. "
+    "LINK_SIGNUP": ("/login/","Where the Sign up buttons go. The default /login/ is the Hack Club sign-in, whose first sign-in makes the account. "
                               "A web link, a mailto: link or a path on this site starting with / is accepted. Empty means a placeholder link that goes nowhere.", "link"),
     "LINK_SLACK": ("", "The Slack join link.", "link"),
     "LINK_SLACK_GRANDMA": ("", "The #grandma channel in Slack, where people chat. Empty means the guides show the name as plain text, not a link.", "link"),
@@ -55,6 +55,10 @@ CONFIG = {
     "PUBLIC_PAGES_INDEXABLE": (False, "Let search engines list the public profiles, project pages, Blue Ribbon wall and cookie board. "
                                       "Off (the default) puts noindex, nofollow on them: the pages stay open to anyone with the link, but they are not found by searching, "
                                       "because the people on them are 13 to 18."),
+
+    "HOME_PANTRY_PEEK": (False, "Show a few Pantry items on the home page, in a section called A peek in the Pantry, right after How Grandma pays. "
+                                "They are picked from the real shop, in shop order, never a ribbon only item. Off (the default) shows nothing and the home page is as it was."),
+    "HOME_PEEK_COUNT": (4, "How many Pantry items the home page peek shows, 1 to 12. The first ones in shop order; by hand items and sold out items are skipped.", "peek_count"),
 
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
                                    "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
@@ -92,6 +96,7 @@ FIELDSETS = (
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
+    ("Home page", ("HOME_PANTRY_PEEK", "HOME_PEEK_COUNT")),
     ("Notifications", ("SLACK_NOTIFICATIONS",)),
     ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED")),
     ("Onboarding questions", ("REGIONS",)),
@@ -106,6 +111,7 @@ FIELDS = {
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
     "expiry_days": ("django.forms.IntegerField", {"min_value": 1, "max_value": 90}),
+    "peek_count": ("django.forms.IntegerField", {"min_value": 1, "max_value": 12}),
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "regions": ("pages.fields.RegionsField",),
