@@ -124,10 +124,12 @@ TEMPLATES = [
     },
 ]
 
+# Development: the SQLite file. Production: DATABASE_URL, the address the host gives (needs its driver, for example psycopg, in requirements).
+DATABASES = {"default": env.db("DATABASE_URL") if env("DATABASE_URL", default="") else {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 # IMMEDIATE: a write transaction takes SQLite's write lock when it starts, so "read the balance, then add an entry" in
 # ledger/services.py cannot interleave with another writer. (On Postgres select_for_update does this job.)
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3",
-                         "OPTIONS": {"transaction_mode": "IMMEDIATE"}}}
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    DATABASES["default"].setdefault("OPTIONS", {})["transaction_mode"] = "IMMEDIATE"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
