@@ -11,3 +11,11 @@ staticfiles/
 media/
 private_media/
 .idea/
+.env.*
+!.env.example
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.log
+*.bak
+*.dump
