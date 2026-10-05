@@ -24,9 +24,7 @@ CONFIG = {
     "LINK_SLACK_GRANDMA": ("", "The #grandma channel in Slack, where people chat. Empty means the guides show the name as plain text, not a link.", "link"),
     "LINK_SLACK_HELP": ("", "The #grandma-help channel in Slack, where people ask for help. Empty means the guides show the name as plain text, not a link. "
                             "The dashboard's Slack help button goes here.", "link"),
-    "LINK_REPO": ("", "The code repository.", "link"),
     "LINK_BOARD": ("", "Where complaints (new demands) get sent.", "link"),
-    "LINK_RULES": ("", "The fine print and Hack Club policies.", "link"),
     "LINK_CONTACT": ("", "How to reach the organizer, for example mailto:you@example.com.", "link"),
 
     "DEAL_SIZE": (6, "How many notes Grandma deals in total when someone talks to her. They keep 1 to 3 of them, "
@@ -81,7 +79,7 @@ CONFIG = {
 # the admin's groups, in this order (a tuple, because constance sorts a plain dict by title)
 FIELDSETS = (
     ("Launch", ("LAUNCH", "FREE_ASKS", "BETA_MODE")),
-    ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_REPO", "LINK_BOARD", "LINK_RULES", "LINK_CONTACT")),
+    ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_BOARD", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
