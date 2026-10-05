@@ -32,6 +32,9 @@ if _site.scheme not in ("http", "https") or not _site.hostname or "@" in _site.n
     raise ImproperlyConfigured("SITE_URL must be the bare address of the site, like https://grandma.example.com: http or https, a host, no path, query or login.")
 if not DEBUG and _site.scheme != "https":
     raise ImproperlyConfigured("SITE_URL must start with https:// while DEBUG is off: Hack Club and Hackatime send people (and their codes) back to it.")
+PREVIEW_PASSWORD = env("PREVIEW_PASSWORD", default="")           # a private preview: HTTP Basic password for the whole site (pages/preview_gate.py). A secret: environment only. Empty is off
+if PREVIEW_PASSWORD and len(PREVIEW_PASSWORD) < 12:
+    raise ImproperlyConfigured("PREVIEW_PASSWORD must be at least 12 characters long (or empty, which switches the preview gate off).")
 SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's Slack bot (accounts/slack.py). A secret: environment only, never the admin or the database
 HCA_CLIENT_ID = env("HCA_CLIENT_ID", default="")                 # Sign in with Hack Club (accounts/hca.py). The id and the secret: environment only, never the admin or the database
 HCA_CLIENT_SECRET = env("HCA_CLIENT_SECRET", default="")
@@ -79,6 +82,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "pages.preview_gate.preview_gate",                 # an optional password in front of everything below, static files included (PREVIEW_PASSWORD, empty is off)
     "whitenoise.middleware.WhiteNoiseMiddleware",      # serves the collected static files with DEBUG off (a real server may serve STATIC_ROOT itself instead)
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "audit.middleware.RequestId",
