@@ -56,6 +56,9 @@ class Demand(models.Model):
     rule = models.TextField(max_length=400, help_text="The proper plain-language rule, without her voice: what a reviewer checks.")
     tier = models.PositiveSmallIntegerField(choices=[(t, f"{t}: {LEVELS[t]}, \"{TIERS[t]}\"") for t in TIERS], default=1)
     categories = models.ManyToManyField(Category, blank=True, related_name="demands", help_text="The categories it can be dealt for.")
+    excluded_subcategories = models.ManyToManyField(Subcategory, blank=True, related_name="excluded_demands",
+                                                    help_text="Subcategories this demand can NOT be dealt for. It fits every subcategory of its categories except these. "
+                                                              "For example Single File cannot be dealt to a Mobile app.")
     conflicts = models.ManyToManyField("self", blank=True, help_text="Demands that are never dealt in the same hand as this one. "
                                                                     "Saving one side adds the other.")
     active = models.BooleanField(default=True, help_text="Off takes it out of the jar. Projects already holding it keep it.")
