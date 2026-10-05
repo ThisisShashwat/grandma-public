@@ -14,7 +14,6 @@ CONFIG = {
     "LAUNCH": ("2026-10-05T12:00:00Z",   # TODO: real launch moment
                "When the program opens, as a UTC time like 2026-10-05T12:00:00Z (or with an offset like +05:30). "
                "The countdown on the home page counts down to it.", "launch"),
-    "FREE_ASKS": (3, "How many free asks the fridge on the home page offers.", "free_asks"),
     "BETA_MODE": (True, "While on, only people with beta access (and staff) can use the participant features: onboarding, the dashboard, Talk to Grandma, projects, "
                         "submitting and orders. Everybody else is sent to a page saying the kitchen is open to a few testers. Give access in the admin under Profiles. "
                         "Switch it off at the public launch."),
@@ -30,7 +29,8 @@ CONFIG = {
 
     "DEAL_SIZE": (6, "How many notes Grandma deals in total when someone talks to her. They keep 1 to 3 of them, "
                      "that part is fixed. A category with fewer notes than this simply deals what it has.", "deal_size"),
-    "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing.", "redeals_free"),
+    "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing. "
+                        "It also sets how many free asks the fridge on the home page offers.", "redeals_free"),
     "REDEAL_COST": (10, "Cookies a re-deal costs once the free ones are used up. Whole cookies, 0 makes them all free.", "cookies"),
 
     "SUBMISSION_CHECKS": (submission.default_checks_json(),
@@ -79,7 +79,7 @@ CONFIG = {
 
 # the admin's groups, in this order (a tuple, because constance sorts a plain dict by title)
 FIELDSETS = (
-    ("Launch", ("LAUNCH", "FREE_ASKS", "BETA_MODE")),
+    ("Launch", ("LAUNCH", "BETA_MODE")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_BOARD", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
@@ -94,7 +94,6 @@ FIELDSETS = (
 FIELDS = {
     "launch": ("pages.fields.LaunchField",),
     "link": ("pages.fields.LinkField",),
-    "free_asks": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "deal_size": ("django.forms.IntegerField", {"min_value": 3, "max_value": 28}),
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),

@@ -37,7 +37,7 @@ def site_data(cfg):
     """Everything the browser needs, as JSON. static/js/core/data.js reads it. Constants live in Python only."""
     return {
         "launch": cfg.LAUNCH,
-        "freeAsks": cfg.FREE_ASKS,
+        "freeAsks": cfg.REDEALS_FREE,
         "tiers": TIERS,
         "levels": LEVELS,
         "pool": POOL,
@@ -53,5 +53,5 @@ def context(request):
     return {
         "site": config.SITE, "footer": config.FOOTER, "link": partial(link, urls), "link_attrs": partial(link_attrs, urls),
         "site_data": site_data(cfg), "pool": POOL, "tiers": TIERS, "levels": LEVELS, "faces": FACES,
-        "free_asks": cfg.FREE_ASKS,
+        "free_asks": cfg.REDEALS_FREE,
     }
