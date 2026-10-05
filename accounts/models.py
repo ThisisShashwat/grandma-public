@@ -37,6 +37,9 @@ class Profile(models.Model):
                                help_text="The stable id Hack Club Auth gives this person (its sub claim). The first Hack Club sign-in makes the account and sets it "
                                          "(accounts/hca.py). Nothing else about them is kept from Hack Club.")
     hca_checked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="The last time they signed in with Hack Club.")
+    email = models.EmailField(max_length=254, blank=True, editable=False,
+                              help_text="The address on their Hack Club account, kept because Ari (HQ's review tool) requires it on every ship. PRIVATE: staff and Ari only, "
+                                        "never on a public page, in a log or in the audit log. The Hack Club sign-in sets it and refreshes it (accounts/hca.py); empty if Hack Club did not send one.")
     beta_access = models.BooleanField(default=False, help_text="May use the participant pages while the BETA_MODE setting is on. Staff never need it. "
                                                                "New profiles start without it; the migration gave it to everyone who was here before.")
 
