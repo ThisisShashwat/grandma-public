@@ -1,6 +1,7 @@
 """The note a person fills in to hand a project to Grandma. The form only validates (every rule is enforced here, on the server, whatever
 the page showed); the page draws the fields by hand (templates/pages/submit.html). The checklist and the blocked playable hosts
-come from the admin settings (program/runtime.py), so the form is built per request with them."""
+come from the admin settings (program/runtime.py), so the form is built per request with them. The order of work is cheap to costly: the
+fields, then the business check the view hands in as `precheck` (the hours, services.check_hours), and only then the picture is decoded."""
 import re
 
 from django import forms
@@ -23,9 +24,11 @@ class SubmitForm(forms.Form):
     ai_declaration_text = forms.CharField(required=False, max_length=1000)
     declarations = forms.MultipleChoiceField(required=False, error_messages={"invalid_choice": NOT_ALL_TICKED})
 
-    def __init__(self, *args, cfg, **kwargs):
-        """The boxes shown, all of which must be ticked, are the checks from the settings."""
+    def __init__(self, *args, cfg, precheck=None, **kwargs):
+        """The boxes shown, all of which must be ticked, are the checks from the settings. `precheck()`: the cheap business checks of the
+        hand-in (no arguments, raising ValidationError), run before the screenshot is decoded."""
         super().__init__(*args, **kwargs)
+        self.precheck = precheck
         self.checks = submission.checks(cfg.SUBMISSION_CHECKS)
         self.blocked_hosts = submission.hosts(cfg.BLOCKED_HOSTS)
         self.max_bytes = cfg.SCREENSHOT_MAX_MB * 1024 * 1024
@@ -60,9 +63,11 @@ class SubmitForm(forms.Form):
         return upload
 
     def clean(self):
-        """The picture is only decoded and re-encoded (the costly part, images.py) once everything else is right, so a stream of
-        half-filled forms costs next to nothing."""
+        """The picture is only decoded and re-encoded (the costly part, images.py) once everything else is right (the fields and the
+        view's precheck), so a stream of half-filled forms costs next to nothing."""
         cleaned = super().clean()
+        if not self.errors:
+            run_precheck(self, self.precheck)
         if not self.errors and "screenshot" in cleaned:
             try:
                 cleaned["screenshot"] = images.clean_screenshot(cleaned["screenshot"], self.max_bytes)
@@ -75,6 +80,17 @@ class SubmitForm(forms.Form):
         if problem:
             raise ValidationError(problem)
         return value
+
+
+def run_precheck(form, check, *arguments):
+    """A cheap business check the view handed the form (`check`, or None for none): its refusal becomes the form's own problem, so the
+    costly work after it (decoding a picture) never starts."""
+    if check is None:
+        return
+    try:
+        check(*arguments)
+    except ValidationError as error:
+        form.add_error(None, error)
 
 
 def prose(text):

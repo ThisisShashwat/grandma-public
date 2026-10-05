@@ -64,10 +64,12 @@ def line_of(item, quantity, upgrade=False):
     return rules.Line(item.pk, quantity, item.effective_cookies, item.usd_value, upgrade)
 
 
-def locked_items(item_id, ribbon):
-    """The base grant (active, never an upgrade) and its active upgrades, rows locked, by id. (None, {}) when the grant is gone, or is ribbon
-    only and the person holds no Blue Ribbon (`ribbon`): it is gone for them, whatever the browser said."""
-    rows = list(ShopItem.objects.select_for_update().visible(ribbon).filter(Q(pk=item_id) | Q(base_item_id=item_id)).order_by("pk"))
+def locked_items(item_id, ribbon, lock=True):
+    """The base grant (active, never an upgrade) and its active upgrades, rows locked, by id (`lock` off: just read, for precheck, which is not
+    in a transaction). (None, {}) when the grant is gone, or is ribbon only and the person holds no Blue Ribbon (`ribbon`): it is gone for
+    them, whatever the browser said."""
+    rows = ShopItem.objects.visible(ribbon).filter(Q(pk=item_id) | Q(base_item_id=item_id)).order_by("pk")
+    rows = list(rows.select_for_update() if lock else rows)
     base = next((row for row in rows if row.pk == item_id and row.base_item_id is None), None)
     return base, {row.pk: row for row in rows if base and row.base_item_id == base.pk}
 
@@ -96,6 +98,26 @@ def take_stock(offer):
         ShopItem.objects.filter(pk=line.item_id, stock__isnull=False).update(stock=F("stock") - line.quantity)
 
 
+def priced(user, base, counts, quantity):
+    """The offer for a base grant and its chosen upgrades, once the per-person limit, the stock and the balance allow it: ValidationError with a
+    sentence for the person otherwise. Reads only; place_order calls it under locks, precheck without."""
+    refuse(rules.limit_problem(base.stackable, base.max_per_user, held(user, base.pk), quantity) or rules.stock_problem(base.stock, quantity))
+    for upgrade, count in counts:
+        refuse(rules.upgrade_count_problem(count, upgrade.max_per_user, upgrade.name) or rules.stock_problem(upgrade.stock, count))
+    offer = rules.price([line_of(base, quantity)] + [line_of(up, count, upgrade=True) for up, count in counts])
+    refuse(rules.afford_problem(ledger.balance(user), offer.cookies))
+    return offer
+
+
+def precheck(user, item_id, *, quantity=1, upgrades=None):
+    """The cheap checks of place_order (the grant is still on the shelf, the upgrades, the limit, the stock, the balance), made without locks
+    BEFORE the screenshot is decoded, which is the costly part (orders/forms.py). Only a fast refusal, never a promise: place_order checks
+    everything again under locks. ValidationError with a sentence for the person."""
+    base, upgrade_items = locked_items(item_id, holds_ribbon_user(user), lock=False)
+    refuse(None if base else GONE)
+    priced(user, base, chosen_upgrades(base, upgrade_items, upgrades or {}), quantity)
+
+
 @transaction.atomic
 def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, product_url="", user_note="", cart_screenshot=None):
     """Place an order for the grant `item_id` (a base item) and take the cookies, or raise ValidationError with a sentence for the person.
@@ -113,11 +135,7 @@ def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, product_url=
     counts = chosen_upgrades(base, upgrade_items, upgrades or {})
     refuse(NEEDS_PROOF if proves and not (product_url and cart_screenshot) else "")
     refuse(rules.url_problem(product_url) if proves else "")
-    refuse(rules.limit_problem(base.stackable, base.max_per_user, held(user, base.pk), quantity) or rules.stock_problem(base.stock, quantity))
-    for upgrade, count in counts:
-        refuse(rules.upgrade_count_problem(count, upgrade.max_per_user, upgrade.name) or rules.stock_problem(upgrade.stock, count))
-    offer = rules.price([line_of(base, quantity)] + [line_of(up, count, upgrade=True) for up, count in counts])
-    refuse(rules.afford_problem(ledger.balance(user), offer.cookies))
+    offer = priced(user, base, counts, quantity)
     order = Order(user=user, item=base, nonce=nonce, total_cookies=offer.cookies, total_value=offer.value,
                   product_url=product_url.strip() if proves else "", user_note=user_note, cart_screenshot=(cart_screenshot or "") if proves else "")
     order.full_clean(exclude=["cart_screenshot"])

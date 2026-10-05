@@ -2,13 +2,14 @@
 whatever the page showed, and the price is never in it); the page draws the fields by hand (templates/pages/order.html). It is built per
 request for one grant: a plain grant has a quantity (if it stacks), upgrades (if it has them), a link and a cart screenshot; a by-hand
 item only a note. The pictures are decoded and re-encoded last, only once everything else is right (submissions/images.py), with the caps
-from the admin settings."""
+from the admin settings: the fields first, then the business checks the view hands in as `precheck` (the limit, the stock, the balance:
+services.precheck), and only then the decoding."""
 from django import forms
 from django.core.exceptions import ValidationError
 
 from orders import rules
 from submissions import images, links
-from submissions.forms import prose
+from submissions.forms import prose, run_precheck
 
 FILL_IN = "Fill that in, dear."
 NEEDS = {"required": FILL_IN}
@@ -20,10 +21,12 @@ class OrderForm(forms.Form):
     nonce = forms.CharField(max_length=32, error_messages={**NEEDS, "max_length": "That page has gone stale, dear. Open it again."})
     user_note = forms.CharField(required=False, max_length=600)
 
-    def __init__(self, *args, cfg, proves, stackable, upgrades, **kwargs):
-        """`proves`: a plain grant, which shows its link and its cart. `upgrades`: (field name, item id) pairs."""
+    def __init__(self, *args, cfg, proves, stackable, upgrades, precheck=None, **kwargs):
+        """`proves`: a plain grant, which shows its link and its cart. `upgrades`: (field name, item id) pairs. `precheck(quantity, upgrades)`:
+        the cheap business checks (services.precheck for this person and grant), raising ValidationError, run before any picture is decoded."""
         super().__init__(*args, **kwargs)
         self.proves = proves
+        self.precheck = precheck
         self.max_bytes, self.max_side, self.max_pixels = cfg.ORDER_SCREENSHOT_MAX_MB * 1024 * 1024, cfg.ORDER_SCREENSHOT_MAX_SIDE, cfg.ORDER_SCREENSHOT_MAX_MEGAPIXELS * 1_000_000
         self.upgrade_fields = dict(upgrades)
         if stackable:
@@ -50,10 +53,12 @@ class OrderForm(forms.Form):
         return prose(self.cleaned_data["user_note"])
 
     def clean(self):
-        """Upgrades are checked as a whole; the pictures are only decoded (the costly part) once everything else is right."""
+        """Upgrades are checked as a whole, then the business checks; the pictures are only decoded (the costly part) once everything else is right."""
         cleaned = super().clean()
         if any(cleaned.get(name) for name in self.upgrade_fields) and len(cleaned.get("user_note") or "") < MIN_UPGRADE_NOTE and "user_note" not in self.errors:
             self.add_error("user_note", NOTE_WITH_UPGRADES)
+        if not self.errors:
+            run_precheck(self, self.precheck, cleaned.get("quantity") or 1, {item_id: cleaned.get(name) or 0 for name, item_id in self.upgrade_fields.items()})
         if not self.errors:
             self.clean_pictures(cleaned)
         return cleaned

@@ -25,9 +25,11 @@ PROOF_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp"}
 
 
 def form_for(request, item, record, cfg):
-    """The order form for this grant and person: bound to the post, or empty."""
+    """The order form for this grant and person: bound to the post, or empty. It runs services.precheck (the limit, the stock, the balance)
+    before it decodes any picture."""
     arguments = {"cfg": cfg, "proves": not record.manual, "stackable": record.stackable,
-                 "upgrades": [(option.field, int(option.field.removeprefix("up_"))) for option in record.options]}
+                 "upgrades": [(option.field, int(option.field.removeprefix("up_"))) for option in record.options],
+                 "precheck": lambda quantity, upgrades: services.precheck(request.user, item.pk, quantity=quantity, upgrades=upgrades)}
     return forms.OrderForm(request.POST, request.FILES, **arguments) if request.method == "POST" else forms.OrderForm(**arguments)
 
 

@@ -69,6 +69,16 @@ def waiting(user):
             .select_related("project").order_by("reviewed_at", "id").first())
 
 
+def check_hours(project, *, hackatime_required=False, hours_check=None):
+    """The hours refusals of a hand-in, as a ValidationError with a sentence: `hours_check` (hours.require_fresh over this project) and, while
+    hours are required, a check that found some. Reads only: submit runs it on the locked, re-read project, the form on the loaded one
+    before it decodes the screenshot."""
+    if hours_check:
+        hours_check(project)
+    if hackatime_required and not project.tracked_seconds:
+        raise ValidationError(CHECK_YOUR_HOURS)
+
+
 @transaction.atomic
 def submit(user, *, project_id=None, hackatime_required=False, hours_check=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
     """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
@@ -87,10 +97,7 @@ def submit(user, *, project_id=None, hackatime_required=False, hours_check=None,
     ship = ship_for(project)
     if ship.problem:
         raise ValidationError(ship.problem)
-    if hours_check:
-        hours_check(project)
-    if hackatime_required and not project.tracked_seconds:
-        raise ValidationError(CHECK_YOUR_HOURS)
+    check_hours(project, hackatime_required=hackatime_required, hours_check=hours_check)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text,
                             hackatime_projects=list(project.tracked_names), tracked_seconds=project.tracked_seconds, tracked_at=project.tracked_at)

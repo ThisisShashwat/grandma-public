@@ -46,14 +46,14 @@ def submit(request, pk=None):
     ship = services.ship_for(project)
     if ship.problem:
         return not_now(request, ship.problem) if pk is None else turned_back(request, ship.problem)
+    hours_rules = {"hackatime_required": hackatime.required(cfg), "hours_check": partial(hours.require_fresh, cfg)}
     if request.method == "POST":
-        form = SubmitForm(request.POST, request.FILES, cfg=cfg)
+        form = SubmitForm(request.POST, request.FILES, cfg=cfg, precheck=partial(services.check_hours, project, **hours_rules))
     else:
         form = SubmitForm(cfg=cfg, initial=starts_from(project) if pk else None)
     if request.method == "POST" and form.is_valid():
         try:
-            services.submit(request.user, project_id=pk, hackatime_required=hackatime.required(cfg), hours_check=partial(hours.require_fresh, cfg),
-                            **form.cleaned_data)
+            services.submit(request.user, project_id=pk, **hours_rules, **form.cleaned_data)
         except ValidationError as error:
             form.add_error(None, error)
         else:
