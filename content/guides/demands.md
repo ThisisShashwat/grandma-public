@@ -30,5 +30,5 @@ Every demand, with what it means in plain words and what it fits.
 <div data-widget="demands-list"></div>
 
 ::: note
-This list will keep growing, and Grandma will keep building on it. One day anyone may be able to send her a new demand, but that is not decided yet.
+This list will keep growing, and Grandma will keep building on it.
 :::

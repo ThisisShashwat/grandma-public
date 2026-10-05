@@ -20,10 +20,7 @@ A few items are handed over by hand instead, mostly jokes that are completely po
 - **Upgrade grants** make the base grant bigger. They are never sold alone: you pick the base grant and add upgrades in the same step. Each upgrade you add raises the cookie price.
 - Upgrades go onto the same HCB grant and each one is used once.
 - An upgrade is never a better deal than the base grant, so you cannot buy the cheapest item and upgrade it into a bargain.
-
-::: note
-Not decided yet: how many upgrades one grant can take in total.
-:::
+- Each upgrade says how many of it you can add.
 
 ## Stackable or not
 
@@ -52,4 +49,4 @@ Screenshot the whole cart, not just the price. If the total is not visible, the 
 
 You need an account and you need to have met Grandma (the welcome chat). Then every card in the [Pantry](/shop/) has a button, and the cookies come out of your jar when you press it. Grandma checks what you sent, and when she is happy she hands over the grant. If she is not, your cookies come back.
 
-Is a grant not what you wanted? Ask in <span data-slack="help"></span>.
+Once a grant has been issued, cookies are usually not given back. Sometimes it makes sense, so ask in <span data-slack="help"></span> and a person will look at it case by case.
