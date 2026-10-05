@@ -3,12 +3,12 @@
 The formula comes from the "Modifiers ysws" canvas PDF and is FROZEN. Do not change a constant or the shape of it
 without the owner saying so (docs/payout.md has the reference table that tests/test_payout.py checks).
 
-    x          = min(xmax, demand tiers + cool + huge (at 20 hours and up) + Blue Ribbon + ribbon holder)
+    x          = min(xmax, demand tiers + cool + huge (at 20 hours and up) + Blue Ribbon)
     multiplier = 1 + (cap - 1) * (1 - e^(-k x)) / (1 - e^(-k xmax))
     cookies    = base * multiplier * cookies_per_usd * hours
 
-`ribbon_holder` is a permanent small bonus for someone who already holds a Blue Ribbon from an earlier project. It is one more additive term
-inside x (so the formula's shape, the min with xmax, is unchanged), it is 0.0 until the owner decides, and with 0.0 nothing changes.
+The Blue Ribbon term is permanent (the owner, 2026-10-05): it applies when the project has the ribbon OR its maker already holds a ribbon from an
+earlier project (`ribbon_holder`). It is the same 0.1 term, counted once and never stacked: both at once still add 0.1.
 
 Dollars are internal only. Never show a dollar figure or a per-hour rate anywhere on the site.
 static/js/modules/pay/math.js is the browser twin of this file and reads the same CONFIG.
@@ -24,8 +24,7 @@ CONFIG = {
     "quality": 0.2,            # "Grandma loved it" (cool, high quality project)
     "huge": 0.1,               # huge project ...
     "huge_hours": 20,          # ... at this many hours and above
-    "ribbon": 0.1,             # Blue Ribbon
-    "ribbon_holder": 0.0,      # permanent bonus for holding a Blue Ribbon from an EARLIER project: undecided, 0.0 changes nothing, the owner sets it
+    "ribbon": 0.1,             # Blue Ribbon, also for every later project of someone who holds one (once, never stacked)
     "cookies_per_usd": 10,
 
     # Grandma's face: look only, never changes a payout. Score = demands and hours, each as a share of its maximum.
@@ -42,11 +41,12 @@ def multiplier(x):
 
 
 def x_for(tiers=(), hours=0, quality=False, ribbon=False, ribbon_holder=False):
-    """tiers: up to three demand tiers (0 means an empty slot). ribbon_holder: the person held a Blue Ribbon before this project."""
+    """tiers: up to three demand tiers (0 means an empty slot). ribbon_holder: the person held a Blue Ribbon before this project, which
+    earns the same ribbon term as the ribbon itself: the term is added once, however many of the two apply."""
     c = CONFIG
     demands = sum(c["tier"].get(t, 0) for t in tiers)
     return min(c["xmax"], demands + (c["quality"] if quality else 0) + (c["huge"] if hours >= c["huge_hours"] else 0)
-               + (c["ribbon"] if ribbon else 0) + (c["ribbon_holder"] if ribbon_holder else 0))
+               + (c["ribbon"] if ribbon or ribbon_holder else 0))
 
 
 def usd_per_hour(x):
@@ -78,7 +78,7 @@ def face(tiers=(), hours=0, quality=False, ribbon=False, hours_max=None, ribbon_
     if not any(tiers):
         return 0
     hours_max = hours_max or c["hours_max"]
-    score = (c["demand_weight"] * x_for(tiers, hours, quality, ribbon) / c["xmax"]
+    score = (c["demand_weight"] * x_for(tiers, hours, quality, ribbon, ribbon_holder) / c["xmax"]
              + c["hours_weight"] * min(1, max(0, (hours - 1) / (hours_max - 1))))
     f = 1
     for i, t in enumerate(c["face_at"]):

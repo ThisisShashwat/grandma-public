@@ -64,11 +64,6 @@
         <td><code>ribbon</code></td>
         <td>{{ config.ribbon }}</td>
       </tr>
-      <tr>
-        <td>Held Blue Ribbon before</td>
-        <td><code>ribbon_holder</code></td>
-        <td>{{ config.ribbon_holder }}</td>
-      </tr>
     </tbody>
   </table>
 </div>
@@ -79,10 +74,10 @@
     <li>
       <strong>Step 1: Find x</strong>
       <p>x equals the sum of the demand tiers you kept plus the bonuses that apply, but never more than the largest x (xmax).</p>
-      <p><code>x = min(xmax, sum of kept demand tiers + quality + huge + ribbon + ribbon_holder)</code></p>
+      <p><code>x = min(xmax, sum of kept demand tiers + quality + huge + ribbon)</code></p>
       <p>Filled in with Grandma's numbers:</p>
       <p><code>x = min({{ config.xmax }}, kept demands + bonuses)</code></p>
-      <p>Where mild is {{ config.tier[1] }}, medium is {{ config.tier[2] }}, and spicy is {{ config.tier[3] }}. Bonuses are: Grandma loved it ({{ config.quality }}), huge project at {{ config.huge_hours }} hours or more ({{ config.huge }}), Blue Ribbon ({{ config.ribbon }}), and held a Blue Ribbon before ({{ config.ribbon_holder }}).</p>
+      <p>Where mild is {{ config.tier[1] }}, medium is {{ config.tier[2] }}, and spicy is {{ config.tier[3] }}. Bonuses are: Grandma loved it ({{ config.quality }}), huge project at {{ config.huge_hours }} hours or more ({{ config.huge }}), Blue Ribbon ({{ config.ribbon }}). The Blue Ribbon bonus also counts on every project after your first ribbon, once, never twice.</p>
     </li>
     <li>
       <strong>Step 2: Calculate the multiplier</strong>
