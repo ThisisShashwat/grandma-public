@@ -1,0 +1,14 @@
+{% import "macros/public.html" as pub %}
+{# The home page's peek at the Blue Ribbon wall (off by default, admin setting HOME_RIBBON_PEEK). `ribbon_peek` is a tuple of showcase.public.Card, the very
+   records /ribbons/ shows (public fields only, addresses made from the public ids). The cards are the wall's own (macros/public.html, static/css/sections/public.css,
+   linked by home.html while the peek shows). #}
+<section class="scene" id="ribbon-peek">
+  <div class="wrap">
+    <h2>Pinned on Grandma's wall</h2>
+    <p class="sub">The newest projects that earned a Blue Ribbon. I am very hard to impress.</p>
+    <ul class="pub-cards pub-cards--wall">
+      {% for c in ribbon_peek %}{{ pub.card(c, maker=true) }}{% endfor %}
+    </ul>
+    <p class="pub-pager"><a class="btn btn--plain" href="{{ url('ribbons') }}">See the whole wall</a></p>
+  </div>
+</section>

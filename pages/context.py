@@ -55,4 +55,5 @@ def context(request):
         "site_data": site_data(cfg), "pool": POOL, "tiers": TIERS, "levels": LEVELS, "faces": FACES,
         "free_asks": cfg.REDEALS_FREE,
         "home_peek_count": cfg.HOME_PEEK_COUNT if cfg.HOME_PANTRY_PEEK else 0,     # how many Pantry items the home page shows, 0 = the switch is off
+        "home_ribbon_count": cfg.HOME_PEEK_COUNT if cfg.HOME_RIBBON_PEEK else 0,   # the same for the Blue Ribbon wall peek
     }

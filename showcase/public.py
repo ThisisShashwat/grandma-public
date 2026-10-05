@@ -258,15 +258,27 @@ def project_page(public_id, cfg):
         ships=tuple(ship(row) for row in reversed(rows)))
 
 
-def wall_page(number, cfg):
-    """Every project that earned a Blue Ribbon, newest ribbon first."""
-    rows = ribboned(ships(cfg.SHOW_REJECTED_PUBLICLY)).values(
+def wall_rows(cfg):
+    """The ribbon ships of the wall, newest collected ribbon first: one query shared by the wall and the home page's peek, so both follow the same rules."""
+    return ribboned(ships(cfg.SHOW_REJECTED_PUBLICLY)).values(
         "project_id", "status", "ribbon", "claimed_at", "screenshot", "project__public_id", "project__name", "project__category__name", "project__subcategory__name",
         "project__user__profile__public_id", "project__user__profile__display_name").order_by("-claimed_at", "-id")
-    page = Paginator(rows, WALL_PAGE).get_page(number)
-    cards = tuple(card({"public_id": r["project__public_id"], "name": r["project__name"], "category__name": r["project__category__name"], "subcategory__name": r["project__subcategory__name"]},
-                       [r], r["project__user__profile__display_name"], r["project__user__profile__public_id"]) for r in page)
-    return Wall(cards=cards, paged=paged(page))
+
+
+def wall_cards(rows):
+    return tuple(card({"public_id": r["project__public_id"], "name": r["project__name"], "category__name": r["project__category__name"], "subcategory__name": r["project__subcategory__name"]},
+                      [r], r["project__user__profile__display_name"], r["project__user__profile__public_id"]) for r in rows)
+
+
+def wall_page(number, cfg):
+    """Every project that earned a Blue Ribbon, newest ribbon first."""
+    page = Paginator(wall_rows(cfg), WALL_PAGE).get_page(number)
+    return Wall(cards=wall_cards(page), paged=paged(page))
+
+
+def wall_peek(cfg, count):
+    """The newest `count` cards of the wall, for the home page's peek (admin switch HOME_RIBBON_PEEK): the same rows, the same cards, nothing else."""
+    return wall_cards(wall_rows(cfg)[:count])
 
 
 def board(cfg):
