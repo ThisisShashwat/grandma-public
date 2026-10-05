@@ -13,3 +13,5 @@ Authlib>=1.8
 requests>=2.34
 cryptography>=45
 better-profanity==0.7.0
+whitenoise>=6.9
+gunicorn>=23; sys_platform != "win32"

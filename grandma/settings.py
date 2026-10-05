@@ -79,6 +79,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",      # serves the collected static files with DEBUG off (a real server may serve STATIC_ROOT itself instead)
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "audit.middleware.RequestId",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -152,6 +153,11 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"          # collectstatic target for a real server (gitignored)
+# Compressed, not the manifest storage: some CSS names art files that do not exist yet (favicon.png, cursor-spoon.png, fridge.png) and the manifest storage fails collectstatic on them.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 # Uploads (the screenshots people hand in, submissions/images.py). Outside static, gitignored. Django serves them only with
 # DEBUG on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
