@@ -58,7 +58,10 @@ CONFIG = {
 
     "HOME_PANTRY_PEEK": (False, "Show a few Pantry items on the home page, in a section called A peek in the Pantry, right after How Grandma pays. "
                                 "They are picked from the real shop, in shop order, never a ribbon only item. Off (the default) shows nothing and the home page is as it was."),
-    "HOME_PEEK_COUNT": (4, "How many Pantry items the home page peek shows, 1 to 12. The first ones in shop order; by hand items and sold out items are skipped.", "peek_count"),
+    "HOME_RIBBON_PEEK": (False, "Show the newest projects of the Blue Ribbon wall on the home page, in a section called Pinned on Grandma's wall, right after the Pantry peek. "
+                                "It shows exactly what the wall shows (only ribbons their makers have collected). Off (the default) shows nothing and the home page is as it was."),
+    "HOME_PEEK_COUNT": (4, "How many items each home page peek shows, 1 to 12 (the Pantry peek and the Blue Ribbon wall peek). The Pantry peek takes the first ones in shop order "
+                           "and skips by hand items and sold out items; the wall peek takes the newest.", "peek_count"),
 
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
                                    "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
@@ -96,7 +99,7 @@ FIELDSETS = (
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
-    ("Home page", ("HOME_PANTRY_PEEK", "HOME_PEEK_COUNT")),
+    ("Home page", ("HOME_PANTRY_PEEK", "HOME_RIBBON_PEEK", "HOME_PEEK_COUNT")),
     ("Notifications", ("SLACK_NOTIFICATIONS",)),
     ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED")),
     ("Onboarding questions", ("REGIONS",)),
