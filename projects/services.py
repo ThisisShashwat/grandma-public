@@ -37,6 +37,7 @@ def other_projects(user, statuses=None, limit=30):
     return [
         ProjectRow(
             id=p.id,
+            public_id=p.public_id,
             name=p.name,
             status=p.status,
             status_label=rules.LABELS.get(p.status, p.status),

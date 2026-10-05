@@ -116,10 +116,10 @@ NOT_PUBLIC = (rules.DEALING, rules.BUILDING, rules.ABANDONED)
 
 def share_url(request, project):
     """The address of the project's public page, absolute, for the Share box; "" while the project has no public page. The bare route is
-    used because the server redirects /p/<id>/ to the canonical slug itself."""
+    used because the server redirects /p/<public id>/ to the canonical slug itself."""
     if project.status in NOT_PUBLIC:
         return ""
-    return settings.SITE_URL.rstrip("/") + reverse("public_project_bare", kwargs={"pk": project.pk})
+    return settings.SITE_URL.rstrip("/") + reverse("public_project_bare", kwargs={"public_id": project.public_id})
 
 
 @onboarded

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
+from accounts.public_id import new_public_id
 from accounts.validators import validate_display_name, validate_slack_id, validate_timezone
 from program.content.expertise import EXPERTISE
 from program.content.regions import REGIONS
@@ -14,6 +15,8 @@ class Profile(models.Model):
     anything asks for it (accounts.services.profile_of). Every field is blank until onboarding fills it in."""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+    public_id = models.CharField(max_length=10, unique=True, editable=False, default=new_public_id,
+                                 help_text="The random id in the person's public address (/u/<id>-<name>/), so the database number never shows. Made once, never changed.")
     display_name = models.CharField(max_length=30, blank=True, validators=[validate_display_name],
                                     help_text="The name shown to other people. Chosen by the person, never their real name by default.")
     slack_id = models.CharField("Slack ID", max_length=12, blank=True, validators=[validate_slack_id],

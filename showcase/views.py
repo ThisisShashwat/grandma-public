@@ -26,18 +26,18 @@ def canonical(request, page):
 
 
 @require_safe
-def profile(request, pk, slug=None):
+def profile(request, public_id, slug=None):
     cfg = live()
-    page = public.profile_page(pk, request.GET.get("page"), cfg)
+    page = public.profile_page(public_id, request.GET.get("page"), cfg)
     if page is None:
         raise Http404
     return canonical(request, page) or show(request, "pages/public_profile.html", cfg, page=page)
 
 
 @require_safe
-def project(request, pk, slug=None):
+def project(request, public_id, slug=None):
     cfg = live()
-    page = public.project_page(pk, cfg)
+    page = public.project_page(public_id, cfg)
     if page is None:
         raise Http404
     return canonical(request, page) or show(request, "pages/public_project.html", cfg, page=page, share_url=settings.SITE_URL.rstrip("/") + page.path)

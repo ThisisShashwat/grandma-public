@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
+from accounts.public_id import new_public_id
 from program.content.demands import LEVELS, TIERS
 from program.draw import MAX_KEEP
 from projects import rules
@@ -72,6 +73,8 @@ class Project(models.Model):
     comes after talking to her; it is `dealing` until they confirm the notes they keep, then `building`."""
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="projects")
+    public_id = models.CharField(max_length=10, unique=True, editable=False, default=new_public_id,
+                                 help_text="The random id in the project's public address (/p/<id>-<name>/), so the database number never shows. Made once, never changed.")
     name = models.CharField(max_length=40, validators=[validate_project_name])
     idea = models.CharField(max_length=200, validators=[validate_idea], help_text="What they said they would make.")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="projects")

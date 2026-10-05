@@ -83,7 +83,7 @@
         {% if op.status not in ("abandoned", "dealing", "building") %}
         <div class="other-project-actions">
           {% if op.status == "changes_requested" %}<a class="btn btn--plain" href="{{ url('submit_fix', args=[op.id]) }}">Fix it</a>{% endif %}
-          <a class="btn btn--plain" href="{{ url('public_project_bare', args=[op.id]) }}">Public page</a>
+          <a class="btn btn--plain" href="{{ url('public_project_bare', args=[op.public_id]) }}">Public page</a>
         </div>
         {% endif %}
       </li>
