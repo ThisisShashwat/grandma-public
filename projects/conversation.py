@@ -15,7 +15,6 @@ from django.utils import timezone
 from accounts.services import profile_of
 from accounts.validators import validate_polite_name
 from projects import expiry, notes, rules, script, services
-from projects.models import Demand
 from projects.validators import validate_idea, validate_project_name
 from talk.dialogue import Deal, End, State
 from talk.store import SessionStore
@@ -39,12 +38,14 @@ def deal_step(user, cfg):
     project = services.dealing_project(user)
     fitting = services.hand_demands(project) if project else []
     hand = notes.notes(fitting) if fitting else []
-    has_category_demands = Demand.objects.filter(categories=project.category, active=True).exists() if project else False
+    has_eligible_demands = services.eligible_demands(project.category_id, project.subcategory_id).filter(active=True).exists() if project else False
     again = again_for(project, cfg) if project else None
     if not hand:
-        lines = script.NO_FITTING_NOTES if has_category_demands else script.EMPTY_JAR
+        lines = script.NO_FITTING_NOTES if has_eligible_demands else script.EMPTY_JAR
     else:
         lines = script.DEAL.lines if again else script.DEAL_NO_AGAIN
+        if len(project.hand) > len(hand):           # some of the hand does not suit the kind now: she says so (once, here)
+            lines = script.put_back(lines)
     return replace(script.DEAL, lines=lines, notes=lambda: hand, again=(lambda: again) if again else None,
                    edit_url=reverse("project_edit"))
 
@@ -65,14 +66,18 @@ def dialogue(cfg, user):
 
 
 def edit_dialogue(project):
-    """The 5-step conversation to edit a working project's idea, name, category, and subcategory."""
+    """The 5-step conversation to edit a working project's idea, name, category, and subcategory. Its last page tells a person who goes on
+    building that some of the notes dealt do not suit the kind they have now (they are only not shown, and come back if the kind changes
+    back). Someone back at the notes (dealing) is told on that page instead, so nobody hears it twice."""
+    hidden = len(project.hand) > len(services.hand_demands(project))
+    saved = script.put_back(script.EDIT_SAVED.lines) if hidden and project.status == rules.BUILDING else script.EDIT_SAVED.lines
     return [
         replace(script.EDIT_IDEA, validators=(validate_idea,)),
         replace(script.EDIT_NAME, validators=(validate_project_name, validate_polite_name)),
         replace(script.ASK_CATEGORY, lines=script.EDIT_CATEGORY_LINES, choices=lambda answers: services.category_choices()),
         replace(script.ASK_SUBCATEGORY, choices=lambda answers: services.subcategory_choices(answers.get("category")),
                 when=lambda answers: bool(services.subcategory_choices(answers.get("category")))),
-        script.EDIT_SAVED,
+        replace(script.EDIT_SAVED, lines=saved),
     ]
 
 

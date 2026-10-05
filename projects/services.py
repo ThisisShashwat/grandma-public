@@ -85,20 +85,37 @@ def resolve(category_slug, subcategory_id):
 
 def cards():
     """Every demand in the jar as plain records for program.draw."""
-    rows = Demand.objects.filter(active=True).prefetch_related("categories", "conflicts")
-    return [draw.Card(d.id, d.tier, frozenset(c.id for c in d.categories.all()), frozenset(x.id for x in d.conflicts.all())) for d in rows]
+    rows = Demand.objects.filter(active=True).prefetch_related("categories", "conflicts", "excluded_subcategories")
+    return [draw.Card(d.id, d.tier, frozenset(c.id for c in d.categories.all()), frozenset(x.id for x in d.conflicts.all()),
+                      frozenset(s.id for s in d.excluded_subcategories.all())) for d in rows]
+
+
+def eligible_demands(category_id, subcategory_id):
+    """The demands a project of this category and subcategory (ids; no subcategory excludes nothing) may hold: the category is one of the
+    demand's and the subcategory is not one it excludes. Active or not (a demand switched off stays in the hands that hold it; add
+    active=True to deal). The same rule as program.draw.fits, which tests pin to this one: every path that decides whether a note suits a
+    project (what is shown, kept, re-kept, dropped by an edit, handed in) asks here."""
+    fitting = Demand.objects.filter(categories=category_id)
+    return fitting if subcategory_id is None else fitting.exclude(excluded_subcategories=subcategory_id)
+
+
+def unfit_kept(project):
+    """The kept notes (ProjectDemand rows) that do not suit the project's category and subcategory now. An edit drops them at once, so only
+    staff can leave one behind (a project's kind or a demand's exclusions changed in the admin)."""
+    return project.kept.exclude(demand__in=eligible_demands(project.category_id, project.subcategory_id))
 
 
 def hand_demands(project):
-    """The demands dealt to this project that fit its current category, in the order dealt (a demand deleted since is skipped)."""
-    by_id = Demand.objects.filter(categories=project.category).distinct().in_bulk(project.hand)
+    """The demands dealt to this project that suit its current category and subcategory, in the order dealt (a demand deleted since is
+    skipped). The stored hand itself is never filtered or changed: the rest is only not shown, and shows again if the kind changes back."""
+    by_id = eligible_demands(project.category_id, project.subcategory_id).in_bulk(project.hand)
     return [by_id[i] for i in project.hand if i in by_id]
 
 
 def can_redeal(project, size):
     """Could another deal change the notes this project shows? Not for a kind with so few demands that every hand is the same
     (Other): that re-deal is never offered and never charged (program.draw.can_change)."""
-    return draw.can_change(cards(), [d.id for d in hand_demands(project)], size, project.category_id)
+    return draw.can_change(cards(), [d.id for d in hand_demands(project)], size, project.category_id, project.subcategory_id)
 
 
 def kept_demands(project):
@@ -126,7 +143,7 @@ def start(user, *, idea, name, category, subcategory, size, rng):
     if existing:
         return existing
     project = Project(user=user, idea=idea, name=name, category=category, subcategory=subcategory,
-                      hand=draw.deal(cards(), size, rng, category.id))
+                      hand=draw.deal(cards(), size, rng, category.id, subcategory.id if subcategory else None))
     project.full_clean()
     project.save()
     audit.record(
@@ -165,7 +182,7 @@ def redeal(user, *, expect, free, cost, size, rng):
     if project.status == rules.BUILDING:
         project.kept.all().delete()
         project.status = rules.DEALING
-    project.hand = draw.deal(cards(), size, rng, project.category_id)
+    project.hand = draw.deal(cards(), size, rng, project.category_id, project.subcategory_id)
     project.redeals_used = next_one.number
     project.save(update_fields=["hand", "redeals_used", "status"])
     audit.record(
@@ -194,7 +211,7 @@ def keep(user, ids, now):
         if project.status == rules.BUILDING and kept == {d.id for d in kept_demands(project)}:
             return project
         raise ValidationError(ALREADY_STARTED)
-    demands = Demand.objects.filter(categories=project.category).distinct().in_bulk(kept)
+    demands = eligible_demands(project.category_id, project.subcategory_id).in_bulk(kept)
     if not draw.keeps_fit(kept, project.hand) or len(demands) != len(kept):
         raise ValidationError(NOT_ON_THE_TABLE)
     kept_in_order = [i for i in project.hand if i in kept]
@@ -214,31 +231,33 @@ def keep(user, ids, now):
     return project
 
 
+def drop_unfit_kept(project):
+    """Delete the kept notes that do not suit the project's category and subcategory and number the rest 1, 2, 3 again (a lower number
+    is always free by then, so the unique order never clashes)."""
+    unfit_kept(project).delete()
+    for order, row in enumerate(project.kept.order_by("order"), start=1):
+        if row.order != order:
+            row.order = order
+            row.save(update_fields=["order"])
+
+
 @transaction.atomic
 def edit_project(user, idea, name, category_value, subcategory_value):
-    """Update a working project's details without touching the hand or redeals counter. If category changed,
-    remove kept demands that do not fit the new category. If building and no kept demands remain, revert status
-    to dealing. No audit entry is recorded."""
+    """Update a working project's details without touching the hand or redeals counter: an edit never creates a note. If the category
+    or the subcategory changed, remove the kept demands that do not suit the new kind (eligible_demands) and number the rest again. If
+    building and no kept demands remain, revert status to dealing. No audit entry is recorded."""
     lock_person(user)
     project = locked_project(user, *rules.WORKING_STATUSES)
     if project is None:
         raise ValidationError("You don't have a project to edit, dear.")
     category, subcategory = resolve(category_value, subcategory_value)
-    category_changed = project.category_id != category.id
+    kind_changed = (project.category_id, project.subcategory_id) != (category.id, subcategory.id if subcategory else None)
     project.idea = idea
     project.name = name
     project.category = category
     project.subcategory = subcategory
-    if category_changed:
-        remaining = list(project.kept.select_related("demand").order_by("order"))
-        for pd in remaining:
-            if not pd.demand.categories.filter(id=category.id).exists():
-                pd.delete()
-        still_kept = list(project.kept.all().order_by("order"))
-        for new_order, pd in enumerate(still_kept, start=1):
-            if pd.order != new_order:
-                pd.order = new_order
-                pd.save(update_fields=["order"])
+    if kind_changed:
+        drop_unfit_kept(project)
         if project.status == rules.BUILDING and not project.kept.exists():
             project.status = rules.DEALING
     project.full_clean()
@@ -249,7 +268,7 @@ def edit_project(user, idea, name, category_value, subcategory_value):
 @transaction.atomic
 def rekeep(user, ids, now):
     """Confirm the new notes kept for a building project: one to three distinct ids from the persisted hand that
-    fit the project's current category. Replaces the ProjectDemand rows in the order dealt. Refuses anything else."""
+    suit the project's current category and subcategory. Replaces the ProjectDemand rows in the order dealt. Refuses anything else."""
     lock_person(user)
     project = locked_project(user, *rules.WORKING_STATUSES)
     if project is None or project.status != rules.BUILDING:
@@ -262,7 +281,7 @@ def rekeep(user, ids, now):
         raise ValidationError(NOT_ON_THE_TABLE)
     if not kept <= set(project.hand):
         raise ValidationError(NOT_ON_THE_TABLE)
-    demands = Demand.objects.filter(categories=project.category).distinct().in_bulk(kept)
+    demands = eligible_demands(project.category_id, project.subcategory_id).in_bulk(kept)
     if len(demands) != len(kept):
         raise ValidationError(NOT_ON_THE_TABLE)
     project.kept.all().delete()

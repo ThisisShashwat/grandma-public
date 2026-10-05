@@ -72,3 +72,9 @@ DEMANDS_SAVED = End(face="smug", button="Back to my project", lines=(
 NO_FITTING_NOTES = (
     "None of the notes I dealt you suit that kind of project, dear.",
     "Ask me to deal again, or go back and change the kind.")
+PUT_BACK = "A few of those don't suit that sort of project, dear, so I put them back in the jar. They come back if you change your mind."
+
+
+def put_back(lines):
+    """Her lines with the one about notes that were put back in the jar, just before the last one."""
+    return (*lines[:-1], PUT_BACK, lines[-1])
