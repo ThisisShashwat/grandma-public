@@ -40,8 +40,4 @@ Example numbers only. Final cookie amounts are set at launch.
 
 ## When you get paid
 
-After a reviewer checks your project and your hours. Then Grandma hands the cookies over herself, the next time you visit.
-
-::: note
-Not decided yet: how long that takes, and the exact payout dates.
-:::
+After a reviewer checks your project and your hours. Then Grandma hands the cookies over herself, the next time you visit. Projects are reviewed in the order they are handed in, and there is no fixed date.

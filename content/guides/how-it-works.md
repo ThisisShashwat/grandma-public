@@ -37,5 +37,5 @@ The Pantry sells Hack Club Bank grants, not parcels. Grandma does not post anyth
 You can have only one project in the works at a time, but build as many as you like. The moment you hand one in, you can talk to Grandma about the next.
 
 ::: note
-Not decided yet: the exact dates for review and payouts, and when the program as a whole ends.
+The program as a whole will have an end date, and Grandma will announce it well before it. Projects are reviewed in the order they are handed in, and there is no fixed date.
 :::
