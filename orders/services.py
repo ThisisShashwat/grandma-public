@@ -28,6 +28,7 @@ GONE = "That isn't on my shelf any more, dear."
 NEEDS_PROOF = "Show me what you're buying, dear: the link and a screenshot of the cart."
 NEEDS_REF = "Paste the reference of the grant you issued before you mark it fulfilled."
 BAD_PAGE = "That page has gone stale, dear. Open it again."
+OWN_ORDER = "You cannot decide on your own order. Ask another staff member."
 
 
 # reads the pages use
@@ -148,15 +149,22 @@ def give_back(order):
         ShopItem.objects.filter(pk=line.item_id, stock__isnull=False).update(stock=F("stock") + line.quantity)
 
 
+def refuse_own(by, order):
+    """Staff (`by`) never decide on their own order, whoever they are: ValidationError (OWN_ORDER), nothing saved. The person taking back their
+    own pending order is not staff action (`owner`, no `by`) and is not touched. The same rule as reviewing your own project."""
+    refuse(OWN_ORDER if by is not None and by.pk == order.user_id else None)
+
+
 @transaction.atomic
 def move(order_id, to, *, by=None, grant_ref=None, owner=None):
     """Move an order to a new status, once and only forward (rules.TRANSITIONS). Into rejected, cancelled or refunded the cookies and the
     stock go back (exactly once: the move happens once and the ledger refuses the refund key twice). Fulfilled needs the grant reference.
     `owner` restricts it to that person's own order. ValidationError with a sentence when it cannot be done, None when there is no such
-    order (or it is not the owner's). Moving to the status it already has changes nothing."""
+    order (or it is not the owner's). Moving to the status it already has changes nothing. `by` (staff) is refused their own order (refuse_own)."""
     found = Order.objects.select_related("user").filter(pk=order_id, **({"user": owner} if owner else {})).first()
     if found is None:
         return None
+    refuse_own(by, found)
     project_services.lock_person(found.user)
     order = Order.objects.select_for_update().select_related("user", "item").get(pk=order_id)
     if order.status == to:
@@ -210,8 +218,10 @@ def cancel(user, order_id):
 @transaction.atomic
 def review(order, *, by):
     """Save what staff edited on `order` (the admin form put it on the object): the notes, the grant reference and, if it changed, the status,
-    which goes through move() so a rejection refunds. Only those fields are written, so a stale form cannot touch anything else."""
+    which goes through move() so a rejection refunds. Only those fields are written, so a stale form cannot touch anything else. Staff cannot
+    save their own order at all (refuse_own): not the status, not the notes, not the reference."""
     stored = Order.objects.get(pk=order.pk)
+    refuse_own(by, stored)
     if order.status != stored.status:
         move(order.pk, order.status, by=by, grant_ref=order.grant_ref)
     current = Order.objects.select_for_update().get(pk=order.pk)
