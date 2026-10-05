@@ -45,7 +45,7 @@
       <a class="btn btn--plain" href="{{ url('project_edit') }}">Change the idea, name or kind</a>
       <a class="btn btn--plain" href="{{ url('project_demands') }}">Change my demands</a>
     </p>
-    {% elif project.status in ("in_review", "shipped") %}
+    {% elif project.status == "in_review" %}
     <p class="project-later">It's with me, dear. I'm reading it. I'll send for you when I've decided, so don't hover.</p>
     {% elif project.status == "changes_requested" %}
     <h2 class="project-fix">What I asked you to change</h2>

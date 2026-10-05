@@ -80,14 +80,14 @@ def client():
         client_kwargs={"scope": SCOPE, "token_endpoint_auth_method": "client_secret_post", "default_timeout": TIMEOUT_SECONDS})
 
 
-def redirect_uri(callback="connect_hackatime_callback"):
-    """The address Hackatime sends the person back to: the connect callback, or (named) the one of the hours check. Both must be registered at Hackatime."""
-    return settings.SITE_URL.rstrip("/") + reverse(callback)
+def redirect_uri():
+    """The address Hackatime sends the person back to: the connect callback, which must be registered at Hackatime."""
+    return settings.SITE_URL.rstrip("/") + reverse("connect_hackatime_callback")
 
 
-def authorize_redirect(request, callback="connect_hackatime_callback"):
+def authorize_redirect(request):
     """The redirect to Hackatime, with the state (and the address to come back to) saved in the session."""
-    return client().authorize_redirect(request, redirect_uri(callback))
+    return client().authorize_redirect(request, redirect_uri())
 
 
 @sensitive_variables("token")

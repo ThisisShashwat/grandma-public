@@ -20,9 +20,6 @@ def too_big_pixels(max_side=MAX_SIDE):
     return f"That picture is enormous, dear. No side longer than {max_side} pixels, please."
 
 
-TOO_BIG_PIXELS = too_big_pixels()
-
-
 def too_big_file(max_bytes):
     return f"That file is too big, dear. {max_bytes // (1024 * 1024)} MB at the very most."
 

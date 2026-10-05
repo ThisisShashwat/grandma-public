@@ -248,7 +248,7 @@ def claim(user, submission_id, *, now=None):
                       reason=f"Grandma paid for {project.name}")
     submission.claimed_at = now or timezone.now()
     submission.save(update_fields=["claimed_at"])
-    if project.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
+    if project.status == project_rules.IN_REVIEW:
         project.status = after_claim(submission)
         project.save(update_fields=["status"])
     audit.record(

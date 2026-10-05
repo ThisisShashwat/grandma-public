@@ -11,7 +11,7 @@ def says(status):
         return "note", "I've still got notes out for you. Come and finish picking."
     if status == rules.BUILDING:
         return "clipboard", "Building? Good. I'm watching. I always am."
-    if status in (rules.SHIPPED, rules.IN_REVIEW):
+    if status == rules.IN_REVIEW:
         return "magnifier", "I'm reading what you handed in. Don't hover."
     if status == rules.CHANGES_REQUESTED:
         return "finger", "Nearly, dear. Fix what I asked for and bring it back to me."

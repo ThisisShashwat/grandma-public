@@ -45,7 +45,7 @@ def says(face, line):
 
 
 def project_card(project):
-    action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.SHIPPED: "reading", rules.DEALING: "resume", rules.CHANGES_REQUESTED: "fix"}.get(project.status, "start")
+    action = {rules.BUILDING: "ship", rules.IN_REVIEW: "reading", rules.DEALING: "resume", rules.CHANGES_REQUESTED: "fix"}.get(project.status, "start")
     return records.ProjectCard(
         id=project.id, note=project_services.change_note(project) if action == "fix" else "", name=project.name, idea=project.idea, where=project.category.name + (f", {project.subcategory.name}" if project.subcategory else ""),
         status=project.status, status_label=rules.LABELS[project.status],
@@ -123,7 +123,7 @@ def build(user):
     project = project_services.working_project(user) or project_services.latest_project(user)
     card = project_card(project) if project else None
     face, line = mood.says(project.status if project else None)
-    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.SHIPPED, rules.CHANGES_REQUESTED), limit=6)
+    other_list = project_services.other_projects(user, statuses=(rules.IN_REVIEW, rules.CHANGES_REQUESTED), limit=6)
     submissions, history, orders = mine(user), entries(user), my_orders(user)
     return records.Summary(
         name=profile.display_name, balance=ledger.balance(user), project=card, says=says(face, line),

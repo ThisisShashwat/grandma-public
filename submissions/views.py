@@ -74,7 +74,7 @@ def starts_from(project):
 def just_handed_in(request, pk):
     """The fix page of a project the person owns that is already with Grandma (a double click, a second tab): her saying so. Any other id, a
     404."""
-    if not Project.objects.filter(pk=pk, user=request.user, status__in=(project_rules.IN_REVIEW, project_rules.SHIPPED)).exists():
+    if not Project.objects.filter(pk=pk, user=request.user, status=project_rules.IN_REVIEW).exists():
         raise Http404
     return flow.page(request, title="Hand it in", kind="end", face="magnifier", then=reverse("dashboard"), lines=script.STILL_READING, step=End(button="To my dashboard"))
 
@@ -93,10 +93,10 @@ def not_now(request, problem=""):
         lines, face, then, button = (problem,), "sideeye", reverse("project"), "Back to my project"
     else:
         working = project_services.working_project(request.user)
-        has_in_review = Project.objects.filter(user=request.user, status__in=(project_rules.IN_REVIEW, project_rules.SHIPPED)).exists()
-        if working is None and (latest.status in (project_rules.IN_REVIEW, project_rules.SHIPPED) or has_in_review):
+        has_in_review = Project.objects.filter(user=request.user, status=project_rules.IN_REVIEW).exists()
+        if working is None and (latest.status == project_rules.IN_REVIEW or has_in_review):
             lines, face, then, button = script.STILL_READING, "magnifier", reverse("grandma"), "Talk to Grandma about a new one"
-        elif latest.status in (project_rules.IN_REVIEW, project_rules.SHIPPED):
+        elif latest.status == project_rules.IN_REVIEW:
             lines, face, then, button = script.STILL_READING, "magnifier", reverse("dashboard"), "To my dashboard"
         else:
             lines, face, then, button = script.NOTHING_TO_HAND_IN, "clipboard", reverse("grandma"), "Talk to Grandma"

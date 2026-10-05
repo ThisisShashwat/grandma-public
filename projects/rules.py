@@ -4,6 +4,8 @@ Why each rule exists: docs/projects.md."""
 from datetime import timedelta
 from typing import NamedTuple
 
+#: SHIPPED is a leftover of the removed two-ship flow: nothing sets it any more and no view, service or template handles it. It stays in
+#: STATUSES and ACTIVE_STATUSES only because the model's choices list it, so dropping it would need a migration.
 DEALING, BUILDING, SHIPPED, IN_REVIEW, CHANGES_REQUESTED, APPROVED, REJECTED, ABANDONED = (
     "dealing", "building", "shipped", "in_review", "changes_requested", "approved", "rejected", "abandoned")
 STATUSES = ((DEALING, "Talking to Grandma"), (BUILDING, "Building"), (SHIPPED, "Handed in"), (IN_REVIEW, "In review"),
