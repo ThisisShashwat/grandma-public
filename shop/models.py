@@ -20,6 +20,7 @@ from program import payout
 from . import pricing
 
 ART_NAME = re.compile(r"[A-Za-z0-9_-]+\.(png|jpg|webp|gif)")
+RIBBON_UPGRADE = "{base} is for Blue Ribbon holders only, so its upgrade {upgrade} must be ribbon only too. Otherwise people without a ribbon would see an upgrade of a grant that does not exist for them."
 
 
 def validate_art(name):
@@ -130,9 +131,14 @@ class ShopItem(models.Model):
         super().save(*args, **kwargs)
 
     def upgrade_problem(self):
-        """Which upgrade rule this item breaks, as a sentence, or "". A base item is checked through its upgrades."""
+        """Which upgrade rule this item breaks, as a sentence, or "". A base item is checked through its upgrades (and, for the ribbon rule,
+        against its own unsaved ribbon_only, so ticking it on a base whose upgrades are for everybody is refused too)."""
         if self.base_item_id is None:
-            return next(filter(None, (up.upgrade_problem() for up in self.upgrades.all())), "") if self.pk else ""
+            if not self.pk:
+                return ""
+            if self.ribbon_only and (loose := self.upgrades.filter(ribbon_only=False).first()):
+                return RIBBON_UPGRADE.format(upgrade=loose.name, base=self.name)
+            return next(filter(None, (up.upgrade_problem() for up in self.upgrades.all())), "")
         base = self.base_item
         if base.pk == self.pk:
             return "An item cannot be its own base."
@@ -142,6 +148,8 @@ class ShopItem(models.Model):
             return "This item has upgrades of its own, so it cannot be an upgrade."
         if self.kind != self.Kind.GRANT or base.kind != self.Kind.GRANT:
             return "An upgrade and its base must both be card grants: the upgrade tops up the base's card."
+        if base.ribbon_only and not self.ribbon_only:
+            return RIBBON_UPGRADE.format(upgrade=self.name, base=base.name)
         if not self.stackable:
             return f"{self.name} must be stackable: an upgrade can be bought several times."
         if not (self.usd_value and self.rate_class_id):
