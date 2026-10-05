@@ -5,9 +5,11 @@ import { initCountdown } from "./countdown.js";
 import { initConfetti } from "./confetti.js";
 import { initAnnotations } from "./annotations.js";
 import { initDev } from "./dev.js";
+import { initPreload } from "./preload.js";
 
 initArt();
 initCountdown(data.launch);
 initConfetti();
 initAnnotations();
 initDev();
+initPreload();
