@@ -169,13 +169,16 @@ STORAGES = {
 
 # Uploads (the screenshots people hand in, submissions/images.py). Outside static, gitignored. Django serves them only when SERVE_MEDIA
 # is on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(env("MEDIA_ROOT", default=str(BASE_DIR / "media")))      # on a host: the persistent folder for PUBLIC uploads
 MEDIA_URL = "media/"
 SERVE_MEDIA = env.bool("SERVE_MEDIA", default=DEBUG)      # for a private preview only: real production serves media/ from the web server, and PRIVATE_MEDIA_ROOT is never served by this
 # PRIVATE uploads (cart and part screenshots of an order, orders/storage.py): outside static, outside MEDIA_ROOT, gitignored, never
 # served as a file. Only the authenticated view orders/views.py hands them out. A web server must NOT expose this folder (docs/orders.md).
 PRIVATE_MEDIA_ROOT = Path(env("PRIVATE_MEDIA_ROOT", default=str(BASE_DIR / "private_media")))
 DATA_UPLOAD_MAX_NUMBER_FILES = 25
+if PRIVATE_MEDIA_ROOT.resolve() == MEDIA_ROOT.resolve() or MEDIA_ROOT.resolve() in PRIVATE_MEDIA_ROOT.resolve().parents:
+    raise ImproperlyConfigured("PRIVATE_MEDIA_ROOT must not be MEDIA_ROOT or inside it: the private order proofs would be served as public files.")
+SECURE_REDIRECT_EXEMPT = [r"^healthz/?$", r"^readyz/?$"]       # the host's health probes may use plain http
 
 # Login. With Hack Club sign-in on, /login/ redirects to Hack Club and there is no password form; the form exists only
 # while it is off. Axes guards the password forms that exist (development login, and the admin's own login for the superuser).

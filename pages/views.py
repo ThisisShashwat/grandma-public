@@ -1,5 +1,6 @@
 import logging
 
+from django.db import DatabaseError, connection
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -11,6 +12,23 @@ from program.content.errors import ERRORS
 log = logging.getLogger(__name__)
 
 LAST_RESORT = "<!doctype html><title>Something went wrong</title><p>Something went wrong, dear. Please go back and try again.</p>"
+
+
+@require_safe
+def healthz(request):
+    """Is the process up? No database, no settings: a host's liveness probe."""
+    return HttpResponse("ok", content_type="text/plain")
+
+
+@require_safe
+def readyz(request):
+    """Can the process reach its database? 503 when not: a host's readiness probe."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except DatabaseError:
+        return HttpResponse("database unreachable", status=503, content_type="text/plain")
+    return HttpResponse("ok", content_type="text/plain")
 
 
 @require_safe

@@ -1,7 +1,7 @@
 """The preview gate: an optional HTTP Basic password in front of the WHOLE site, for a private preview (docs/security.md "Private preview").
 
 With `settings.PREVIEW_PASSWORD` empty (the default) nothing happens. With it set, every request (static files, media, the admin, the Hack Club callback,
-everything) needs the password in an `Authorization: Basic` header (the user name is ignored), or it gets a plain 401, and every response carries
+everything but the two health probes) needs the password in an `Authorization: Basic` header (the user name is ignored), or it gets a plain 401, and every response carries
 `X-Robots-Tag: noindex`. The password is never logged and never put in a response."""
 import base64
 import hmac
@@ -10,6 +10,7 @@ from django.conf import settings
 from django.http import HttpResponse
 
 NOINDEX = "noindex, nofollow, noarchive"
+PROBES = ("/healthz", "/readyz")      # a host's health checks cannot answer a password prompt, and they say nothing
 CHALLENGE = 'Basic realm="Grandma preview", charset="UTF-8"'
 
 
@@ -30,7 +31,7 @@ def refused():
 
 def preview_gate(get_response):
     def middleware(request):
-        if not settings.PREVIEW_PASSWORD:
+        if not settings.PREVIEW_PASSWORD or request.path in PROBES:
             return get_response(request)
         given = given_password(request)
         response = get_response(request) if given is not None and hmac.compare_digest(given, settings.PREVIEW_PASSWORD.encode()) else refused()
