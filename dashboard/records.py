@@ -85,3 +85,4 @@ class Summary:
     orders: tuple           # the latest few, OrderRow records
     orders_total: int
     other_projects: tuple = ()
+    public_page: str = ""   # the address of the person's own public page, "" when they have none

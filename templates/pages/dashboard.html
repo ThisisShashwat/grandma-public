@@ -15,6 +15,7 @@
 <section class="scene scene--sky dash-head">
   <div class="wrap">
     <h1>Hello, {{ dash.name }}</h1>
+    {% if dash.public_page %}<p class="dash-small"><a href="{{ dash.public_page }}">My public page</a></p>{% endif %}
     {% if handed_in %}<p class="dash-flash" role="status">Handed in, dear. I'll read it when I'm good and ready.</p>{% endif %}
 
     <div class="dash-bal">

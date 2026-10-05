@@ -108,6 +108,15 @@ def entries(user):
     return CookieEntry.objects.filter(user=user).order_by("-created_at", "-id")
 
 
+def public_page(user, profile):
+    """The address of the person's own public page, or "" when they have none. The rule is the showcase's (showcase/public.py `people`:
+    onboarding finished and the account not switched off), copied here on purpose because nothing may import showcase. The bare address is
+    used: the server redirects it to the canonical /u/<public id>-<slug>/ (the same choice as projects/views.py share_url)."""
+    if profile.onboarded_at is None or not user.is_active:
+        return ""
+    return reverse("public_profile_bare", kwargs={"public_id": profile.public_id})
+
+
 def build(user):
     profile = profile_of(user)
     zone = zone_of(profile)
@@ -121,7 +130,7 @@ def build(user):
         submissions=tuple(submission_row(s, zone) for s in submissions[:LATEST]), submissions_total=submissions.count(),
         history=tuple(cookie_row(e, zone) for e in history[:RECENT]), history_total=history.count(),
         orders=tuple(order_row(o, zone) for o in orders[:LATEST]), orders_total=orders.count(),
-        other_projects=tuple(row for row in other_list if not (card and row.id == card.id))[:5])
+        other_projects=tuple(row for row in other_list if not (card and row.id == card.id))[:5], public_page=public_page(user, profile))
 
 
 def paged(queryset, number, make):
