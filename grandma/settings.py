@@ -159,10 +159,11 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 
-# Uploads (the screenshots people hand in, submissions/images.py). Outside static, gitignored. Django serves them only with
-# DEBUG on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
+# Uploads (the screenshots people hand in, submissions/images.py). Outside static, gitignored. Django serves them only when SERVE_MEDIA
+# is on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "media/"
+SERVE_MEDIA = env.bool("SERVE_MEDIA", default=DEBUG)      # for a private preview only: real production serves media/ from the web server, and PRIVATE_MEDIA_ROOT is never served by this
 # PRIVATE uploads (cart and part screenshots of an order, orders/storage.py): outside static, outside MEDIA_ROOT, gitignored, never
 # served as a file. Only the authenticated view orders/views.py hands them out. A web server must NOT expose this folder (docs/orders.md).
 PRIVATE_MEDIA_ROOT = Path(env("PRIVATE_MEDIA_ROOT", default=str(BASE_DIR / "private_media")))
