@@ -84,6 +84,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "pages.preview_gate.preview_gate",                 # an optional password in front of everything below, static files included (PREVIEW_PASSWORD, empty is off)
+    "pages.static_cache.static_cache",                 # one year for a static address with ?v=, one hour without (replaces WhiteNoise's header)
     "whitenoise.middleware.WhiteNoiseMiddleware",      # serves the collected static files with DEBUG off (a real server may serve STATIC_ROOT itself instead)
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "audit.middleware.RequestId",
