@@ -9,7 +9,11 @@
       <p>Every project gets a few of Grandma's demands, like {{ ui.mark("no libraries") }}, {{ ui.mark("one button") }} or {{ ui.mark("two colors") }}. The more annoying the demand, the happier she is.</p>
       <p class="countdown" data-cd>Grandma calls soon</p>
       <div class="actions">
+        {% if signed_in %}
+        <a class="btn btn--big" href="{{ url('dashboard') }}">My dashboard</a>
+        {% else %}
         <a class="btn btn--big" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
+        {% endif %}
         <a class="btn btn--plain" data-link="slack" {{ link_attrs("slack") }}>Join the Slack</a>
       </div>
     </div>

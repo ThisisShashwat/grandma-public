@@ -11,12 +11,12 @@
     <a href="{{ url('leaderboard') }}">Leaderboard</a>
     <a href="{{ url('home') }}#faq">FAQ</a>
     <a data-link="slack" {{ link_attrs("slack") }}>Slack</a>
-    {% if request is defined and request.user.is_authenticated %}
+    {% if signed_in %}
     <a href="{{ url('dashboard') }}">Dashboard</a>
     <form class="nav-leave" method="post" action="{{ url('logout') }}">{{ csrf_input }}<button>Log out</button></form>
     {% else %}
     <a href="{{ url('login') }}">Sign in</a>
-    {% endif %}
     <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
+    {% endif %}
   </nav>
 </header>
