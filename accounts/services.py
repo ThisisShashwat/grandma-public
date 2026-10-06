@@ -11,6 +11,14 @@ def profile_of(user):
     return Profile.objects.get_or_create(user=user)[0]
 
 
+def request_profile(request):
+    """The signed in person's Profile, read once per request and kept on the request (the gates, the page and the dialogue's store all ask for it: each
+    used to cost a query). Only for reading at the edges of a request; a service that changes a Profile locks and reads its own row."""
+    if getattr(request, "_profile", None) is None:
+        request._profile = profile_of(request.user)
+    return request._profile
+
+
 def set_beta_access(profile, granted, *, by):
     """Give (True) or take away (False) a person's beta access and record it. It compares with what is stored now, so a repeat or a stale
     admin page writes nothing. Returns whether anything changed. `by` is the staff member."""

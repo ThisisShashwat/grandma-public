@@ -7,7 +7,7 @@ from django.utils import timezone
 from accounts import hackatime, script
 from accounts.models import FILLED_IN
 from accounts.validators import canonical_timezone
-from accounts.services import profile_of
+from accounts.services import profile_of, request_profile
 from audit import services as audit
 from program.content import regions
 from program.tutorial import offers_skip, parts
@@ -69,7 +69,7 @@ def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False
 
 def finish(cfg, request, answers):
     """Called once, when the last step before the end is answered: they are onboarded. Safe to run twice."""
-    profile = profile_of(request.user)
+    profile = request_profile(request)
     first_time = not profile.onboarded_at
     profile.onboarded_at = profile.onboarded_at or timezone.now()
     if cfg.TUTORIAL_ENABLED:
@@ -90,14 +90,16 @@ class ProfileStore(SessionStore):
 
     def load(self, request):
         state = super().load(request)
-        profile = profile_of(request.user)
+        profile = request_profile(request)
         saved = {key: getattr(profile, key) for key in FILLED_IN if getattr(profile, key)}
         return State(state.position, saved | state.answers)
 
     def save(self, request, state):
-        profile = profile_of(request.user)
+        profile = request_profile(request)
         answers = {key: canonical_timezone(value) if key == "timezone" else value for key, value in state.answers.items()}
         changed = [key for key in FILLED_IN if key in answers and getattr(profile, key) != answers[key]]
+        if not changed:                         # most steps are only "go on": nothing to validate or write but the place
+            return super().save(request, state)
         for key in FILLED_IN:
             if key in answers:
                 setattr(profile, key, answers[key])

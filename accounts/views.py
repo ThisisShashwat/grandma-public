@@ -17,7 +17,7 @@ from accounts import hackatime, hca, onboarding
 from accounts.access import has_access, invited
 from accounts.forms import LoginForm
 from accounts.script import HACKATIME_REFUSALS, HCA_REFUSALS
-from accounts.services import profile_of
+from accounts.services import profile_of, request_profile
 from pages.live import live
 from program.content import regions
 from talk import flow
@@ -63,7 +63,7 @@ def welcome(request):
     """Onboarding. Someone who is already onboarded is sent to their dashboard, unless this session has just finished it (then they
     still get the last page, with its button to the dashboard)."""
     store = onboarding.ProfileStore()
-    profile = profile_of(request.user)
+    profile = request_profile(request)
     if profile.onboarded_at and not store.load(request).position:
         return redirect("dashboard")
     cfg = live()
