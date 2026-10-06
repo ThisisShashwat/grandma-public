@@ -23,12 +23,12 @@ def check(profile):
 
 
 def depth_for(expertise, cfg):
-    """The tutorial depth the admin settings give this level of experience. Anything unexpected gets the full tutorial."""
-    return {"new": cfg.TUTORIAL_FOR_NEW, "some": cfg.TUTORIAL_FOR_SOME, "veteran": cfg.TUTORIAL_FOR_VETERAN}.get(expertise, "both")
+    """The tutorial depth the admin settings give this level of experience. Anything unexpected gets the Hack Club basics."""
+    return {"new": cfg.TUTORIAL_FOR_NEW, "some": cfg.TUTORIAL_FOR_SOME, "veteran": cfg.TUTORIAL_FOR_VETERAN}.get(expertise, "play")
 
 
 def plays(part, cfg):
-    """A step's `when`: is this tutorial part (1 or 2) played for the answers so far?"""
+    """A step's `when`: is this tutorial part (0 the Hack Club basics, 1 and 2 about this program) played for the answers so far?"""
     return lambda answers: part in parts(cfg.TUTORIAL_ENABLED, depth_for(answers.get("expertise"), cfg), answers.get("tutorial") == "show")
 
 
@@ -58,9 +58,11 @@ def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False
     return [
         *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(on, hackatime_connected),
         script.hackatime_connected_step(on, hackatime_connected),
-        replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
         *(replace(step, when=plays(1, cfg)) for step in script.PART_ONE),
         *(replace(step, when=plays(2, cfg)) for step in script.PART_TWO),
+        replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
+        *(replace(step, when=plays(0, cfg)) for step in script.PART_BASICS),
+        *(replace(step, when=plays(1, cfg)) for step in script.TUTORIAL_CLOSE),
         script.ENDING,
     ]
 

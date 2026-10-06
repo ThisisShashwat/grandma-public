@@ -89,10 +89,10 @@ CONFIG = {
                                         "A code is two capital letters or digits (people keep their code if you rename its label). At least two lines, and the XX line "
                                         "(the catch-all, XX: Somewhere else) must stay.", "regions"),
 
-    "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips it for everyone."),
-    "TUTORIAL_FOR_NEW": ("both", "What someone who is new to Hack Club sees.", "tutorial_depth"),
-    "TUTORIAL_FOR_SOME": ("second", "What someone who has shipped a project or two sees.", "tutorial_depth"),
-    "TUTORIAL_FOR_VETERAN": ("offer", "What someone who ships all the time sees.", "tutorial_depth"),
+    "TUTORIAL_ENABLED": (True, "Play the tutorial at the end of onboarding. Off skips ALL of it for everyone. On, the two lessons about this program (how Help Grandma Out works, cookies and the Pantry) always play for everybody."),
+    "TUTORIAL_FOR_NEW": ("play", "The Hack Club basics (what shipping means, You Ship We Ship, what a grant is) for someone who is new to Hack Club.", "tutorial_depth"),
+    "TUTORIAL_FOR_SOME": ("offer", "The Hack Club basics for someone who has shipped a project or two.", "tutorial_depth"),
+    "TUTORIAL_FOR_VETERAN": ("offer", "The Hack Club basics for someone who ships all the time.", "tutorial_depth"),
 }
 
 # the admin's groups, in this order (a tuple, because constance sorts a plain dict by title)

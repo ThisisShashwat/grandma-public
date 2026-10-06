@@ -67,7 +67,23 @@ def hackatime_connected_step(enabled=False, connected=False):
 
 SKIP_OFFER = AskChoice(
     key="tutorial", face="sideeye", choices=(("skip", "No thanks, I know my way around"), ("show", "Fine, lecture me")), lines=(
-        "You ship all the time? Show-off.", "I have two little lessons about how things work here. Want them?"))
+        "You've shipped before? Show-off.", "I have a few little words about how Hack Club works. Want them?"))
+
+# The Hack Club basics (part 0): the only part experience may skip. Draft copy by Claude, 2026-10-07, for the owner to read.
+PART_BASICS = [
+    Say(face="finger", lines=(
+        "One more thing, dear, and it's about Hack Club, not about me.",
+        "Hack Club is a nonprofit of teenagers who make things. I only run one little corner of it.")),
+    Say(face="magnifier", lines=(
+        "To ship something means to finish it and put it where other people can use it. A real link, not a promise.",
+        "A half built thing in a folder on your laptop has not shipped, dear. I don't count those.")),
+    Say(face="note", lines=(
+        "This is what Hack Club calls a YSWS. You Ship, We Ship.",
+        "You ship a project, and they ship you something back. Here, what comes back is cookies, and cookies turn into grants.")),
+    Say(face="hug", lines=(
+        "A grant is money on a card from Hack Club's bank, for one particular thing. You buy the thing yourself, and you show what you bought.",
+        "That's all it is. No magic, no parcels.")),
+]
 
 PART_ONE = [
     Say(face="finger", lines=("Lesson one, dear. How this works.", "It is very simple. I am bossy and you are talented.")),
@@ -98,6 +114,9 @@ PART_TWO = [
     Say(face="wag", lines=(
         "Some grants stack, some don't. Some can be topped up with upgrade grants to make them bigger.",
         "Every item on the shelf tells you what it costs and what it's worth. Read it before you spend, dear.")),
+]
+
+TUTORIAL_CLOSE = [
     Say(face="approved", lines=(
         "And that's everything. Questions go in the Slack.", "Somebody there is much less grumpy than me.")),
 ]
