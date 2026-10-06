@@ -59,16 +59,16 @@ class Login(LoginView):
 @invited
 @never_cache
 def welcome(request):
-    """Onboarding. Someone who is already onboarded is sent home, unless this session has just finished it (then they
-    still get the last page, with its button home)."""
+    """Onboarding. Someone who is already onboarded is sent to their dashboard, unless this session has just finished it (then they
+    still get the last page, with its button to the dashboard)."""
     store = onboarding.ProfileStore()
     profile = profile_of(request.user)
     if profile.onboarded_at and not store.load(request).position:
-        return redirect("home")
+        return redirect("dashboard")
     cfg = live()
     return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id)),
                     store=store, finish=partial(onboarding.finish, cfg),
-                    then=resolve_url("home"), title="Welcome")
+                    then=resolve_url("dashboard"), title="Welcome")
 
 
 @login_required
