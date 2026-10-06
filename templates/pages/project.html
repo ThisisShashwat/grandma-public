@@ -42,7 +42,7 @@
     <p class="project-later">When it's done, hand it in to me. There is no clock, dear: half an hour or ten days, it takes what it takes.</p>
     <p class="actions">
       <a class="btn btn--big" href="{{ url('submit') }}">Ship it</a>
-      <a class="btn btn--plain" href="{{ url('project_rename') }}">Rename it (nothing else changes)</a>
+      <a class="btn btn--plain" href="{{ url('project_rename') }}">Change the name and idea (nothing else)</a>
       <a class="btn btn--plain" href="{{ url('project_edit') }}">Change the idea, name or kind</a>
       <a class="btn btn--plain" href="{{ url('project_demands') }}">Change my demands</a>
     </p>
@@ -53,7 +53,7 @@
     {% if change_note %}<blockquote class="slip-note">{{ change_note }}</blockquote>{% endif %}
     <p class="project-later">Nearly there, dear. Fix it whenever you like and hand it back to me. There is no clock.</p>
     <p class="actions"><a class="btn btn--big" href="{{ url('submit_fix', args=[project.id]) }}">Fix it</a>
-      <a class="btn btn--plain" href="{{ url('project_rename') }}">Rename it (nothing else changes)</a></p>
+      <a class="btn btn--plain" href="{{ url('project_rename') }}">Change the name and idea (nothing else)</a></p>
     {% endif %}
     {% if share_url %}{{ ui.share(share_url) }}{% endif %}
   </div>

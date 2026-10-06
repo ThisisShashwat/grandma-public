@@ -82,8 +82,9 @@ def edit_dialogue(project):
 
 
 def rename_dialogue():
-    """The 2-step conversation that changes only a project's name."""
-    return [replace(script.RENAME_NAME, validators=(validate_project_name, validate_polite_name)), script.RENAME_SAVED]
+    """The 3-step conversation that changes only a project's idea (its description) and name."""
+    return [replace(script.RENAME_IDEA, validators=(validate_idea,)),
+            replace(script.RENAME_NAME, validators=(validate_project_name, validate_polite_name)), script.RENAME_SAVED]
 
 
 def demands_dialogue(project, cfg):
@@ -126,7 +127,7 @@ class EditStore(SessionStore):
 
 
 class RenameStore(SessionStore):
-    """The current name prefilled; save calls rename_project at the End step before the session write."""
+    """The current idea and name prefilled; save calls rename_project at the End step before the session write."""
 
     def __init__(self, steps, project):
         super().__init__("project_rename")
@@ -136,11 +137,11 @@ class RenameStore(SessionStore):
     def load(self, request):
         state = super().load(request)
         person = {"display_name": profile_of(request.user).display_name}
-        return State(state.position, {"name": self.project.name} | state.answers | person)
+        return State(state.position, {"idea": self.project.idea, "name": self.project.name} | state.answers | person)
 
     def save(self, request, state):
         if state.position >= self.end_at:
-            services.rename_project(request.user, state.answers.get("name", ""))
+            services.rename_project(request.user, state.answers.get("name", ""), state.answers.get("idea", ""))
         super().save(request, state)
 
 

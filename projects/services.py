@@ -266,16 +266,17 @@ def edit_project(user, idea, name, category_value, subcategory_value):
 
 
 @transaction.atomic
-def rename_project(user, name):
-    """Change only the name of a project that is being worked on or has changes requested: the idea, the kind, the hand, the kept demands and the
-    re-deal counter are not touched. The audit entry carries no name (free text)."""
+def rename_project(user, name, idea):
+    """Change only the name and the description (the idea) of a project that is being worked on or has changes requested: the kind, the hand, the kept
+    demands and the re-deal counter are not touched. The audit entry carries neither (free text)."""
     lock_person(user)
     project = locked_project(user, *rules.WORKING_STATUSES, rules.CHANGES_REQUESTED)
     if project is None:
         raise ValidationError("You don't have a project to rename, dear.")
     project.name = name
+    project.idea = idea
     project.full_clean()
-    project.save(update_fields=["name"])
+    project.save(update_fields=["name", "idea"])
     audit.record("project.rename", actor=user, subject=user, target=project)
     return project
 

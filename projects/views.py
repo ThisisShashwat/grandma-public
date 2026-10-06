@@ -101,7 +101,7 @@ def project_edit(request):
 @onboarded
 @never_cache
 def project_rename(request):
-    """Change only the name of the working project (or the one with changes requested): no demand, idea or kind changes."""
+    """Change only the name and the description of the working project (or the one with changes requested): no demand or kind changes."""
     project = services.working_project(request.user) or fixing(request.user)
     if project is None:
         return redirect("project")
