@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.static import serve
 
+admin.site.site_header = f"Help Grandma Out admin (times in {settings.TIME_ZONE})"      # the zone is always visible in the admin
+
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path("", include("accounts.urls")),
