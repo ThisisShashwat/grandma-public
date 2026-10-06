@@ -6,6 +6,7 @@ import { initConfetti } from "./confetti.js";
 import { initAnnotations } from "./annotations.js";
 import { initDev } from "./dev.js";
 import { initPreload } from "./preload.js";
+import { initOnce } from "./once.js";
 
 initArt();
 initCountdown(data.launch);
@@ -13,3 +14,4 @@ initConfetti();
 initAnnotations();
 initDev();
 initPreload();
+initOnce();
