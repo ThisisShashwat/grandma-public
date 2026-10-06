@@ -266,6 +266,21 @@ def edit_project(user, idea, name, category_value, subcategory_value):
 
 
 @transaction.atomic
+def rename_project(user, name):
+    """Change only the name of a project that is being worked on or has changes requested: the idea, the kind, the hand, the kept demands and the
+    re-deal counter are not touched. The audit entry carries no name (free text)."""
+    lock_person(user)
+    project = locked_project(user, *rules.WORKING_STATUSES, rules.CHANGES_REQUESTED)
+    if project is None:
+        raise ValidationError("You don't have a project to rename, dear.")
+    project.name = name
+    project.full_clean()
+    project.save(update_fields=["name"])
+    audit.record("project.rename", actor=user, subject=user, target=project)
+    return project
+
+
+@transaction.atomic
 def rekeep(user, ids, now):
     """Confirm the new notes kept for a building project: one to three distinct ids from the persisted hand that
     suit the project's current category and subcategory. Replaces the ProjectDemand rows in the order dealt. Refuses anything else."""

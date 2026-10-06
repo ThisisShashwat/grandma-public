@@ -63,6 +63,13 @@ EDIT_CATEGORY_LINES = (
 EDIT_SAVED = End(face="approved", button="Carry on", lines=(
     "There. I've crossed out the old and written in the new, {display_name}.",
     "The notes I dealt you are the notes you get. I don't hand out new ones for free."))
+RENAME_NAME = AskText(key="name", face="clipboard", label="Project name", max_length=40, button="That's the name",
+                      attrs={"autocomplete": "off", "spellcheck": "false"}, lines=(
+                          "A new name, {display_name}? Fine. Only the name, mind. Your idea, your kind and your demands stay exactly as they are.",
+                          "So what are we calling it?"))
+RENAME_SAVED = End(face="approved", button="Back to my project", lines=(
+    "There. I've crossed out the old name and written in the new one.",
+    "Nothing else changed, dear. Not a single demand."))
 DEMANDS_DEAL = Deal(key="keep", face="note", notes=list, lines=(
     "Swapping demands, {display_name}? Fine. Pick again from the hand I dealt you.",
     "I won't deal you new ones unless you ask, and asking costs after the free ones."))

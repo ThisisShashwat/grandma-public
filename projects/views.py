@@ -100,6 +100,18 @@ def project_edit(request):
 
 @onboarded
 @never_cache
+def project_rename(request):
+    """Change only the name of the working project (or the one with changes requested): no demand, idea or kind changes."""
+    project = services.working_project(request.user) or fixing(request.user)
+    if project is None:
+        return redirect("project")
+    steps = conversation.rename_dialogue()
+    store = conversation.RenameStore(steps, project)
+    return flow.run(request, steps, store=store, finish=lambda request, answers: None, then=reverse("project"), title="Talk to Grandma")
+
+
+@onboarded
+@never_cache
 def project_demands(request):
     """Edit the kept demands of a building project."""
     working = services.working_project(request.user)
@@ -148,6 +160,7 @@ def project(request):
     request.session.pop("talk:grandma", None)          # the send-off has been seen
     request.session.pop("talk:project_edit", None)
     request.session.pop("talk:project_demands", None)
+    request.session.pop("talk:project_rename", None)
     shown = working or fixing(request.user)
     context = {"others": [row for row in others if shown is None or row.id != shown.id]}
     if shown is not None:

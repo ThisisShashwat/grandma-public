@@ -81,6 +81,11 @@ def edit_dialogue(project):
     ]
 
 
+def rename_dialogue():
+    """The 2-step conversation that changes only a project's name."""
+    return [replace(script.RENAME_NAME, validators=(validate_project_name, validate_polite_name)), script.RENAME_SAVED]
+
+
 def demands_dialogue(project, cfg):
     """The 2-step conversation to change demands for a building project."""
     return [
@@ -117,6 +122,25 @@ class EditStore(SessionStore):
                 category_value=answers.get("category", ""),
                 subcategory_value=answers.get("subcategory", ""),
             )
+        super().save(request, state)
+
+
+class RenameStore(SessionStore):
+    """The current name prefilled; save calls rename_project at the End step before the session write."""
+
+    def __init__(self, steps, project):
+        super().__init__("project_rename")
+        self.project = project
+        self.end_at = next(i for i, step in enumerate(steps) if isinstance(step, End))
+
+    def load(self, request):
+        state = super().load(request)
+        person = {"display_name": profile_of(request.user).display_name}
+        return State(state.position, {"name": self.project.name} | state.answers | person)
+
+    def save(self, request, state):
+        if state.position >= self.end_at:
+            services.rename_project(request.user, state.answers.get("name", ""))
         super().save(request, state)
 
 
