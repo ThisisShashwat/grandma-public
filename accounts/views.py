@@ -182,7 +182,7 @@ def connect_hackatime_callback(request):
     if connection is None:
         log.warning("hackatime connect failed")
         return hackatime_refused(request, "failed")
-    if not hackatime.link(profile_of(request.user), connection.hackatime_id, connection.slack_id, connection.sealed):
+    if not hackatime.link(profile_of(request.user), connection.hackatime_id, connection.slack_id, connection.sealed, connection.github_username):
         hackatime.discard(connection.sealed)
         return hackatime_refused(request, "taken")
     return after_sign_in(target, request.user)

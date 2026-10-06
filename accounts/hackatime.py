@@ -12,6 +12,7 @@ it is read in memory and dropped, nothing but the id and the Slack ID (which is 
 The stored token reads the time server side (`read`, `list_projects`, `list_all_time`, `total_seconds`). When checking hours from the submit note, the person picks
 projects (only ones made after they spoke to Grandma: `ineligible`) and their time is read without any redirect to Hackatime. When Hackatime rejects the token, they are asked to reconnect.
 """
+import re
 from datetime import timedelta, timezone
 from typing import NamedTuple
 
@@ -29,6 +30,7 @@ NAME = "hackatime"
 SCOPE = "profile read"
 TIMEOUT_SECONDS = 5
 ID_MAX_LENGTH = 40
+GITHUB_NAME = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})")      # what GitHub allows in a username: 1 to 39 letters, digits and single hyphens inside
 NAME_MAX_LENGTH = 255                      # the longest Hackatime project name we list and ask about (the per name limit is enforced by clean_name)
 MAX_SECONDS = 2**31 - 1                    # what the database column holds
 MIN_SECONDS = 600                          # when hours are required: a ten-minute floor, so one stray heartbeat is not "work" (code, not a setting)
@@ -55,6 +57,7 @@ class Connection(NamedTuple):
     hackatime_id: str
     slack_id: str | None
     sealed: str
+    github_username: str = ""
 
 
 oauth = OAuth()
@@ -92,10 +95,11 @@ def authorize_redirect(request):
 
 @sensitive_variables("token")
 def read_identity(token):
-    """(the person's Hackatime user id as a string, their Slack ID or None), from GET api/v1/authenticated/me, and nothing else: the answer has emails and
-    a GitHub name, and none of it is kept (the Slack ID is only compared with the one on the Profile, never stored). ASSUMED (research 3.3, from the docs
-    and swagger, not run live): the body is a JSON object whose `id` is an integer and whose `slack_id` is text, null or missing. A missing, empty,
-    boolean or over-long id, or a Slack ID that is not text, raises."""
+    """(the person's Hackatime user id as a string, their Slack ID or None, their GitHub username or ""), from GET api/v1/authenticated/me, and nothing
+    else: the answer has emails too, and they are not kept (the Slack ID is only compared with the one on the Profile, never stored; the GitHub username
+    is kept private on the Profile since 2026-10-07, for Ari's repo owner check). ASSUMED (research 3.3, from the docs and swagger, not run live): the body
+    is a JSON object whose `id` is an integer and whose `slack_id` is text, null or missing, and whose `github_username` may be missing. A missing, empty,
+    boolean or over-long id, or a Slack ID that is not text, raises; a GitHub name that is not a valid GitHub username is dropped, not an error."""
     response = client().get("api/v1/authenticated/me", token=token)
     response.raise_for_status()
     body = response.json()
@@ -105,7 +109,8 @@ def read_identity(token):
     hackatime_id = str(value).strip()
     if not 0 < len(hackatime_id) <= ID_MAX_LENGTH:
         raise ValueError
-    return hackatime_id, slack_id or None
+    github = body.get("github_username")
+    return hackatime_id, slack_id or None, github if isinstance(github, str) and GITHUB_NAME.fullmatch(github) else ""
 
 
 @sensitive_variables("token")
@@ -191,10 +196,10 @@ def identity_of(request):
         return None
     keep = False
     try:
-        hackatime_id, slack_id = read_identity(token)
+        hackatime_id, slack_id, github_username = read_identity(token)
         sealed = seal(token["access_token"])
         keep = True
-        return Connection(hackatime_id, slack_id, sealed)
+        return Connection(hackatime_id, slack_id, sealed, github_username)
     except Exception:
         return None
     finally:
@@ -202,7 +207,7 @@ def identity_of(request):
             revoke(token)
 
 
-def link(profile, hackatime_id, slack_id=None, sealed=""):
+def link(profile, hackatime_id, slack_id=None, sealed="", github_username=""):
     """Connect this Profile to this Hackatime account: True, or False to refuse. Refused: an id that already belongs to another Profile, a Profile
     already connected to a different id (it stays put, so a banned or unlucky account cannot be swapped for a clean one), an inactive user, and a
     Hackatime account that names another Slack ID than the one on the Profile (`slack_id` is only compared, never stored; a missing one on either side
@@ -217,7 +222,8 @@ def link(profile, hackatime_id, slack_id=None, sealed=""):
         stored.hackatime_user_id = hackatime_id
         stored.hackatime_connected = True
         stored.hackatime_token = sealed
-        stored.save(update_fields=["hackatime_user_id", "hackatime_connected", "hackatime_token"])
+        stored.github_username = github_username
+        stored.save(update_fields=["hackatime_user_id", "hackatime_connected", "hackatime_token", "github_username"])
         audit.record("accounts.hackatime_connect", actor=stored.user, subject=stored.user, target=stored, details={})
     return True
 
