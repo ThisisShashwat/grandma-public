@@ -49,8 +49,10 @@ def question(step, cfg, slack_known):
 def dialogue(cfg, hackatime_connected=False, slack_known=False):
     """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, and whether their Slack ID is already known."""
     questions = [question(step, cfg, slack_known) for step in script.QUESTIONS]
+    on = hackatime.enabled(cfg)
     return [
-        *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(hackatime.enabled(cfg), hackatime_connected),
+        *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(on, hackatime_connected),
+        script.hackatime_connected_step(on, hackatime_connected),
         replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
         *(replace(step, when=plays(1, cfg)) for step in script.PART_ONE),
         *(replace(step, when=plays(2, cfg)) for step in script.PART_TWO),

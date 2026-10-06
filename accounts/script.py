@@ -53,6 +53,13 @@ def hackatime_step(enabled=False, connected=False):
         "Press the button and Hackatime will ask if I may take a look. Its screen lists more than I need, and I can't help that. I keep one number, dear, and hand the key straight back."))
 
 
+def hackatime_connected_step(enabled=False, connected=False):
+    """What she says once Hackatime is connected: played right after the Hackatime step, only for somebody who is connected (the step before it is skipped then)."""
+    return Say(face="approved", when=lambda answers: enabled and connected, lines=(
+        "There, dear. Hackatime is hooked up.",
+        "Now mind you keep it counting while you build. No hours, no cookies."))
+
+
 SKIP_OFFER = AskChoice(
     key="tutorial", face="sideeye", choices=(("skip", "No thanks, I know my way around"), ("show", "Fine, lecture me")), lines=(
         "You ship all the time? Show-off.", "I have two little lessons about how things work here. Want them?"))
