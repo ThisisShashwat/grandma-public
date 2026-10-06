@@ -20,3 +20,4 @@ private_media/
 *.bak
 *.dump
 ari-projects.json
+tools/ari_projects.json
