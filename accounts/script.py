@@ -50,7 +50,7 @@ def hackatime_step(enabled=False, connected=False):
     return Say(face="finger", link=("Connect Hackatime", reverse("connect_hackatime")), locked=True, when=lambda answers: not connected, lines=(
         "Now the important bit.",
         "I count your hours with a thing called Hackatime. No Hackatime, no hours. No hours, no cookies.",
-        "Press the button and Hackatime will ask if I may take a look. Its screen lists more than I need, and I can't help that. I keep one number, dear, and hand the key straight back."))
+        "Press the button and Hackatime will ask if I may take a look. Its screen lists more than I need, and I can't help that. I only ever look at your hours, dear, and I keep the key locked away."))
 
 
 def hackatime_connected_step(enabled=False, connected=False):
@@ -97,7 +97,7 @@ PART_TWO = [
         "And that's everything. Questions go in the Slack.", "Somebody there is much less grumpy than me.")),
 ]
 
-ENDING = End(face="overjoyed", button="Take me home", lines=(
+ENDING = End(face="overjoyed", button="To my dashboard", lines=(
     "{display_name}, you're all set.", "Off you go. And wipe your feet on the way out."))
 
 # What Grandma says when a Hack Club sign-in does not go through (accounts/views.py): one fixed label and sentence per case, so nothing from Hack Club
