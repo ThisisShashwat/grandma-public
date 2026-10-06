@@ -2,7 +2,8 @@
    her speech bubble (the bubble's frame and tail are shared, core/notes.css), three notes under it, then slips and receipts. The home page's
    language: 3 to 4px ink borders, wobbly corners, tilts under two degrees, muted yellow, pink and blue. No tables of numbers. */
 .dash-head { padding-block: clamp(2rem, 5vw, 3.5rem); }
-.dash-head h1 { margin-bottom: 0.6rem; font-size: clamp(2.6rem, 8vw, 4.6rem); overflow-wrap: anywhere; }
+.dash-head h1 { margin-bottom: 1.1rem; font-size: clamp(2.6rem, 8vw, 4.6rem); overflow-wrap: anywhere; }
+.dash-head h1 + .dash-small { position: relative; }   /* the h1 is tilted, so its box reaches over the line below and would eat clicks on "My public page" */
 .dash-head--sub h1 { margin-bottom: 0; }
 .dash-back { margin: 0 0 0.6rem; font-weight: 700; }
 .dash-fig { width: min(100%, 12rem); justify-self: center; }
