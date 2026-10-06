@@ -66,7 +66,8 @@ def welcome(request):
     if profile.onboarded_at and not store.load(request).position:
         return redirect("dashboard")
     cfg = live()
-    return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id)),
+    return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
+                                         name_known=bool(profile.hca_sub and profile.display_name)),
                     store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("dashboard"), title="Welcome")
 

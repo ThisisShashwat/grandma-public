@@ -46,9 +46,10 @@ def question(step, cfg, slack_known):
     return step
 
 
-def dialogue(cfg, hackatime_connected=False, slack_known=False):
-    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, and whether their Slack ID is already known."""
+def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False):
+    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, whether their Slack ID is already known, and whether Hack Club already gave their name (the question is then skipped, never removed, so the places in the dialogue never shift)."""
     questions = [question(step, cfg, slack_known) for step in script.QUESTIONS]
+    questions = [replace(step, when=lambda answers: not name_known) if getattr(step, "key", None) == "display_name" else step for step in questions]
     on = hackatime.enabled(cfg)
     return [
         *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(on, hackatime_connected),

@@ -7,7 +7,7 @@ HCA_CLIENT_SECRET are in the environment (`enabled`), and the library is only se
 A first Hack Club sign-in CREATES an account with an unusable password (never staff, never superuser) and attaches its Slack ID to the Profile.
 The gate (ysws_eligible is True) is checked at first login only: returning participants are never polled or re-checked, so aging out mid-program
 does not lock them out. A returning sign-in finds the account by `hca_sub` and signs in. Staff and superusers may sign in this way; the admin itself
-is gated separately (accounts/admin_gate.py). Hack Club is asked for four scopes (openid, slack_id, verification_status, email) and we keep four fields: the stable `sub` id, the Slack ID and the
+is gated separately (accounts/admin_gate.py). Hack Club is asked for five scopes (openid, profile, slack_id, verification_status, email) and we keep five fields (owner, 2026-10-07: the display name comes from Hack Club, FIRST NAME ONLY: `given_name` or else `nickname`, never the family name or the full name, and only if it passes the display name rules; the question in /welcome/ is skipped then): the stable `sub` id, the Slack ID and the
 email (both private, never shown on a public page; the email because Ari, HQ's review tool, requires it on every ship) and the time of the last sign-in. The email is kept current on every
 sign-in; a missing or malformed one never blocks anything and is never invented. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
 """
@@ -17,18 +17,20 @@ import re
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import Profile
 from accounts.slack import is_member_id
+from accounts.validators import validate_display_name, validate_polite_name
 from audit import services as audit
 
 NAME = "hackclub"
-SCOPE = "openid slack_id verification_status email"
+SCOPE = "openid profile slack_id verification_status email"
 TIMEOUT_SECONDS = 5
-CLAIMS = ("sub", "slack_id", "verification_status", "ysws_eligible", "email")
+CLAIMS = ("sub", "slack_id", "verification_status", "ysws_eligible", "email", "given_name", "nickname")
 SUB_MAX_LENGTH = 100
 EMAIL_MAX_LENGTH = 254
 EMAIL_SHAPE = re.compile(r"[^@\s]+@[^@\s]+")
@@ -99,6 +101,22 @@ def clean_email(value):
     return email if len(email) <= EMAIL_MAX_LENGTH and EMAIL_SHAPE.fullmatch(email) else ""
 
 
+def clean_first_name(userinfo):
+    """The display name to start a new account with: the first name Hack Club gave (`given_name`, else `nickname`), or "" when there is none or it would
+    not do as a display name (shown to other people: the dialogue's own rules, rude names included). Never the family name, never invented."""
+    for key in ("given_name", "nickname"):
+        value = userinfo.get(key)
+        if isinstance(value, str) and value.strip():
+            name = " ".join(value.split())
+            try:
+                validate_display_name(name)
+                validate_polite_name(name)
+            except ValidationError:
+                return ""
+            return name
+    return ""
+
+
 def may_sign_in(user):
     """Active users may sign in (staff and superusers included; the admin is gated separately, accounts/admin_gate.py)."""
     return bool(user.is_active)
@@ -126,7 +144,7 @@ def sign_in(profile, email=""):
     return profile, None
 
 
-def create(sub, slack_id, email=""):
+def create(sub, slack_id, email="", display_name=""):
     """Create a user and profile for a first-time Hack Club sign-in, and record the login."""
     # create_user without a password creates an account with an unusable password on purpose.
     user = get_user_model().objects.create_user(username=username_for(sub))
@@ -135,6 +153,7 @@ def create(sub, slack_id, email=""):
         hca_sub=sub,
         slack_id=slack_id,
         email=email,
+        display_name=display_name,
         hca_checked_at=timezone.now(),
     )
     audit.record("accounts.hca_login", actor=user, subject=user, target=profile, details={"created": True})
@@ -163,7 +182,7 @@ def identify(userinfo, require_eligible):
         slack_id = userinfo.get("slack_id")
         try:
             with transaction.atomic():
-                profile = create(sub, slack_id, email)
+                profile = create(sub, slack_id, email, clean_first_name(userinfo))
                 return profile, None
         except IntegrityError:
             profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
