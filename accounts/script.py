@@ -50,7 +50,7 @@ def hackatime_step(enabled=False, connected=False):
     return Say(face="finger", link=("Connect Hackatime", reverse("connect_hackatime")), locked=True, when=lambda answers: not connected, lines=(
         "Now the important bit.",
         "I count your hours with a thing called Hackatime. No Hackatime, no hours. No hours, no cookies.",
-        "Press the button and Hackatime will ask if I may take a look. Its screen lists more than I need, and I can't help that. I only ever look at your hours, dear, and I keep the key locked away."))
+        "Press the button and Hackatime will ask if I may take a look."))
 
 
 def hackatime_connected_step(enabled=False, connected=False):
