@@ -22,8 +22,8 @@
   flex: 1; display: grid; align-content: start; gap: 0.45rem; padding: 1.3rem 1rem 0.9rem;
   background: var(--paper); border: 3px solid var(--ink); font-size: 1.05rem; line-height: 1.25;
 }
-.dnote:nth-child(3n+2) .dnote-body { background: var(--note-pink); }
-.dnote:nth-child(3n) .dnote-body { background: var(--note-blue); }
+.dnote[data-tier="1"] .dnote-body { background: var(--note-blue); }      /* mild blue, medium yellow, spicy pink (the same as the guides) */
+.dnote[data-tier="3"] .dnote-body { background: var(--note-pink); }
 label.dnote-body { cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
 .dnote:has(input:checked) .dnote-body { box-shadow: 5px 5px 0 var(--ink); }
 .dnote:has(input:focus-visible) .dnote-body { outline: 4px dashed var(--ribbon); outline-offset: 4px; }

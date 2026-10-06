@@ -1,13 +1,14 @@
 """Grandma's draw: which notes she deals. Pure Python, no Django, so tests can replay a deal with a seeded generator.
 
-Tier first: roll how grumpy the next note is (about 1/2 mild, 1/3 medium, 1/6 spicy), then pick a note of that tier, so
-beginners are not handed a spicy one by luck. A note the hand already holds, or that clashes with one it holds (the blocklist in
+Balanced by tier (owner, 2026-10-07): a hand holds the same number of mild, medium and spicy notes (3 of each for a hand of 9). When a tier has
+too few notes for the category, the shortfall is dealt from the other tiers (tier rolled 3:2:1, `pick`). A note the hand already holds, or that clashes with one it holds (the blocklist in
 docs/program.md), is never picked. Notes are plain records (`Card`); the caller says which random generator to use:
 random.SystemRandom() in production (the draw is a money-adjacent decision, nobody may predict it), a seeded random.Random in tests.
 """
 from typing import NamedTuple
 
-TIER_WEIGHTS = {1: 3, 2: 2, 3: 1}      # 3:2:1 is 1/2, 1/3, 1/6 of the rolls
+TIERS = (1, 2, 3)
+TIER_WEIGHTS = {1: 3, 2: 2, 3: 1}      # only for a shortfall: 3:2:1 is 1/2, 1/3, 1/6 of the rolls
 MIN_KEEP, MAX_KEEP = 1, 3              # a fixed rule of the program, not a setting: a project builds around one to three demands
 
 
@@ -44,10 +45,21 @@ def pick(options, rng):
     return rng.choice([card for card in options if card.tier == tier])
 
 
+def quotas(size):
+    """How many cards of each tier a hand of `size` holds: equal shares, the left over ones going to mild first (9 gives 3, 3, 3; 10 gives 4, 3, 3)."""
+    return {tier: size // len(TIERS) + (1 if tier <= size % len(TIERS) else 0) for tier in TIERS}
+
+
 def deal(cards, size, rng, category=None, subcategory=None):
-    """The ids of up to `size` cards for `category` and `subcategory`, in the order dealt. A smaller pool (or one that runs out because
-    of clashes) simply gives a smaller hand."""
+    """The ids of up to `size` cards for `category` and `subcategory`, in the order dealt: the mild ones, then the medium, then the spicy,
+    `quotas(size)` of each. A tier that runs short is made up from the other tiers. A smaller pool (or one that runs out because of
+    clashes) simply gives a smaller hand."""
     hand = []
+    for tier, quota in quotas(size).items():
+        for _ in range(quota):
+            options = [card for card in candidates(cards, hand, category, subcategory) if card.tier == tier]
+            if options:
+                hand.append(rng.choice(options))
     while len(hand) < size:
         options = candidates(cards, hand, category, subcategory)
         if not options:

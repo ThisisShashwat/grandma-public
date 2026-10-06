@@ -28,7 +28,7 @@ CONFIG = {
     "LINK_BOARD": ("", "Where complaints (new demands) get sent.", "link"),
     "LINK_CONTACT": ("", "How to reach the organizer, for example mailto:you@example.com.", "link"),
 
-    "DEAL_SIZE": (6, "How many notes Grandma deals in total when someone talks to her. They keep 1 to 3 of them, "
+    "DEAL_SIZE": (9, "How many notes Grandma deals in total when someone talks to her, split evenly over mild, medium and spicy (9 is 3 of each). They keep 1 to 3 of them, "
                      "that part is fixed. A category with fewer notes than this simply deals what it has.", "deal_size"),
     "REDEALS_FREE": (3, "How many times a person may ask Grandma to deal again, per project, for nothing. "
                         "It also sets how many free asks the fridge on the home page offers.", "redeals_free"),

@@ -58,8 +58,8 @@
 
 .minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
 .mini { display: grid; align-content: start; gap: 0.25rem; padding: 0.8rem 0.9rem; background: var(--paper); border: 3px solid var(--ink); font-size: 1rem; line-height: 1.25; }
-.mini:nth-child(3n+2) { background: var(--note-pink); }
-.mini:nth-child(3n+3) { background: var(--note-blue); }
+.mini[data-tier="1"] { background: var(--note-blue); }                  /* mild blue, medium yellow, spicy pink */
+.mini[data-tier="3"] { background: var(--note-pink); }
 .mini-name { font-family: var(--display); font-size: 1.5rem; font-weight: 400; line-height: 1; overflow-wrap: anywhere; }
 .mini-level { font-size: 0.9rem; font-style: italic; }
 .mini-rule { font-weight: 700; }
