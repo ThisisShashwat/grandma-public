@@ -94,8 +94,8 @@
         <p class="actions">
           {% if project.action == "ship" %}<a class="btn btn--big" href="{{ url('submit') }}">Ship it</a>
           {% elif project.action == "fix" %}<a class="btn btn--big" href="{{ url('submit_fix', args=[project.id]) }}">Fix it</a>
-          {% elif project.action == "resume" %}<a class="btn" href="{{ url('grandma') }}">Finish talking to Grandma</a>
-          {% elif project.action == "start" %}<a class="btn" href="{{ url('grandma') }}">Talk to Grandma about another one</a>{% endif %}
+          {% elif project.action == "resume" %}<a class="btn" href="{{ url('grandma') }}">Finish talking to Grandma</a>{% endif %}
+          {% if project.action in ("start", "reading", "fix") %}<a class="btn{{ '' if project.action == 'start' else ' btn--plain' }}" href="{{ url('grandma') }}">Talk to Grandma about another one</a>{% endif %}
           {% if project.action != "resume" %}<a class="btn btn--plain" href="{{ url('project') }}">Open my project</a>{% endif %}
         </p>
         {% if project.action == "reading" %}<p class="dash-small">It's with me, dear. I'm reading it. Don't hover.</p>{% endif %}
