@@ -13,6 +13,11 @@ OPENING = [
         "I'm Grandma. I'll be bossing you about for a good while, so I need to write a few things down.")),
 ]
 
+def region_guess_line(label):
+    """The extra line when the browser pointed at a region: a guess, never a fact (the braces are doubled because the lines are formatted)."""
+    return f"Your browser makes me think {label.replace('{', '{{').replace('}', '}}')}. Tap it if I'm right, dear, or tap your own."
+
+
 SOFTWARE_ONLY = Say(face="finger", lines=(
     "One rule before we start, dear: software only.",
     "Websites, apps, games, tools, bots, anything made of code. Nothing you have to plug in or solder."))

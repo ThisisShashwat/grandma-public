@@ -19,6 +19,7 @@ from accounts.forms import LoginForm
 from accounts.script import HACKATIME_REFUSALS, HCA_REFUSALS
 from accounts.services import profile_of
 from pages.live import live
+from program.content import regions
 from talk import flow
 
 
@@ -67,7 +68,8 @@ def welcome(request):
         return redirect("dashboard")
     cfg = live()
     return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
-                                         name_known=bool(profile.hca_sub and profile.display_name)),
+                                         name_known=bool(profile.hca_sub and profile.display_name),
+                                         region_guess=regions.guess(request.headers.get("Accept-Language", ""), regions.regions(cfg.REGIONS))),
                     store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("dashboard"), title="Welcome")
 

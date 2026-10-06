@@ -36,19 +36,23 @@ def asks_to_skip(cfg):
     return lambda answers: offers_skip(cfg.TUTORIAL_ENABLED, depth_for(answers.get("expertise"), cfg))
 
 
-def question(step, cfg, slack_known):
-    """One question as this site runs it now: the Slack ID is skipped when it is already known, and the regions come from the admin setting."""
+def question(step, cfg, slack_known, region_guess=""):
+    """One question as this site runs it now: the Slack ID is skipped when it is already known, and the regions come from the admin setting (with her
+    guess said aloud when the browser pointed at one: the person still taps their own answer)."""
     key = getattr(step, "key", None)
     if key == "slack_id":
         return replace(step, when=lambda answers: not slack_known)
     if key == "region":
-        return replace(step, choices=regions.regions(cfg.REGIONS))
+        rows = regions.regions(cfg.REGIONS)
+        label = dict(rows).get(region_guess)
+        lines = step.lines + (script.region_guess_line(label),) if label else step.lines
+        return replace(step, choices=rows, lines=lines)
     return step
 
 
-def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False):
+def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False, region_guess=""):
     """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, whether their Slack ID is already known, and whether Hack Club already gave their name (the question is then skipped, never removed, so the places in the dialogue never shift)."""
-    questions = [question(step, cfg, slack_known) for step in script.QUESTIONS]
+    questions = [question(step, cfg, slack_known, region_guess) for step in script.QUESTIONS]
     questions = [replace(step, when=lambda answers: not name_known) if getattr(step, "key", None) == "display_name" else step for step in questions]
     on = hackatime.enabled(cfg)
     return [
