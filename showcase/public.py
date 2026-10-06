@@ -58,6 +58,7 @@ class Card:
 class ProfilePage:
     name: str
     path: str
+    github: str         # the GitHub username Hackatime reported, or "" (public by the owner's decision, 2026-10-07; already checked against GitHub's username rules)
     projects: int
     ribbons: int
     cards: tuple
@@ -197,7 +198,7 @@ def paged(page):
 
 def profile_page(public_id, number, cfg):
     """A person's page, or None when there is nobody to show (unknown, not onboarded, switched off). `number` is the ?page= text."""
-    person = people().filter(public_id=public_id).values("user_id", "display_name").first()
+    person = people().filter(public_id=public_id).values("user_id", "display_name", "github_username").first()
     if person is None:
         return None
     pk = person["user_id"]
@@ -209,7 +210,7 @@ def profile_page(public_id, number, cfg):
         by_project[row["project_id"]].append(row)
     name = person["display_name"]
     return ProfilePage(
-        name=name, path=profile_path(public_id, name),
+        name=name, path=profile_path(public_id, name), github=person["github_username"],
         projects=page.paginator.count, ribbons=shown.filter(Exists(ribboned(visible).filter(project=OuterRef("pk")))).count(),
         cards=tuple(filter(None, (card(p, by_project[p["id"]], name, public_id) for p in page))), paged=paged(page))
 

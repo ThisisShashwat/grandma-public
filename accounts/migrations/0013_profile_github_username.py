@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='profile',
             name='github_username',
-            field=models.CharField(blank=True, default='', editable=False, help_text="The GitHub username Hackatime reports for the account they connected (2026-10-07), for Ari's repo owner check. PRIVATE: never on a public page, in a log or in the audit log. Only the Hackatime connect callback sets it (accounts/hackatime.py); a reconnect refreshes it.", max_length=39),
+            field=models.CharField(blank=True, default='', editable=False, help_text="The GitHub username Hackatime reports for the account they connected (2026-10-07). PUBLIC on their profile page by the owner's decision, and used for Ari's repo owner check. Only the Hackatime connect callback sets it (accounts/hackatime.py); a reconnect refreshes it.", max_length=39),
         ),
     ]

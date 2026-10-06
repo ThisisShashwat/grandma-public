@@ -5,7 +5,7 @@
 {% block title %}{{ page.name }}{% endblock %}
 
 {# A person's public page (showcase/views.py profile): the name they chose and every
-   project they have handed in. Nothing else about them is on it, and nothing here is a model: `page` is plain public records. #}
+   project they have handed in. Nothing else about them is on it but their GitHub name, when Hackatime gave one, and nothing here is a model: `page` is plain public records. #}
 {% block main %}
 <section class="scene scene--sky pub-head">
   <div class="wrap split">
@@ -15,6 +15,7 @@
         {% if page.projects %}Handed in {{ page.projects }} {{ "project" if page.projects == 1 else "projects" }}{% if page.ribbons %}, {{ page.ribbons }} with a Blue Ribbon{% endif %}.
         {% else %}Nothing handed in yet.{% endif %}
       </p>
+      {% if page.github %}<p class="pub-count"><a href="https://github.com/{{ page.github }}" target="_blank" rel="noopener">github.com/{{ page.github }}</a></p>{% endif %}
     </div>
     {{ art.fig("grandma-wave.png", "Grandma waving hello", "aside-fig pub-fig") }}
   </div>
