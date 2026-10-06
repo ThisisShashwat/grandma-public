@@ -21,6 +21,11 @@ MAX_HOURS = Decimal(300)
 #: The hard ceiling of the MAX_ROUNDS setting (program/runtime.py, which cannot import this) and of Submission.round: a typo guard.
 MAX_ROUND_LIMIT = 10
 
+#: What this site did with a message from Ari (AriEvent.outcome, submissions/ari_inbound.py).
+APPLIED, NOOP, IGNORED, REFUSED, NEEDS_STAFF, REVERTED = "applied", "noop", "ignored", "refused", "needs_staff", "reverted"
+#: Ari decides without our MAX_ROUNDS cap (owner, 2026-10-06): review_problem is asked as if there were always one more round.
+NO_ROUND_CAP = MAX_ROUND_LIMIT + 1
+
 STILL_READING = "That one is still with me, dear. I'm reading it. Wait until I've told you what I think."
 ALREADY_FINAL = "You have already handed this one in."
 
@@ -57,6 +62,13 @@ def review_problem(status, public_note, number, max_rounds, was=""):
         return "Asking for changes needs a public note that says what to change. Grandma reads it to the person."
     if was != CHANGES_REQUESTED and number >= max_rounds:
         return f"This is round {number} of {max_rounds}, the last round: there is no next round to fix it in. Approve it or reject it."
+    return ""
+
+
+def ari_hours_problem(hours):
+    """Why an approval from Ari is not applied, or "": hours missing, zero, or above the typo guard. Staff look at those (a 4xx would only make Ari drop it)."""
+    if hours is None or hours <= 0 or hours > MAX_HOURS:
+        return "The approved hours are missing, zero or above the limit."
     return ""
 
 

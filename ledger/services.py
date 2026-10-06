@@ -14,6 +14,11 @@ def balance(user):
     return CookieEntry.objects.filter(user=user).aggregate(total=Sum("amount"))["total"] or 0
 
 
+def count_keys(user, prefix):
+    """How many of this person's entries have a key that starts with `prefix` (a caller's own key family, like `submission:7:revert:`)."""
+    return CookieEntry.objects.filter(user=user, key__startswith=prefix).count()
+
+
 EARNED = Q(kind=rules.EARNING, amount__gt=0)      # what counts as earned: spending, refunds and adjustments do not
 
 

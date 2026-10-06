@@ -17,6 +17,8 @@ from submissions import rules
 from submissions.images import FORMATS
 from submissions.validators import validate_prose, validate_repo_url, validate_web_url
 
+ARI_KINDS = ("ingest", "withdraw")
+ARI_STATUSES = ("pending", "sent", "failed")
 EXTENSIONS = {f".{extension}" for extension, _ in FORMATS.values()}
 
 
@@ -61,6 +63,14 @@ class Submission(models.Model):
     cookies_awarded = models.PositiveIntegerField(null=True, blank=True, editable=False, help_text="Worked out when the review was saved. What Grandma hands over.")
     claimed_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When Grandma handed the result over. After this the review is frozen.")
 
+    # Ari (HQ's review tool, submissions/ari.py): where the ship sits there and what its reviewer decided. Staff only.
+    ari_ship_id = models.CharField(max_length=40, blank=True, editable=False, help_text="Ari's id for this hand-in (like AR-4821), from its answer when it took the ship.")
+    reviewer_label = models.CharField(max_length=254, blank=True, editable=False, help_text="Who decided it in Ari: the reviewer's email or Slack id, as text. Staff only. Empty for a decision made in this admin.")
+    demand_checks = models.JSONField(default=list, blank=True, editable=False, help_text="What the Ari reviewer ticked for each demand the person kept: a list of demand id and met.")
+    needs_staff = models.BooleanField(default=False, editable=False,
+                                      help_text="Ari sent something this site could not apply by itself (hours too big or missing, a decision after the person collected, a revert after they spent the cookies). "
+                                                "Look at it, fix it by hand if needed, then clear this with the admin action.")
+
     class Meta:
         ordering = ["-submitted_at", "-id"]
         constraints = [
@@ -91,3 +101,40 @@ class Submission(models.Model):
         """Check every constraint even for fields a form leaves out (the admin shows most of them read only): a constraint over a
         left-out field would otherwise be skipped and only fail in the database, as an error page."""
         super().validate_constraints(exclude=None)
+
+
+class AriDelivery(models.Model):
+    """One message to Ari that must get there: a ship (ingest) or the withdrawal of an open one. The exact bytes are kept, so a resend is byte for byte
+    the same and Ari answers 200 duplicate within the hour (submissions/ari.py). Never holds a secret, and last_error is always one of a few fixed words."""
+    submission = models.ForeignKey(Submission, on_delete=models.PROTECT, related_name="ari_deliveries")
+    kind = models.CharField(max_length=10, choices=[(k, k) for k in ARI_KINDS])
+    body = models.BinaryField(editable=False)
+    status = models.CharField(max_length=10, choices=[(s, s) for s in ARI_STATUSES], default="pending")
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_status = models.PositiveSmallIntegerField(null=True, blank=True, help_text="The HTTP status Ari last answered with.")
+    last_error = models.CharField(max_length=40, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["id"]
+        constraints = [
+            models.CheckConstraint(condition=Q(kind__in=ARI_KINDS), name="ari_delivery_kind_is_known"),
+            models.CheckConstraint(condition=Q(status__in=ARI_STATUSES), name="ari_delivery_status_is_known"),
+            models.CheckConstraint(condition=Q(attempts__gte=0), name="ari_delivery_attempts_not_negative"),
+        ]
+
+    def __str__(self):
+        return f"{self.kind} of {self.submission_id} ({self.status})"
+
+
+class AriEvent(models.Model):
+    """One message Ari sent us, written when it is handled: the delivery id is unique, so Ari's retry of the same delivery is a no-op."""
+    delivery_id = models.CharField(max_length=64, unique=True)
+    event = models.CharField(max_length=40)
+    external_id = models.CharField(max_length=100, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+    outcome = models.CharField(max_length=20, blank=True, help_text="What this site did with it: applied, noop, ignored, refused, reverted or needs_staff.")
+
+    class Meta:
+        ordering = ["-id"]

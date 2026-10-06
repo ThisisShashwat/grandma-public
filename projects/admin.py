@@ -8,6 +8,7 @@ from django.db import transaction
 from audit import services as audit
 from projects import rules, services
 from projects.models import Category, Complaint, Demand, Project, ProjectDemand, Subcategory
+from projects.signals import project_abandoned
 
 
 class SubcategoryInline(admin.TabularInline):
@@ -116,6 +117,7 @@ class ProjectAdmin(admin.ModelAdmin):
                     target=project,
                     details={"from": old_status},
                 )
+                project_abandoned.send(sender=Project, project=project)
             count += 1
         self.message_user(request, f"Abandoned {count} projects.")
 
