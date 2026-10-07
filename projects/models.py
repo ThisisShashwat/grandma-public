@@ -156,3 +156,37 @@ class Complaint(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Suggestion(models.Model):
+    """Something a person asks for on the suggestion board (/suggestions/): a new demand for Grandma's jar or an item for the Pantry. PUBLIC but
+    anonymous (the board never shows who), voted on by others. A vote does nothing but order the list; staff read them in the admin, add the real
+    demand or shop item by hand, and hide or delete the suggestion. Made only by projects/suggestions.py, which charges the cookies."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="suggestions")
+    kind = models.CharField(max_length=10, choices=rules.SUGGESTION_KINDS)
+    title = models.CharField(max_length=rules.TITLE_MAX, validators=[validate_complaint_line], help_text="What it is called: the demand's name, or the item.")
+    text = models.CharField(max_length=rules.TEXT_MAX, validators=[validate_complaint_text], help_text="What it is and why.")
+    example = models.CharField(max_length=rules.EXAMPLE_MAX, blank=True, validators=[validate_complaint_line],
+                               help_text="A project the demand would fit, or where to buy the item (shown as plain text, never a link).")
+    votes = models.PositiveIntegerField(default=0, db_index=True, editable=False, help_text="How many people voted for it. Only projects/suggestions.py changes it.")
+    hidden = models.BooleanField(default=False, help_text="Off the board. Votes and cookies spent stay as they were.")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-votes", "-created_at", "-id"]
+        constraints = [models.CheckConstraint(condition=Q(kind__in=[DEMAND_VALUE for DEMAND_VALUE, _ in rules.SUGGESTION_KINDS]), name="suggestion_kind_is_known")]
+
+    def __str__(self):
+        return self.title
+
+
+class SuggestionVote(models.Model):
+    """One person's one vote for one suggestion. The database refuses a second one."""
+
+    suggestion = models.ForeignKey(Suggestion, on_delete=models.CASCADE, related_name="ballots")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="suggestion_votes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["suggestion", "user"], name="one_vote_per_person_per_suggestion")]

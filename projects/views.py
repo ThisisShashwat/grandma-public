@@ -15,7 +15,8 @@ from ledger.rules import InsufficientCookies
 from pages.live import live
 from projects import complaints as complaint_service
 from projects import conversation, notes, rules, script, services
-from projects.forms import ComplaintForm
+from projects import suggestions as board_service
+from projects.forms import ComplaintForm, SuggestionForm
 from talk import flow
 from talk.dialogue import fill
 from talk.portraits import portrait
@@ -191,3 +192,65 @@ def complaints(request):
     sent = request.method == "GET" and request.session.pop("complaint_sent", False)
     file, alt = portrait("smug") if sent else portrait("sideeye") if form.errors else PILE
     return render(request, "pages/complaints.html", {"form": form, "sent": sent, "portrait": {"file": file, "alt": alt}})
+
+
+SECTIONS = (
+    (rules.DEMAND, "Demands for Grandma", "Something else I should demand, dear? Say what it is and why it is annoying."),
+    (rules.ITEM, "Things for the Pantry", "Something you'd like on my shelf? Say what it is and why it belongs there."),
+)
+
+
+def board_flash(request, ok, text):
+    request.session["suggestion_flash"] = [ok, text]
+
+
+def board_address(sort, anchor=""):
+    return reverse("suggestions") + (f"?sort={sort}" if sort in board_service.ORDER and sort != "top" else "") + anchor
+
+
+@onboarded
+@never_cache
+@require_http_methods(["GET", "HEAD", "POST"])
+def suggestions(request):
+    """The suggestion board: two sections (demands, Pantry items) on one page, each with its form and its list, sorted by votes, newest or oldest. A
+    suggestion costs SUGGEST_COST cookies, a vote VOTE_COST (admin settings), and the board never says who suggested what. POST then redirect."""
+    cfg = live()
+    sort = request.GET.get("sort", "top")
+    forms = {kind: SuggestionForm(prefix=kind) for kind, _, _ in SECTIONS}
+    if request.method == "POST":
+        kind = request.POST.get("kind", "")
+        if kind not in forms:
+            return redirect(board_address(sort))
+        forms[kind] = form = SuggestionForm(request.POST, prefix=kind)
+        if form.is_valid():
+            try:
+                board_service.suggest(request.user, kind, cost=cfg.SUGGEST_COST, **form.cleaned_data)
+            except ValidationError as error:
+                form.add_error(None, error)
+            except InsufficientCookies:
+                form.add_error(None, f"A suggestion costs {conversation.cookies(cfg.SUGGEST_COST)}, dear, and your jar hasn't got that. I don't do credit.")
+            else:
+                board_flash(request, True, "It's on the board, dear. Let's see who cares.")
+                return redirect(board_address(sort, f"#{kind}"))
+    flash = request.session.pop("suggestion_flash", None)
+    sections = [{"kind": kind, "title": title, "blurb": blurb, "form": forms[kind], "rows": board_service.board(request.user, kind, sort)} for kind, title, blurb in SECTIONS]
+    context = {"sections": sections, "sort": sort if sort in board_service.ORDER else "top", "sorts": rules.SORTS, "flash": flash, "balance": ledger.balance(request.user),
+               "suggest_cost": conversation.cookies(cfg.SUGGEST_COST), "vote_cost": conversation.cookies(cfg.VOTE_COST)}
+    return render(request, "pages/suggestions.html", context)
+
+
+@onboarded
+@never_cache
+@require_http_methods(["POST"])
+def suggestion_vote(request, pk):
+    """One vote for one suggestion, then back to the board where the person was. The service refuses a second vote, an own one and a gone one."""
+    sort = request.POST.get("sort", "top")
+    try:
+        board_service.vote(request.user, pk, live().VOTE_COST)
+    except ValidationError as error:
+        board_flash(request, False, " ".join(error.messages))
+    except InsufficientCookies:
+        board_flash(request, False, f"A vote costs {conversation.cookies(live().VOTE_COST)}, dear, and your jar hasn't got that.")
+    else:
+        board_flash(request, True, "Counted, dear. It moves up the list.")
+    return redirect(board_address(sort, f"#s-{pk}"))

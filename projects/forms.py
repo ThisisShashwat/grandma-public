@@ -3,7 +3,7 @@ page draws the fields by hand. The lengths and the characters come from the mode
 from django import forms
 
 from projects import rules
-from projects.models import Complaint
+from projects.models import Complaint, Suggestion
 
 
 def answer(limit):
@@ -13,5 +13,14 @@ def answer(limit):
 class ComplaintForm(forms.ModelForm):
     class Meta:
         model = Complaint
+        fields = ("title", "text", "example")
+        error_messages = {"title": answer(rules.TITLE_MAX), "text": answer(rules.TEXT_MAX), "example": answer(rules.EXAMPLE_MAX)}
+
+
+class SuggestionForm(forms.ModelForm):
+    """One suggestion on the board. The kind is posted beside it and checked by projects/suggestions.py; each kind's form has its own prefix."""
+
+    class Meta:
+        model = Suggestion
         fields = ("title", "text", "example")
         error_messages = {"title": answer(rules.TITLE_MAX), "text": answer(rules.TEXT_MAX), "example": answer(rules.EXAMPLE_MAX)}

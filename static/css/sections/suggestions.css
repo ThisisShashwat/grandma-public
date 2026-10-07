@@ -1,0 +1,36 @@
+/* The suggestion board (templates/pages/suggestions.html): two sections of sticky notes with a vote button on each. Loads after submit.css, whose
+   .submit-note, .nf and .oops it reuses for the forms. The home page's language: 3px ink borders, small tilts, muted yellow, pink and blue. */
+.sug-head { padding-block: clamp(2rem, 5vw, 3.5rem); }
+.sug-head h1 { margin-bottom: 1rem; overflow-wrap: anywhere; }
+.sug-bubble { max-width: 44rem; }
+.sug-bubble p { margin: 0 0 0.4rem; }
+.sug-jar { margin: 1rem 0 0; font-size: 1.2rem; }
+.sug-flash { display: inline-block; margin: 0.8rem 0 0; padding: 0.4rem 1rem; font-weight: 700; background: var(--paper); border: 3px solid var(--ink); rotate: -0.6deg; }
+.sug-sorts { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: baseline; margin-top: 1rem; font-size: 1.15rem; }
+.sug-sorts a { color: var(--ink); }
+.sug-sorts a[aria-current] { font-weight: 700; text-decoration: underline; }
+
+.sug-body { padding-block: clamp(1.5rem, 4vw, 3rem); }
+.sug-blurb { margin: 0 0 1rem; }
+.sug-new { margin-bottom: 1.5rem; }
+.sug-new > summary { display: inline-block; list-style: none; cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
+.sug-new > summary::-webkit-details-marker { display: none; }
+.sug-new .submit-note { margin-top: 1.2rem; }
+
+.sug-list { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.sug { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; padding: 0.9rem 1rem; background: var(--paper); border: 3px solid var(--ink); }
+.sug:nth-child(3n+2) { background: var(--note-pink); rotate: 0.3deg; }
+.sug:nth-child(3n) { background: var(--note-blue); rotate: -0.3deg; }
+.sug-vote { display: grid; justify-items: center; align-content: start; gap: 0.4rem; margin: 0; min-width: 5.5rem; }
+.sug-votes { font-family: var(--display); font-size: 2.4rem; font-weight: 400; line-height: 1; }
+.sug-state { font-style: italic; }
+.sug-vote .btn { font-size: 1rem; padding-inline: 0.8rem; }
+.sug-body-text { min-width: 0; }
+.sug-body-text h3 { margin: 0 0 0.3rem; font-family: var(--display); font-size: 1.7rem; font-weight: 400; line-height: 1.05; overflow-wrap: anywhere; }
+.sug-body-text p { margin: 0 0 0.3rem; overflow-wrap: anywhere; white-space: pre-line; }
+.sug-example, .sug-age { font-size: 0.95rem; font-style: italic; }
+.sug-empty { font-style: italic; }
+@media (max-width: 520px) {
+  .sug { grid-template-columns: minmax(0, 1fr); }
+  .sug-vote { grid-auto-flow: column; justify-content: start; align-items: center; min-width: 0; }
+}

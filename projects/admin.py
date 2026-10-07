@@ -7,7 +7,7 @@ from django.db import transaction
 
 from audit import services as audit
 from projects import rules, services
-from projects.models import Category, Complaint, Demand, Project, ProjectDemand, Subcategory
+from projects.models import Category, Complaint, Demand, Project, ProjectDemand, Subcategory, Suggestion
 from projects.signals import project_abandoned
 
 
@@ -146,3 +146,49 @@ class ComplaintAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         if "status" in form.changed_data:
             audit.record("complaint.admin_status", actor=request.user, subject=obj.user, target=obj, details={"from": old_status, "to": obj.status})
+
+
+@admin.register(Suggestion)
+class SuggestionAdmin(admin.ModelAdmin):
+    """The suggestion board (projects/suggestions.py), highest votes first. What people typed and the votes are read only; staff hide a suggestion (off the
+    board, kept) or delete it once they have added the real demand or Pantry item by hand. Nothing can be added here: only a person suggests."""
+    list_display = ("title", "kind", "votes", "hidden", "created_at", "user")
+    list_editable = ("hidden",)
+    list_filter = ("kind", "hidden")
+    list_select_related = ("user",)
+    search_fields = ("title", "text")
+    ordering = ("-votes", "-created_at")
+    fields = ("kind", "title", "text", "example", "votes", "user", "created_at", "hidden")
+    readonly_fields = ("kind", "title", "text", "example", "votes", "user", "created_at")
+    actions = ("hide", "show")
+
+    def has_add_permission(self, request):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if "hidden" in form.changed_data:
+            audit.record("suggestion.admin_hidden", actor=request.user, subject=obj.user, target=obj, details={"hidden": obj.hidden})
+
+    def delete_model(self, request, obj):
+        audit.record("suggestion.admin_delete", actor=request.user, subject=obj.user, target=obj, details={"suggestion": obj.pk, "votes": obj.votes})
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            self.delete_model(request, obj)
+
+    @admin.action(description="Hide from the board")
+    def hide(self, request, queryset):
+        self.set_hidden(request, queryset, True)
+
+    @admin.action(description="Show on the board again")
+    def show(self, request, queryset):
+        self.set_hidden(request, queryset, False)
+
+    def set_hidden(self, request, queryset, hidden):
+        with transaction.atomic():
+            for obj in queryset.exclude(hidden=hidden):
+                obj.hidden = hidden
+                obj.save(update_fields=["hidden"])
+                audit.record("suggestion.admin_hidden", actor=request.user, subject=obj.user, target=obj, details={"hidden": hidden})

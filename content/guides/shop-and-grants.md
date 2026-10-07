@@ -45,6 +45,10 @@ Everything is a grant, so Grandma wants to see what the money is for before she 
 Screenshot the whole cart, not just the price. If the total is not visible, the screenshot does not count.
 :::
 
+## Something missing?
+
+If the Pantry has no item you want, put it on the suggestion board, which has a button on your dashboard. Suggesting costs a few cookies and voting costs fewer, and a vote only pushes a suggestion up the list. I read the top ones and decide what goes on the shelf.
+
 ## Buying one
 
 You need an account and you need to have met Grandma (the welcome chat). Then every card in the [Pantry](/shop/) has a button, and the cookies come out of your jar when you press it. Grandma checks what you sent, and when she is happy she hands over the grant. If she is not, your cookies come back.

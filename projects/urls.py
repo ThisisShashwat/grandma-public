@@ -10,4 +10,6 @@ urlpatterns = [
     path("project/rename/", views.project_rename, name="project_rename"),
     path("project/demands/", views.project_demands, name="project_demands"),
     path("complaints/", views.complaints, name="complaints"),
+    path("suggestions/", views.suggestions, name="suggestions"),
+    path("suggestions/<int:pk>/vote/", views.suggestion_vote, name="suggestion_vote"),
 ]

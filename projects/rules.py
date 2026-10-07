@@ -45,6 +45,14 @@ COMPLAINT_LIMIT = 5
 COMPLAINT_WINDOW = timedelta(hours=24)
 
 
+# The suggestion board (docs/projects.md "The suggestion board"): public, anonymous, voted on. Two kinds share every rule and every line of code.
+DEMAND, ITEM = "demand", "item"
+SUGGESTION_KINDS = ((DEMAND, "A new demand for Grandma"), (ITEM, "A Pantry item"))
+SUGGESTION_LIMIT = 5                    # per person per COMPLAINT_WINDOW, spam control on top of the cookie cost
+SHOWN = 50                              # how many of each kind the board lists
+SORTS = (("top", "Most votes"), ("new", "Newest"), ("old", "Oldest"))
+
+
 def tidy(text):
     """Trimmed, with the CRLF line breaks a browser sends made plain LF ones."""
     return text.replace("\r\n", "\n").replace("\r", "\n").strip()
