@@ -90,3 +90,10 @@
 @media (max-width: 520px) {
   .sug-sechead { flex-direction: column; align-items: flex-start; }
 }
+
+/* the "are you sure" box (static/js/features/confirm.js): a speech bubble with two buttons */
+dialog.confirm { max-width: min(30rem, calc(100vw - 2rem)); padding: 1.2rem 1.5rem; color: var(--ink); background: var(--canvas); border: var(--line) solid var(--ink); border-radius: var(--wobble-a); }
+dialog.confirm::backdrop { background: rgba(0, 0, 0, 0.45); }
+dialog.confirm form { margin: 0; }
+.confirm-ask { margin: 0 0 1rem; font-family: var(--display); font-size: 1.5rem; line-height: 1.15; overflow-wrap: anywhere; }
+.confirm-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 0; }

@@ -3,6 +3,10 @@
 
 {% block title %}The suggestion board{% endblock %}
 
+{% block scripts %}
+<script type="module" src="{{ static('js/pages/suggestions.js') }}"></script>
+{% endblock %}
+
 {% block styles %}
 <link rel="stylesheet" href="{{ static('css/sections/submit.css') }}">
 <link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
@@ -20,7 +24,8 @@
 {% macro suggest_form(section, form, sort) -%}
 <details class="sug-new"{% if form.errors %} open{% endif %}>
   <summary class="btn">Suggest one <small>({{ suggest_cost }})</small></summary>
-  <form class="submit-note" method="post" action="{{ url('suggestions') }}{{ '?sort=' ~ sort if sort != 'top' else '' }}">
+  <form class="submit-note" method="post" action="{{ url('suggestions') }}{{ '?sort=' ~ sort if sort != 'top' else '' }}"
+          data-confirm="Put this on the board for {{ suggest_cost }}, dear? Everybody here can read it, and I don't give cookies back.">
     {{ csrf_input }}
     <input type="hidden" name="kind" value="{{ section.kind }}">
     <h3 class="sug-form-title">{{ "A new demand" if section.kind == "demand" else "A thing for the Pantry" }}</h3>
@@ -55,7 +60,8 @@
 {%- endmacro %}
 
 {% macro vote_form(row, sort) -%}
-<form class="sug-vote" method="post" action="{{ url('suggestion_vote', args=[row.id]) }}">
+<form class="sug-vote" method="post" action="{{ url('suggestion_vote', args=[row.id]) }}"
+      data-confirm="Spend {{ vote_cost }} to vote for {{ row.title }}, dear? It only moves it up the list.">
   {{ csrf_input }}
   <input type="hidden" name="sort" value="{{ sort }}">
   {% if row.mine %}<span class="sug-state">Yours</span>

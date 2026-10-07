@@ -6,7 +6,7 @@ from zoneinfo import available_timezones
 
 from django.core.exceptions import ValidationError
 
-from program.profanity import is_rude
+from program.profanity import is_rude_name
 
 NAME_CHARS = re.compile(r"[\w .'\-]+")
 SLACK_ID = re.compile(r"[UW][A-Z0-9]{8,11}")
@@ -22,7 +22,7 @@ def validate_display_name(value):
 def validate_polite_name(value):
     """A name other people will read (a display name, a project name) must not be rude. Only the dialogue steps use it: it is not on
     the models, so staff can still type any name in the admin."""
-    if is_rude(value):
+    if is_rude_name(value):
         raise ValidationError("Not in my kitchen, dear. Pick another name.")
 
 
