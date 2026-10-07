@@ -33,6 +33,9 @@ class Profile(models.Model):
                                                    "sets it. Nothing else about them is kept from Hackatime except the encrypted token below.")
     github_username = models.CharField(max_length=39, blank=True, default="", editable=False,
                                        help_text="The GitHub username Hackatime reports for the account they connected (2026-10-07). PUBLIC on their profile page by the owner's decision, and used for Ari's repo owner check. Only the Hackatime connect callback sets it (accounts/hackatime.py); a reconnect refreshes it.")
+    identity = models.TextField(blank=True, default="", editable=False,
+                                help_text="Name, birthday and address from Hack Club for HQ's unified record, ENCRYPTED with PII_KEYS (accounts/identity.py). Empty unless HCA_IDENTITY is on and Hack Club sent it. "
+                                          "PRIVATE: never on a public page, in the admin, a log or the audit log. Only the Hack Club sign-in sets it.")
     hackatime_token = models.TextField(blank=True, default="", editable=False,
                                        help_text="The Hackatime access token, ENCRYPTED with the keys in HACKATIME_TOKEN_KEYS. Empty when they have not connected or the token was dropped. Only accounts/hackatime.py reads or writes it; it is never shown anywhere.")
     hca_sub = models.CharField("Hack Club Auth ID", max_length=100, null=True, blank=True, unique=True, editable=False,

@@ -22,6 +22,7 @@ from django.db import IntegrityError, transaction
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts import identity
 from accounts.models import Profile
 from accounts.slack import is_member_id
 from accounts.validators import validate_display_name, validate_polite_name
@@ -30,7 +31,7 @@ from audit import services as audit
 NAME = "hackclub"
 SCOPE = "openid profile slack_id verification_status email"
 TIMEOUT_SECONDS = 5
-CLAIMS = ("sub", "slack_id", "verification_status", "ysws_eligible", "email", "given_name", "nickname")
+CLAIMS = ("sub", "slack_id", "verification_status", "ysws_eligible", "email", "given_name", "nickname", "family_name", "name", "birthdate", "address")
 SUB_MAX_LENGTH = 100
 EMAIL_MAX_LENGTH = 254
 EMAIL_SHAPE = re.compile(r"[^@\s]+@[^@\s]+")
@@ -43,13 +44,19 @@ def enabled(cfg):
     return bool(cfg.HCA_LOGIN and settings.HCA_CLIENT_ID and settings.HCA_CLIENT_SECRET)
 
 
+def scope():
+    """What Hack Club is asked for: the usual five, plus birthdate and address only when the identity capture is on (accounts/identity.py: it needs HQ to have
+    approved those scopes for this app, or Hack Club would refuse every sign-in)."""
+    return SCOPE + (" birthdate address" if identity.enabled() else "")
+
+
 def client():
     """The Hack Club app, registered on first use from the settings (importing this module with no credentials does nothing). Authlib reads the
     discovery document, makes the state, the nonce and the PKCE verifier, keeps them in the session and checks the id token."""
     return oauth.create_client(NAME) or oauth.register(
         NAME, client_id=settings.HCA_CLIENT_ID, client_secret=settings.HCA_CLIENT_SECRET,
         server_metadata_url=f"{settings.HCA_ISSUER.rstrip('/')}/.well-known/openid-configuration",
-        client_kwargs={"scope": SCOPE, "code_challenge_method": "S256", "default_timeout": TIMEOUT_SECONDS})
+        client_kwargs={"scope": scope(), "code_challenge_method": "S256", "default_timeout": TIMEOUT_SECONDS})
 
 
 def redirect_uri():
@@ -127,7 +134,27 @@ def username_for(sub):
     return "hca_" + hashlib.sha256(sub.encode()).hexdigest()[:32]
 
 
-def sign_in(profile, email=""):
+def keep_identity(profile, userinfo):
+    """Refresh the encrypted identity from this sign-in (only when the capture is on and Hack Club sent something usable); returns whether it changed.
+    The caller saves the Profile. A key problem never blocks a sign-in: it is skipped."""
+    if not identity.enabled():
+        return False
+    data = identity.clean(userinfo)
+    if not data:
+        return False
+    try:
+        sealed = identity.seal(data)
+        if identity.unseal(profile.identity) == data:
+            return False
+    except identity.Unreadable:
+        if not profile.identity:
+            return False
+        sealed = identity.seal(data)           # an old unreadable value (a retired key) is replaced by the fresh one
+    profile.identity = sealed
+    return True
+
+
+def sign_in(profile, email="", userinfo=None):
     """Sign in a returning person: check they may sign in, update the check time, keep the email current and record the login. A present email
     that differs from the stored one replaces it (they may change it at Hack Club; `hca_sub` stays the identity) and is audited as a profile
     update naming the field only, never the address. A missing one leaves the stored one alone."""
@@ -137,14 +164,15 @@ def sign_in(profile, email=""):
     if changed:
         profile.email = email
     profile.hca_checked_at = timezone.now()
-    profile.save(update_fields=["hca_checked_at", *changed])
+    new_identity = keep_identity(profile, userinfo or {})
+    profile.save(update_fields=["hca_checked_at", *changed, *(["identity"] if new_identity else [])])
     if changed:
         audit.record("profile.update", actor=profile.user, subject=profile.user, target=profile, details={"fields": changed})
     audit.record("accounts.hca_login", actor=profile.user, subject=profile.user, target=profile, details={"created": False})
     return profile, None
 
 
-def create(sub, slack_id, email="", display_name=""):
+def create(sub, slack_id, email="", display_name="", userinfo=None):
     """Create a user and profile for a first-time Hack Club sign-in, and record the login."""
     # create_user without a password creates an account with an unusable password on purpose.
     user = get_user_model().objects.create_user(username=username_for(sub))
@@ -156,6 +184,8 @@ def create(sub, slack_id, email="", display_name=""):
         display_name=display_name,
         hca_checked_at=timezone.now(),
     )
+    if keep_identity(profile, userinfo or {}):
+        profile.save(update_fields=["identity"])
     audit.record("accounts.hca_login", actor=user, subject=user, target=profile, details={"created": True})
     return profile
 
@@ -173,7 +203,7 @@ def identify(userinfo, require_eligible):
     with transaction.atomic():
         profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
         if profile is not None:
-            return sign_in(profile, email)
+            return sign_in(profile, email, userinfo)
 
         ok, reason = check(userinfo, require_eligible)
         if not ok:
@@ -182,10 +212,10 @@ def identify(userinfo, require_eligible):
         slack_id = userinfo.get("slack_id")
         try:
             with transaction.atomic():
-                profile = create(sub, slack_id, email, clean_first_name(userinfo))
+                profile = create(sub, slack_id, email, clean_first_name(userinfo), userinfo)
                 return profile, None
         except IntegrityError:
             profile = Profile.objects.select_for_update().select_related("user").filter(hca_sub=sub).first()
             if profile is not None:
-                return sign_in(profile, email)
+                return sign_in(profile, email, userinfo)
             return None, "no_account"

@@ -1,0 +1,81 @@
+"""The identity data HQ's unified record wants for an approved project (name, birthday, address), kept ENCRYPTED and PRIVATE (todo item 2, 2026-10-07).
+
+OFF by default, and off means nothing at all changes: Hack Club is not even asked for the extra scopes. It is on only when BOTH `HCA_IDENTITY` is true in the
+environment and `PII_KEYS` holds at least one Fernet key (environment only, never in the admin or the database, newest first). Why both: `birthdate` and
+`address` are scopes Hack Club only gives to apps it has marked official, so asking for them before HQ has approved this app would break every sign-in; and
+without a key there is nowhere safe to put them.
+
+What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "birthdate": "YYYY-MM-DD", "address": {street_address,
+locality, region, postal_code, country, formatted}}, only the parts Hack Club sent and that pass the checks below. It is refreshed at every Hack Club sign-in
+(a person may move house or fix a typo at Hack Club). It is never on a public page, never in the admin, never in a log, a session or the audit log
+(the audit log may name that it changed, never what it holds), and nothing reads it yet: the export to HQ waits for HQ's answer to question 11 in docs/hq-questions.md.
+"""
+import json
+from datetime import date
+
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
+from django.conf import settings
+
+ADDRESS_KEYS = ("formatted", "street_address", "locality", "region", "postal_code", "country")
+MAX_TEXT = 200
+
+
+class Unreadable(Exception):
+    """The sealed identity cannot be opened (no keys, a wrong key, or damage)."""
+
+
+def enabled():
+    return bool(settings.HCA_IDENTITY and settings.PII_KEYS)
+
+
+def text(value, limit=MAX_TEXT):
+    """A claim made fit to keep: stripped text with nothing unprintable, at most `limit` characters, or "" for anything else."""
+    return value.strip() if isinstance(value, str) and value.strip() and value.strip().isprintable() and len(value.strip()) <= limit else ""
+
+
+def clean(userinfo):
+    """The identity claims of a sign-in as a small dict, or {} when Hack Club sent nothing usable. Never raises, never invents."""
+    out = {}
+    name = " ".join(filter(None, (text(userinfo.get("given_name"), 60), text(userinfo.get("family_name"), 60)))) or text(userinfo.get("name"), 120)
+    if name:
+        out["name"] = name
+    try:
+        born = date.fromisoformat(userinfo.get("birthdate") or "")
+        if 1900 <= born.year <= date.today().year:
+            out["birthdate"] = born.isoformat()
+    except (TypeError, ValueError):
+        pass
+    raw = userinfo.get("address")
+    address = {"formatted": text(raw, 400)} if isinstance(raw, str) else {key: text(raw.get(key)) for key in ADDRESS_KEYS} if isinstance(raw, dict) else {}
+    address = {key: value for key, value in address.items() if value}
+    if address:
+        out["address"] = address
+    return out
+
+
+def fernet():
+    if not settings.PII_KEYS:
+        raise Unreadable
+    return MultiFernet([Fernet(key) for key in settings.PII_KEYS])
+
+
+def seal(data):
+    """The dict as encrypted text for `Profile.identity` (the first key encrypts). Raises Unreadable without keys."""
+    try:
+        return fernet().encrypt(json.dumps(data, separators=(",", ":"), sort_keys=True).encode()).decode()
+    except Unreadable:
+        raise
+    except Exception:
+        raise Unreadable from None
+
+
+def unseal(sealed):
+    """The dict behind `Profile.identity` (any key in PII_KEYS opens it). {} for an empty field. Raises Unreadable when it cannot be opened."""
+    if not sealed:
+        return {}
+    try:
+        return json.loads(fernet().decrypt(sealed.encode()))
+    except Unreadable:
+        raise
+    except (InvalidToken, ValueError):
+        raise Unreadable from None

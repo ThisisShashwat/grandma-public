@@ -59,6 +59,9 @@ def validate_hackatime_token_keys(keys):
             raise ImproperlyConfigured("HACKATIME_TOKEN_KEYS contains an invalid Fernet key.")
 
 
+HCA_IDENTITY = env.bool("HCA_IDENTITY", default=False)     # ask Hack Club for birthdate and address too and keep name, birthday and address ENCRYPTED (accounts/identity.py); needs PII_KEYS and HQ's approval of the scopes
+PII_KEYS = env.list("PII_KEYS", default=[])                # comma separated Fernet keys, newest first, environment only: they open Profile.identity (python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+validate_hackatime_token_keys(PII_KEYS)                    # the same check: a malformed key stops Django at startup
 HACKATIME_TOKEN_KEYS = env.list("HACKATIME_TOKEN_KEYS", default=[])          # comma separated Fernet keys, newest first, environment only, never derived from SECRET_KEY, never in the admin or the database
 validate_hackatime_token_keys(HACKATIME_TOKEN_KEYS)
 for _name, _address in (("HCA_ISSUER", HCA_ISSUER), ("HACKATIME_BASE_URL", HACKATIME_BASE_URL)):
