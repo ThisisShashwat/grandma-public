@@ -1,4 +1,5 @@
 :root {
+  --cat: clamp(7rem, 20vh, 12rem);
   --ink: #000;
   --paper: #fff3a6;
   --pink: #f4a3b4;
@@ -11,36 +12,39 @@
 
 body {
   margin: 0;
+  position: relative;
+  overflow-x: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
-  background: #fff;
+  background: #e3c97b;
   color: var(--ink);
   font-family: var(--body);
-  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.3rem);
   line-height: 1.45;
 }
 
-main { width: min(100% - 2rem, 40rem); padding: 2rem 0; text-align: center; }
+main { position: relative; z-index: 1; width: min(100% - 2rem, 40rem); padding: 1rem 0 var(--cat); text-align: center; }
 
-img { max-width: 100%; height: auto; }
+main img { display: block; margin: 0 auto 0.3rem; width: auto; max-width: 100%; height: clamp(7rem, 24vh, 15rem); }
 
 h1 {
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(3.2rem, 10vw, 6rem);
+  font-size: clamp(2.4rem, min(9vw, 9vh), 5.5rem);
   line-height: 1.05;
   margin: 0 0 0.4em;
   rotate: -2deg;
 }
 
 p { margin: 0 0 1em; }
-.soon { font-family: var(--display); font-size: 2rem; background: var(--paper); display: inline-block; padding: 0 0.4em; }
+.soon { font-family: var(--display); font-size: 1.7rem; background: var(--paper); display: inline-block; padding: 0 0.4em; }
 
 .btn {
   display: inline-block;
   font-family: var(--display);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   line-height: 1.1;
   padding: 0.45em 1.1em;
   color: var(--ink);
@@ -52,3 +56,11 @@ p { margin: 0 0 1em; }
 .btn:hover { background: var(--pink); }
 .btn:active { translate: 3px 3px; }
 .btn:focus-visible { outline: 4px dashed #2f4fc4; outline-offset: 4px; }
+
+/* the cat and its whole yarn trail sit in the bottom right corner, behind the text: below the text on narrow screens, beside it on wide ones */
+.cat { position: absolute; right: 0; bottom: 0; height: var(--cat); width: auto; pointer-events: none; }
+
+@media (min-width: 1000px) {
+  main { padding-bottom: 1rem; }
+  .cat { width: calc(50vw - 19rem); height: auto; }
+}
