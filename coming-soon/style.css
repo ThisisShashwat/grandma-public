@@ -1,5 +1,5 @@
 :root {
-  --cat: clamp(7rem, 24vh, 16rem);
+  --cat: clamp(6rem, 21vh, 16rem);
   --ink: #000;
   --paper: #fff3a6;
   --pink: #f4a3b4;
@@ -30,7 +30,7 @@ body {
 
 main { position: relative; z-index: 1; width: min(100% - 2rem, 40rem); padding: 1rem 0; text-align: center; }
 
-main img { display: block; margin: 0 auto 0.3rem; width: auto; max-width: 100%; height: clamp(7rem, 24vh, 15rem); }
+main img { display: block; margin: 0 auto 0.3rem; width: auto; max-width: 100%; height: clamp(6rem, 22vh, 15rem); }
 
 h1 {
   font-family: var(--display);
@@ -60,6 +60,8 @@ p { margin: 0 0 1em; }
 .btn:active { translate: 3px 3px; }
 .btn:focus-visible { outline: 4px dashed #2f4fc4; outline-offset: 4px; }
 
+.credit { margin: 0.5rem 0; text-align: center; font-size: 0.95rem; }
+
 /* small screens: the tag and the button stack, so the button is in the middle and the thread can hang from it */
 .soon, .btn { display: table; margin-inline: auto; }
 
@@ -70,5 +72,6 @@ p { margin: 0 0 1em; }
 @media (min-width: 1000px) {
   body { display: grid; place-items: center; }
   .soon, .btn { display: inline-block; margin-inline: 0; }
+  .credit { position: absolute; left: 0; right: 0; bottom: 0.6rem; margin: 0; }
   .cat { position: absolute; right: 0; bottom: 0; margin: 0; translate: none; width: calc(50vw - 19rem); height: auto; }
 }
