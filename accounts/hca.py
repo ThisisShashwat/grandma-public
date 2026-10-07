@@ -25,7 +25,7 @@ from django.utils import timezone
 from accounts import identity
 from accounts.models import Profile
 from accounts.slack import is_member_id
-from accounts.validators import validate_display_name, validate_polite_name
+from accounts.validators import validate_display_name
 from audit import services as audit
 
 NAME = "hackclub"
@@ -109,15 +109,15 @@ def clean_email(value):
 
 
 def clean_first_name(userinfo):
-    """The display name to start a new account with: the first name Hack Club gave (`given_name`, else `nickname`), or "" when there is none or it would
-    not do as a display name (shown to other people: the dialogue's own rules, rude names included). Never the family name, never invented."""
+    """The display name to start an account with: the first name Hack Club gave (`given_name`, else `nickname`), or "" when there is none or it would
+    not do as a display name (the shape rules only: it is shown to other people, so no markup or odd characters). It is NOT checked for rude words (owner,
+    2026-10-07): Hack Club supplied it as the person's own name, and real names such as Wang or Dick must never be refused. Never the family name, never invented."""
     for key in ("given_name", "nickname"):
         value = userinfo.get(key)
         if isinstance(value, str) and value.strip():
             name = " ".join(value.split())
             try:
                 validate_display_name(name)
-                validate_polite_name(name)
             except ValidationError:
                 return ""
             return name
@@ -163,6 +163,10 @@ def sign_in(profile, email="", userinfo=None):
     changed = ["email"] if email and email != profile.email else []
     if changed:
         profile.email = email
+    name = "" if profile.display_name else clean_first_name(userinfo or {})       # a blank name is filled from Hack Club; a name they have is never touched
+    if name:
+        profile.display_name = name
+        changed.append("display_name")
     profile.hca_checked_at = timezone.now()
     new_identity = keep_identity(profile, userinfo or {})
     profile.save(update_fields=["hca_checked_at", *changed, *(["identity"] if new_identity else [])])
