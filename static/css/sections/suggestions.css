@@ -1,36 +1,92 @@
-/* The suggestion board (templates/pages/suggestions.html): two sections of sticky notes with a vote button on each. Loads after submit.css, whose
-   .submit-note, .nf and .oops it reuses for the forms. The home page's language: 3px ink borders, small tilts, muted yellow, pink and blue. */
-.sug-head { padding-block: clamp(2rem, 5vw, 3.5rem); }
-.sug-head h1 { margin-bottom: 1rem; overflow-wrap: anywhere; }
-.sug-bubble { max-width: 44rem; }
-.sug-bubble p { margin: 0 0 0.4rem; }
-.sug-jar { margin: 1rem 0 0; font-size: 1.2rem; }
-.sug-flash { display: inline-block; margin: 0.8rem 0 0; padding: 0.4rem 1rem; font-weight: 700; background: var(--paper); border: 3px solid var(--ink); rotate: -0.6deg; }
-.sug-sorts { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: baseline; margin-top: 1rem; font-size: 1.15rem; }
-.sug-sorts a { color: var(--ink); }
-.sug-sorts a[aria-current] { font-weight: 700; text-decoration: underline; }
+/* The suggestion board (templates/pages/suggestions.html). Built from the site's own pieces: the fridge door and sticky notes of Grandma's dealt notes
+   (project.css: .hand, .dnote), the Pantry's shelf label, cards and price tag (shop.css), and the lined note paper of the forms (submit.css). Only what
+   is new lives here: the header, the vote button (a cookie), the tally, and the "top pick" stamp. 3px ink borders, small tilts, muted colours. */
 
-.sug-body { padding-block: clamp(1.5rem, 4vw, 3rem); }
-.sug-blurb { margin: 0 0 1rem; }
-.sug-new { margin-bottom: 1.5rem; }
+/* the header */
+.sug-head { padding-block: clamp(2rem, 5vw, 3.5rem); }
+.sug-head h1 { margin-bottom: 1rem; font-size: clamp(2.6rem, 8vw, 5rem); overflow-wrap: anywhere; }
+/* her picture has a white background, so it sits on a white card like the Pantry's jar */
+.sug-fig { width: min(100%, 18rem); justify-self: center; padding: 0.75rem; background: var(--canvas); border: var(--line) solid var(--ink); rotate: 1.5deg; }
+.sug-bubble { max-width: 34rem; padding: 1rem 1.4rem 0.7rem; }
+.sug-bubble p { margin: 0 0 0.4rem; }
+.sug-jar {
+  display: inline-flex; align-items: center; gap: 0.7rem; margin: 1.6rem 0 0; padding: 0.4rem 1rem 0.4rem 0.6rem; background: var(--paper);
+  border: 3px solid var(--ink); rotate: -1.2deg; font-size: 1.25rem;
+}
+.sug-jar img { width: 2.6rem; height: auto; }
+.sug-jar b { font-family: var(--display); font-size: 1.9rem; font-weight: 400; }
+.sug-prices { margin: 0.9rem 0 0; font-size: 1.15rem; }
+.sug-prices b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; }
+.sug-flash { display: inline-block; margin: 0.9rem 0 0; padding: 0.4rem 1rem; font-weight: 700; background: var(--paper); border: 3px solid var(--ink); rotate: -0.6deg; }
+.sug-sorts { display: flex; flex-wrap: wrap; gap: 0.5rem 0.7rem; align-items: center; margin-top: 1.2rem; font-size: 1.1rem; }
+.sug-sort {
+  padding: 0.05em 0.8em; color: var(--ink); text-decoration: none; background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b);
+  font-weight: 700; line-height: 1.5;
+}
+.sug-sort[aria-current] { background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.sug-sort:hover { background: var(--paper); }
+
+/* each section: a picture, the shelf label and her blurb */
+.sug-section { padding-block: clamp(2rem, 5vw, 3.75rem); }
+.sug-sechead { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2rem); margin-bottom: 1.2rem; }
+.sug-sechead .shelf-blurb { margin-bottom: 0; }
+.sug-secfig { width: clamp(4.5rem, 12vw, 7rem); }
+.sug-new { margin: 0 0 2rem; }
 .sug-new > summary { display: inline-block; list-style: none; cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; }
 .sug-new > summary::-webkit-details-marker { display: none; }
-.sug-new .submit-note { margin-top: 1.2rem; }
+.sug-new > summary { font-size: 1.5rem; }
+.sug-new > summary small { font-size: 0.8em; opacity: 0.8; }
+.sug-new[open] > summary { box-shadow: 4px 4px 0 var(--ink); }
+.sug-new .submit-note { margin-top: 1.4rem; max-width: 46rem; }
+.sug-form-title { margin: 0; font-size: clamp(1.7rem, 4vw, 2.3rem); rotate: -1deg; }
 
-.sug-list { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
-.sug { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; padding: 0.9rem 1rem; background: var(--paper); border: 3px solid var(--ink); }
-.sug:nth-child(3n+2) { background: var(--note-pink); rotate: 0.3deg; }
-.sug:nth-child(3n) { background: var(--note-blue); rotate: -0.3deg; }
-.sug-vote { display: grid; justify-items: center; align-content: start; gap: 0.4rem; margin: 0; min-width: 5.5rem; }
-.sug-votes { font-family: var(--display); font-size: 2.4rem; font-weight: 400; line-height: 1; }
-.sug-state { font-style: italic; }
-.sug-vote .btn { font-size: 1rem; padding-inline: 0.8rem; }
-.sug-body-text { min-width: 0; }
-.sug-body-text h3 { margin: 0 0 0.3rem; font-family: var(--display); font-size: 1.7rem; font-weight: 400; line-height: 1.05; overflow-wrap: anywhere; }
-.sug-body-text p { margin: 0 0 0.3rem; overflow-wrap: anywhere; white-space: pre-line; }
-.sug-example, .sug-age { font-size: 0.95rem; font-style: italic; }
-.sug-empty { font-style: italic; }
+/* the demands, on the fridge */
+.sug-hand { margin-top: 0.5rem; }
+.sug:nth-child(3n+2) .dnote-body { background: var(--note-pink); }
+.sug:nth-child(3n) .dnote-body { background: var(--note-blue); }
+.sug .dnote-body { position: relative; }
+.sug .dnote-line { overflow-wrap: anywhere; white-space: pre-line; }
+.sug .dnote-rule { font-size: 0.95rem; overflow-wrap: anywhere; }
+.sug-tally { display: grid; gap: 0; font-size: 1rem; line-height: 1.1; }
+.sug-tally b { font-family: var(--display); font-size: 2.6rem; font-weight: 400; line-height: 0.95; }
+.sug-tally small { font-size: 0.85rem; font-style: italic; }
+
+/* the top pick stamp */
+.sug-top {
+  position: absolute; top: -0.9rem; right: 0.6rem; z-index: 1; padding: 0.05em 0.6em; font-family: var(--display); font-size: 1.15rem; line-height: 1.3;
+  color: var(--canvas); background: var(--red); border: 3px solid var(--ink); rotate: 4deg;
+}
+.item { position: relative; }
+
+/* the vote: a cookie to press */
+.sug-vote { margin: 0; }
+.sug-cookie {
+  display: grid; justify-items: center; gap: 0.15rem; padding: 0; color: var(--ink); background: none; border: 0; line-height: 1;
+  cursor: url("../../assets/cursor-spoon.png") 4 4, pointer; transition: rotate 0.15s steps(3);
+}
+.sug-face { position: relative; display: grid; place-items: center; width: 4.6rem; height: 4.6rem; }
+.sug-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.sug-face span { position: relative; font-family: var(--display); font-size: 1.5rem; -webkit-text-stroke: 4px var(--canvas); paint-order: stroke fill; }
+.sug-cookie small { font-size: 0.85rem; font-weight: 700; }
+.sug-cookie:hover, .sug-cookie:focus-visible { rotate: -10deg; }
+.sug-cookie:focus-visible { outline: 4px dashed var(--ribbon); outline-offset: 3px; }
+.sug-state { display: inline-block; padding: 0.05em 0.7em; font-family: var(--display); font-size: 1.3rem; background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b); rotate: -3deg; }
+.sug-state--voted { background: var(--paper); }
+
+/* the Pantry wishes, on the shelf */
+.sug-items .item { gap: 0.5rem; }
+.sug-mystery {
+  display: grid; place-items: center; width: min(100%, 9rem); aspect-ratio: 1; margin: 0 auto 0.2rem; font-family: var(--display); font-size: 5rem; line-height: 1;
+  background: var(--paper); border: 3px dashed var(--ink); rotate: -2deg;
+}
+.sug-items li:nth-child(3n+2) .sug-mystery { background: var(--note-pink); rotate: 2deg; }
+.sug-items li:nth-child(3n) .sug-mystery { background: var(--note-blue); }
+.sug-items .item h3, .sug-items .tagline, .sug-items .worth { overflow-wrap: anywhere; }
+.sug-items .tagline { white-space: pre-line; }
+.sug-items .item-foot { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.sug-items .item-foot .sug-age { flex-basis: 100%; }
+.sug-age { margin: 0; font-size: 0.95rem; font-style: italic; }
+
 @media (max-width: 520px) {
-  .sug { grid-template-columns: minmax(0, 1fr); }
-  .sug-vote { grid-auto-flow: column; justify-content: start; align-items: center; min-width: 0; }
+  .sug-sechead { flex-direction: column; align-items: flex-start; }
 }

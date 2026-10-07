@@ -5,98 +5,156 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ static('css/sections/submit.css') }}">
+<link rel="stylesheet" href="{{ static('css/sections/project.css') }}">
+<link rel="stylesheet" href="{{ static('css/sections/shop.css') }}">
 <link rel="stylesheet" href="{{ static('css/sections/suggestions.css') }}">
 {% endblock %}
 
-{# The suggestion board (projects/views.py suggestions): two sections on one page, demands and Pantry items, the same markup twice. Anonymous: no
+{# The suggestion board (projects/views.py suggestions): demands on Grandma's fridge door, Pantry wishes on a shelf, the same rows drawn twice. Anonymous: no
    record here has a person. Everything is plain rows (projects/suggestions.py Row) and the two forms. Suggesting and voting cost cookies; a vote only
-   moves a suggestion up the list. #}
+   moves a suggestion up the list. The fridge and the shelf are the dealt notes' and the Pantry's own classes (project.css, shop.css). #}
 {% macro oops(form, name) -%}
 {% if form[name].errors %}<p class="oops" id="err-{{ form.prefix }}-{{ name }}" role="alert">{% for message in form[name].errors %}{{ message }} {% endfor %}</p>{% endif %}
 {%- endmacro %}
 
+{% macro suggest_form(section, form, sort) -%}
+<details class="sug-new"{% if form.errors %} open{% endif %}>
+  <summary class="btn">Suggest one <small>({{ suggest_cost }})</small></summary>
+  <form class="submit-note" method="post" action="{{ url('suggestions') }}{{ '?sort=' ~ sort if sort != 'top' else '' }}">
+    {{ csrf_input }}
+    <input type="hidden" name="kind" value="{{ section.kind }}">
+    <h3 class="sug-form-title">{{ "A new demand" if section.kind == "demand" else "A thing for the Pantry" }}</h3>
+    {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
+    {% if form.errors and not form.non_field_errors() %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
+
+    <div class="nf">
+      <label class="nf-label" for="{{ form['title'].id_for_label }}">{{ "What is the demand called?" if section.kind == "demand" else "What is the item?" }}</label>
+      <input class="input" id="{{ form['title'].id_for_label }}" name="{{ form['title'].html_name }}" maxlength="60" required autocomplete="off"
+             placeholder="{{ 'No Mouse' if section.kind == 'demand' else 'A second monitor' }}" value="{{ form['title'].value() or '' }}"{% if form['title'].errors %} aria-invalid="true" aria-describedby="err-{{ form.prefix }}-title"{% endif %}>
+      {{ oops(form, "title") }}
+    </div>
+
+    <div class="nf">
+      <label class="nf-label" for="{{ form['text'].id_for_label }}">{{ "What should I demand, and why is it annoying?" if section.kind == "demand" else "Why should it be in the Pantry?" }}</label>
+      <textarea class="input" id="{{ form['text'].id_for_label }}" name="{{ form['text'].html_name }}" rows="4" maxlength="500" required
+                {% if form['text'].errors %}aria-invalid="true" aria-describedby="err-{{ form.prefix }}-text"{% endif %}>{{ form['text'].value() or '' }}</textarea>
+      {{ oops(form, "text") }}
+      <p class="nf-hint">Plain words, dear. Five hundred characters at the very most. Everybody on the board can read it, and nobody can see who wrote it.</p>
+    </div>
+
+    <div class="nf">
+      <label class="nf-label" for="{{ form['example'].id_for_label }}">{{ "A project it would fit" if section.kind == "demand" else "Where to buy it" }} <small>(if you know)</small></label>
+      <input class="input" id="{{ form['example'].id_for_label }}" name="{{ form['example'].html_name }}" maxlength="200" autocomplete="off"
+             value="{{ form['example'].value() or '' }}"{% if form['example'].errors %} aria-invalid="true" aria-describedby="err-{{ form.prefix }}-example"{% endif %}>
+      {{ oops(form, "example") }}
+    </div>
+
+    <p class="submit-actions"><button class="btn btn--big">Put it on the board ({{ suggest_cost }})</button></p>
+  </form>
+</details>
+{%- endmacro %}
+
+{% macro vote_form(row, sort) -%}
+<form class="sug-vote" method="post" action="{{ url('suggestion_vote', args=[row.id]) }}">
+  {{ csrf_input }}
+  <input type="hidden" name="sort" value="{{ sort }}">
+  {% if row.mine %}<span class="sug-state">Yours</span>
+  {% elif row.voted %}<span class="sug-state sug-state--voted">Voted</span>
+  {% else %}<button class="sug-cookie" aria-label="Vote for {{ row.title }}, {{ vote_cost }}"><span class="sug-face">{{ art.img("cookie.png", "", (300, 300), false) }}<span>Vote</span></span><small>{{ vote_cost }}</small></button>{% endif %}
+</form>
+{%- endmacro %}
+
 {% block main %}
 <section class="scene scene--sky sug-head">
-  <div class="wrap">
-    <h1>The suggestion board</h1>
-    <div class="talk-bubble sug-bubble">
-      <p>Suggest something and I'll read it. Vote for what you like and it climbs the list, dear.</p>
-      <p>A suggestion costs {{ suggest_cost }} and a vote costs {{ vote_cost }}. A vote does nothing but push it up. I decide the rest.</p>
+  <div class="wrap split">
+    <div>
+      <h1>The suggestion board</h1>
+      <div class="talk-bubble sug-bubble">
+        <p>Tell me what else to demand, dear, or what belongs on my shelf. The others vote, and the ones they like float up.</p>
+        <p>I read the top ones. A vote only moves it up. I decide the rest.</p>
+      </div>
+      <p class="sug-jar">{{ art.img("cookie.png", "", (300, 300), false) }}<span><b>{{ balance }}</b> {{ "cookie" if balance == 1 else "cookies" }} in your jar</span></p>
+      <p class="sug-prices">Suggesting costs <b>{{ suggest_cost }}</b>. Voting costs <b>{{ vote_cost }}</b>.</p>
+      {% if flash %}<p class="{{ 'sug-flash' if flash[0] else 'oops' }}" role="status">{{ flash[1] }}</p>{% endif %}
+      <nav class="sug-sorts" aria-label="Sort the board"><span>Sort by</span>
+        {% for value, label in sorts %}<a class="sug-sort" href="{{ url('suggestions') }}{{ '?sort=' ~ value if value != 'top' else '' }}"{% if value == sort %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+      </nav>
     </div>
-    <p class="sug-jar">In your jar: <b>{{ balance }}</b> {{ "cookie" if balance == 1 else "cookies" }}</p>
-    {% if flash %}<p class="{{ 'sug-flash' if flash[0] else 'oops' }}" role="status">{{ flash[1] }}</p>{% endif %}
-    <nav class="sug-sorts" aria-label="Sort the board"><span>Sort by</span>
-      {% for value, label in sorts %}<a href="{{ url('suggestions') }}{{ '?sort=' ~ value if value != 'top' else '' }}"{% if value == sort %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
-    </nav>
+    {{ art.fig("grandma-complaints.png", "Grandma half buried under a mountain of complaint notes", "aside-fig sug-fig") }}
   </div>
 </section>
 
-{% for section in sections %}
+{# the demands: Grandma's fridge door, the same one the dealt notes hang on #}
+{% set section = sections[0] %}
 {% set form = section.form %}
-<section class="scene sug-body" id="{{ section.kind }}" aria-labelledby="h-{{ section.kind }}">
+<section class="scene sug-section" id="{{ section.kind }}" aria-labelledby="h-{{ section.kind }}">
   <div class="wrap">
-    <h2 id="h-{{ section.kind }}">{{ section.title }}</h2>
-    <p class="sug-blurb">{{ section.blurb }}</p>
-
-    <details class="sug-new"{% if form.errors %} open{% endif %}>
-      <summary class="btn">Suggest one ({{ suggest_cost }})</summary>
-      <form class="submit-note" method="post" action="{{ url('suggestions') }}{{ '?sort=' ~ sort if sort != 'top' else '' }}">
-        {{ csrf_input }}
-        <input type="hidden" name="kind" value="{{ section.kind }}">
-        {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
-        {% if form.errors and not form.non_field_errors() %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
-
-        <div class="nf">
-          <label class="nf-label" for="{{ form['title'].id_for_label }}">{{ "What is the demand called?" if section.kind == "demand" else "What is the item?" }}</label>
-          <input class="input" id="{{ form['title'].id_for_label }}" name="{{ form['title'].html_name }}" maxlength="60" required autocomplete="off"
-                 placeholder="{{ 'No Mouse' if section.kind == 'demand' else 'A second monitor' }}" value="{{ form['title'].value() or '' }}"{% if form['title'].errors %} aria-invalid="true" aria-describedby="err-{{ form.prefix }}-title"{% endif %}>
-          {{ oops(form, "title") }}
-        </div>
-
-        <div class="nf">
-          <label class="nf-label" for="{{ form['text'].id_for_label }}">{{ "What should I demand, and why is it annoying?" if section.kind == "demand" else "Why should it be in the Pantry?" }}</label>
-          <textarea class="input" id="{{ form['text'].id_for_label }}" name="{{ form['text'].html_name }}" rows="4" maxlength="500" required
-                    {% if form['text'].errors %}aria-invalid="true" aria-describedby="err-{{ form.prefix }}-text"{% endif %}>{{ form['text'].value() or '' }}</textarea>
-          {{ oops(form, "text") }}
-          <p class="nf-hint">Plain words, dear. Five hundred characters at the very most. Everybody on the board can read it, and nobody can see who wrote it.</p>
-        </div>
-
-        <div class="nf">
-          <label class="nf-label" for="{{ form['example'].id_for_label }}">{{ "A project it would fit" if section.kind == "demand" else "Where to buy it" }} <small>(if you know)</small></label>
-          <input class="input" id="{{ form['example'].id_for_label }}" name="{{ form['example'].html_name }}" maxlength="200" autocomplete="off"
-                 value="{{ form['example'].value() or '' }}"{% if form['example'].errors %} aria-invalid="true" aria-describedby="err-{{ form.prefix }}-example"{% endif %}>
-          {{ oops(form, "example") }}
-        </div>
-
-        <p class="submit-actions"><button class="btn btn--big">Put it on the board ({{ suggest_cost }})</button></p>
-      </form>
-    </details>
-
+    <div class="sug-sechead">
+      {{ art.fig("grandma-clipboard.png", "", "aside-fig sug-secfig") }}
+      <div>
+        <h2 class="shelf-label" id="h-{{ section.kind }}">{{ section.title }}</h2>
+        <p class="shelf-blurb">{{ section.blurb }}</p>
+      </div>
+    </div>
+    {{ suggest_form(section, form, sort) }}
     {% if section.rows %}
-    <ol class="sug-list">
+    <ol class="hand sug-hand">
       {% for row in section.rows %}
-      <li class="sug" id="s-{{ row.id }}">
-        <form class="sug-vote" method="post" action="{{ url('suggestion_vote', args=[row.id]) }}">
-          {{ csrf_input }}
-          <input type="hidden" name="sort" value="{{ sort }}">
-          <b class="sug-votes" aria-label="{{ row.votes }} votes">{{ row.votes }}</b>
-          {% if row.mine %}<span class="sug-state">yours</span>
-          {% elif row.voted %}<span class="sug-state">voted</span>
-          {% else %}<button class="btn btn--plain">Vote ({{ vote_cost }})</button>{% endif %}
-        </form>
-        <div class="sug-body-text">
-          <h3>{{ row.title }}</h3>
-          <p>{{ row.text }}</p>
-          {% if row.example %}<p class="sug-example">{{ "Fits: " if section.kind == "demand" else "Found at: " }}{{ row.example }}</p>{% endif %}
-          <p class="sug-age">{{ row.age }}</p>
+      <li class="dnote sug" id="s-{{ row.id }}">
+        <div class="dnote-body">
+          {% if loop.first and sort == "top" and row.votes %}<span class="sug-top">Top pick</span>{% endif %}
+          <b class="dnote-name">{{ row.title }}</b>
+          <i class="dnote-line">"{{ row.text }}"</i>
+          {% if row.example %}<span class="dnote-rule">Fits: {{ row.example }}</span>{% endif %}
+          <span class="dnote-foot">
+            <span class="sug-tally"><b>{{ row.votes }}</b> <span>{{ "vote" if row.votes == 1 else "votes" }}</span><small>{{ row.age }}</small></span>
+            {{ vote_form(row, sort) }}
+          </span>
         </div>
       </li>
       {% endfor %}
     </ol>
     {% else %}
-    <p class="sug-empty">Nothing here yet, dear. Be the first.</p>
+    <div class="empty">{{ art.fig("grandma-peek.png", "Grandma peeking round the door", "aside-fig empty-fig") }}<p>Not a single complaint, dear. Suspicious. Go on, be the first.</p></div>
     {% endif %}
   </div>
 </section>
-{% endfor %}
+
+{# the Pantry wishes: cards on a shelf, a vote tag where the price tag goes #}
+{% set section = sections[1] %}
+{% set form = section.form %}
+<section class="scene scene--lilac sug-section" id="{{ section.kind }}" aria-labelledby="h-{{ section.kind }}">
+  <div class="wrap">
+    <div class="sug-sechead">
+      {{ art.fig("grandma-cookie-jar.png", "", "aside-fig sug-secfig") }}
+      <div>
+        <h2 class="shelf-label" id="h-{{ section.kind }}">{{ section.title }}</h2>
+        <p class="shelf-blurb">{{ section.blurb }}</p>
+      </div>
+    </div>
+    {{ suggest_form(section, form, sort) }}
+    {% if section.rows %}
+    <ol class="items sug-items">
+      {% for row in section.rows %}
+      <li id="s-{{ row.id }}">
+        <article class="item">
+          {% if loop.first and sort == "top" and row.votes %}<span class="sug-top">Top pick</span>{% endif %}
+          <div class="sug-mystery" aria-hidden="true">?</div>
+          <h3>{{ row.title }}</h3>
+          <p class="tagline">{{ row.text }}</p>
+          {% if row.example %}<p class="worth">Found at: {{ row.example }}</p>{% endif %}
+          <div class="item-foot">
+            <p class="price-tag"><b>{{ row.votes }}</b> {{ "vote" if row.votes == 1 else "votes" }}</p>
+            {{ vote_form(row, sort) }}
+            <p class="sug-age">{{ row.age }}</p>
+          </div>
+        </article>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <div class="empty">{{ art.fig("grandma-peek.png", "Grandma peeking round the door", "aside-fig empty-fig") }}<p>The shelf is bare, dear. Tell me what you'd put on it.</p></div>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}
