@@ -1,5 +1,5 @@
 :root {
-  --cat: clamp(7rem, 20vh, 12rem);
+  --cat: clamp(7rem, 24vh, 16rem);
   --ink: #000;
   --paper: #fff3a6;
   --pink: #f4a3b4;
@@ -16,8 +16,10 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background: #e3c97b;
   color: var(--ink);
   font-family: var(--body);
@@ -25,7 +27,7 @@ body {
   line-height: 1.45;
 }
 
-main { position: relative; z-index: 1; width: min(100% - 2rem, 40rem); padding: 1rem 0 var(--cat); text-align: center; }
+main { position: relative; z-index: 1; width: min(100% - 2rem, 40rem); padding: 1rem 0; text-align: center; }
 
 main img { display: block; margin: 0 auto 0.3rem; width: auto; max-width: 100%; height: clamp(7rem, 24vh, 15rem); }
 
@@ -57,10 +59,15 @@ p { margin: 0 0 1em; }
 .btn:active { translate: 3px 3px; }
 .btn:focus-visible { outline: 4px dashed #2f4fc4; outline-offset: 4px; }
 
-/* the cat and its whole yarn trail sit in the bottom right corner, behind the text: below the text on narrow screens, beside it on wide ones */
-.cat { position: absolute; right: 0; bottom: 0; height: var(--cat); width: auto; pointer-events: none; }
+/* small screens: the tag and the button stack, so the button is in the middle and the thread can hang from it */
+.soon, .btn { display: table; margin-inline: auto; }
 
+/* the thread hangs out of the Slack button down to the cat; its top end is 94% across the picture, so shift the picture left until that point is under the button */
+.cat { position: relative; z-index: 0; height: var(--cat); width: auto; margin-top: -1.5rem; translate: calc(var(--cat) * -0.3); pointer-events: none; }
+
+/* wide screens: the whole yarn trail in the bottom right corner, beside the text */
 @media (min-width: 1000px) {
-  main { padding-bottom: 1rem; }
-  .cat { width: calc(50vw - 19rem); height: auto; }
+  body { display: grid; place-items: center; }
+  .soon, .btn { display: inline-block; margin-inline: 0; }
+  .cat { position: absolute; right: 0; bottom: 0; margin: 0; translate: none; width: calc(50vw - 19rem); height: auto; }
 }
