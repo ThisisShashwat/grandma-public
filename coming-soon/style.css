@@ -3,7 +3,7 @@
   --ink: #000;
   --paper: #fff3a6;
   --pink: #f4a3b4;
-  --lilac: #c8a2d8;
+  --note-pink: #ffd1dc;
   --display: "Gochi Hand", "Comic Sans MS", "Chalkboard SE", cursive;
   --body: "Comic Neue", "Comic Sans MS", "Chalkboard SE", sans-serif;
   --wobble: 255px 15px 225px 15px / 15px 225px 15px 255px;
@@ -42,7 +42,7 @@ h1 {
 }
 
 p { margin: 0 0 1em; }
-.soon { font-family: var(--display); font-size: 1.7rem; background: var(--lilac); display: inline-block; padding: 0 0.4em; }
+.soon { font-family: var(--display); font-size: 1.7rem; background: var(--note-pink); display: inline-block; padding: 0 0.4em; }
 
 .btn {
   display: inline-block;
