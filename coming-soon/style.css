@@ -62,13 +62,10 @@ p { margin: 0 0 1em; }
 
 .credit { margin: 0.5rem 0; text-align: center; font-size: 0.95rem; }
 
-/* small screens: the tag and the button stack, so the button is in the middle and the thread can hang from it */
 .soon, .btn { display: table; margin-inline: auto; }
 
-/* the thread hangs out of the Slack button down to the cat; its top end is 94% across the picture, so shift the picture left until that point is under the button */
 .cat { position: relative; z-index: 0; height: var(--cat); width: auto; margin-top: -1.5rem; translate: calc(var(--cat) * -0.3); pointer-events: none; }
 
-/* wide screens: the whole yarn trail in the bottom right corner, beside the text */
 @media (min-width: 1000px) {
   body { display: grid; place-items: center; }
   .soon, .btn { display: inline-block; margin-inline: 0; }
