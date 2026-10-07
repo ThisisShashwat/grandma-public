@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.utils.cache import add_never_cache_headers
 from django.views.decorators.http import require_safe
 
+from pages.public_cache import public_cache
 from program.content.errors import ERRORS
 
 log = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ def readyz(request):
 
 
 @require_safe
+@public_cache
 def home(request):
     return render(request, "pages/home.html")
 

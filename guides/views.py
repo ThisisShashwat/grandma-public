@@ -4,6 +4,7 @@ from django.views.decorators.http import require_safe
 
 from pages.context import program_links
 from pages.live import live
+from pages.public_cache import public_cache
 
 from . import loader, widgets
 
@@ -15,6 +16,7 @@ def index(request):
 
 
 @require_safe
+@public_cache
 def page(request, slug):
     guides = loader.all_guides()
     guide = loader.get(slug)

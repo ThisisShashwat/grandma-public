@@ -23,6 +23,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 if not DEBUG and not ALLOWED_HOSTS:       # with no host Django answers every request with a 400 and no hint why
     raise ImproperlyConfigured("Set ALLOWED_HOSTS to the site's host name (comma separated, in the environment) before turning DEBUG off: with none, every request is refused with a 400.")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+PUBLIC_PAGE_CACHE_SECONDS = env.int("PUBLIC_PAGE_CACHE_SECONDS", default=60)     # Cache-Control max-age of the home page and the guides (pages/public_cache.py); 0 = off
 LIVE_CACHE_SECONDS = env.int("LIVE_CACHE_SECONDS", default=15)     # how long pages.live.live() keeps the admin settings in memory; 0 = ask the database every time (the tests)
 ADMIN_URL = env("ADMIN_URL", default="admin/")  # keep the trailing slash; change it in production
 if not ADMIN_URL.endswith("/") or ADMIN_URL.startswith("/"):
