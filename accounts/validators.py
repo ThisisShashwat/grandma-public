@@ -26,6 +26,14 @@ def validate_polite_name(value):
         raise ValidationError("Not in my kitchen, dear. Pick another name.")
 
 
+def polite_unless(own_names):
+    """validate_polite_name, except that a name which is one of the person's own names (lower case, from Hack Club: accounts/identity.py own_names) passes."""
+    def validate(value):
+        if " ".join(value.split()).casefold() not in own_names:
+            validate_polite_name(value)
+    return validate
+
+
 def validate_slack_id(value):
     """A Slack member ID (not the username): U or W, then capital letters and digits, 9 to 12 characters in all."""
     if not SLACK_ID.fullmatch(value):

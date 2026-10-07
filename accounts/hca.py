@@ -135,9 +135,9 @@ def username_for(sub):
 
 
 def keep_identity(profile, userinfo):
-    """Refresh the encrypted identity from this sign-in (only when the capture is on and Hack Club sent something usable); returns whether it changed.
+    """Refresh the encrypted identity from this sign-in (only with an encryption key, and when Hack Club sent something usable); returns whether it changed.
     The caller saves the Profile. A key problem never blocks a sign-in: it is skipped."""
-    if not identity.enabled():
+    if not identity.stores():
         return False
     data = identity.clean(userinfo)
     if not data:

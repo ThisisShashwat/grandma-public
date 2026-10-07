@@ -1,7 +1,8 @@
 """The identity data HQ's unified record wants for an approved project (name, birthday, address), kept ENCRYPTED and PRIVATE (todo item 2, 2026-10-07).
 
-OFF by default, and off means nothing at all changes: Hack Club is not even asked for the extra scopes. It is on only when BOTH `HCA_IDENTITY` is true in the
-environment and `PII_KEYS` holds at least one Fernet key (environment only, never in the admin or the database, newest first). Why both: `birthdate` and
+Two switches, both in the environment. `PII_KEYS` (at least one Fernet key) lets the identity be kept at all: the name Hack Club already sends with the `profile`
+scope is then kept, and a display name typed in onboarding that matches one of those names is never censored (`own_names`). `HCA_IDENTITY` on top of it also asks
+Hack Club for the extra scopes. With neither set nothing changes and Hack Club is not asked for anything extra. The extras are on only when BOTH `HCA_IDENTITY` is true and `PII_KEYS` holds at least one Fernet key (environment only, never in the admin or the database, newest first). Why both: `birthdate` and
 `address` are scopes Hack Club only gives to apps it has marked official (the owner says this app already is, 2026-10-07; if it were not, every sign-in would be refused); and
 without a key there is nowhere safe to put them.
 
@@ -25,7 +26,13 @@ class Unreadable(Exception):
 
 
 def enabled():
+    """Is Hack Club asked for birthdate and address too?"""
     return bool(settings.HCA_IDENTITY and settings.PII_KEYS)
+
+
+def stores():
+    """May the identity be kept (the name, and the extras when `enabled`)? Only with an encryption key."""
+    return bool(settings.PII_KEYS)
 
 
 def text(value, limit=MAX_TEXT):
@@ -34,22 +41,26 @@ def text(value, limit=MAX_TEXT):
 
 
 def clean(userinfo):
-    """The identity claims of a sign-in as a small dict, or {} when Hack Club sent nothing usable. Never raises, never invents."""
+    """The identity claims of a sign-in as a small dict (the name always, the birthday and the address only when `enabled`), or {} when Hack Club sent nothing usable. Never raises, never invents."""
     out = {}
     name = " ".join(filter(None, (text(userinfo.get("given_name"), 60), text(userinfo.get("family_name"), 60)))) or text(userinfo.get("name"), 120)
     if name:
         out["name"] = name
-    try:
-        born = date.fromisoformat(userinfo.get("birthdate") or "")
-        if 1900 <= born.year <= date.today().year:
-            out["birthdate"] = born.isoformat()
-    except (TypeError, ValueError):
-        pass
-    raw = userinfo.get("address")
-    address = {"formatted": text(raw, 400)} if isinstance(raw, str) else {key: text(raw.get(key)) for key in ADDRESS_KEYS} if isinstance(raw, dict) else {}
-    address = {key: value for key, value in address.items() if value}
-    if address:
-        out["address"] = address
+    nickname = text(userinfo.get("nickname"), 60)
+    if nickname:
+        out["nickname"] = nickname
+    if enabled():                      # birthday and address only when the owner switched them on (HCA_IDENTITY)
+        try:
+            born = date.fromisoformat(userinfo.get("birthdate") or "")
+            if 1900 <= born.year <= date.today().year:
+                out["birthdate"] = born.isoformat()
+        except (TypeError, ValueError):
+            pass
+        raw = userinfo.get("address")
+        address = {"formatted": text(raw, 400)} if isinstance(raw, str) else {key: text(raw.get(key)) for key in ADDRESS_KEYS} if isinstance(raw, dict) else {}
+        address = {key: value for key, value in address.items() if value}
+        if address:
+            out["address"] = address
     return out
 
 
@@ -79,3 +90,14 @@ def unseal(sealed):
         raise
     except (InvalidToken, ValueError):
         raise Unreadable from None
+
+
+def own_names(sealed):
+    """The names Hack Club gave for this person, lower case: the whole name, each word of it, and the nickname. A frozenset, empty for no identity, no key or damage.
+    A display name that is one of these is the person's own name and is never checked for rude words."""
+    try:
+        data = unseal(sealed)
+    except Unreadable:
+        return frozenset()
+    names = {data.get("name", ""), data.get("nickname", ""), *data.get("name", "").split(), *data.get("nickname", "").split()}
+    return frozenset(" ".join(name.split()).casefold() for name in names if name)

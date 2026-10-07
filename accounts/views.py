@@ -14,7 +14,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_safe
 
-from accounts import hackatime, hca, onboarding
+from accounts import hackatime, hca, identity, onboarding
 from accounts.access import has_access, invited
 from accounts.forms import LoginForm
 from accounts.script import HACKATIME_REFUSALS, HCA_REFUSALS
@@ -78,7 +78,7 @@ def welcome(request):
     cfg = live()
     return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
                                          name_known=bool(profile.hca_sub and profile.display_name),
-                                         region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS))),
+                                         region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS)), own_names=identity.own_names(profile.identity)),
                     store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("dashboard"), title="Welcome")
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from accounts import hackatime, script
 from accounts.models import FILLED_IN
-from accounts.validators import canonical_timezone
+from accounts.validators import canonical_timezone, polite_unless, validate_display_name
 from accounts.services import profile_of, request_profile
 from audit import services as audit
 from program.content import regions
@@ -36,10 +36,12 @@ def asks_to_skip(cfg):
     return lambda answers: offers_skip(cfg.TUTORIAL_ENABLED, depth_for(answers.get("expertise"), cfg))
 
 
-def question(step, cfg, slack_known, region_guess=""):
+def question(step, cfg, slack_known, region_guess="", own_names=frozenset()):
     """One question as this site runs it now: the Slack ID is skipped when it is already known, and the regions come from the admin setting (with her
     guess said aloud when the time zone they gave pointed at one: the person still taps their own answer)."""
     key = getattr(step, "key", None)
+    if key == "display_name" and own_names:
+        return replace(step, validators=(validate_display_name, polite_unless(own_names)))
     if key == "slack_id":
         return replace(step, when=lambda answers: not slack_known)
     if key == "region":
@@ -50,9 +52,9 @@ def question(step, cfg, slack_known, region_guess=""):
     return step
 
 
-def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False, region_guess=""):
+def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False, region_guess="", own_names=frozenset()):
     """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, whether their Slack ID is already known, and whether Hack Club already gave their name (the question is then skipped, never removed, so the places in the dialogue never shift)."""
-    questions = [question(step, cfg, slack_known, region_guess) for step in script.QUESTIONS]
+    questions = [question(step, cfg, slack_known, region_guess, own_names) for step in script.QUESTIONS]
     questions = [replace(step, when=lambda answers: not name_known) if getattr(step, "key", None) == "display_name" else step for step in questions]
     on = hackatime.enabled(cfg)
     return [
