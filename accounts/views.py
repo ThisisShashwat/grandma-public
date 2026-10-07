@@ -69,7 +69,7 @@ def welcome(request):
     cfg = live()
     return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
                                          name_known=bool(profile.hca_sub and profile.display_name),
-                                         region_guess=regions.guess(request.headers.get("Accept-Language", ""), regions.regions(cfg.REGIONS))),
+                                         region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS))),
                     store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("dashboard"), title="Welcome")
 

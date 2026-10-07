@@ -38,7 +38,7 @@ def asks_to_skip(cfg):
 
 def question(step, cfg, slack_known, region_guess=""):
     """One question as this site runs it now: the Slack ID is skipped when it is already known, and the regions come from the admin setting (with her
-    guess said aloud when the browser pointed at one: the person still taps their own answer)."""
+    guess said aloud when the time zone they gave pointed at one: the person still taps their own answer)."""
     key = getattr(step, "key", None)
     if key == "slack_id":
         return replace(step, when=lambda answers: not slack_known)

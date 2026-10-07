@@ -3,9 +3,11 @@ import re
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
+from django.utils import timezone
+from django.utils.functional import lazy
 from django.views.static import serve
 
-admin.site.site_header = f"Help Grandma Out admin (times in {settings.TIME_ZONE})"      # the zone is always visible in the admin
+admin.site.site_header = lazy(lambda: f"Help Grandma Out admin (times in {timezone.get_current_timezone_name()})", str)()      # the zone in force is always visible in the admin
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),

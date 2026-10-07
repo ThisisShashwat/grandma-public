@@ -14,8 +14,8 @@ OPENING = [
 ]
 
 def region_guess_line(label):
-    """The extra line when the browser pointed at a region: a guess, never a fact (the braces are doubled because the lines are formatted)."""
-    return f"Your browser makes me think {label.replace('{', '{{').replace('}', '}}')}. Tap it if I'm right, dear, or tap your own."
+    """The extra line when the time zone pointed at a region: a guess, never a fact (the braces are doubled because the lines are formatted)."""
+    return f"That time zone makes me think {label.replace('{', '{{').replace('}', '}}')}. Tap it if I'm right, dear, or tap your own."
 
 
 SOFTWARE_ONLY = Say(face="finger", lines=(
@@ -32,12 +32,12 @@ QUESTIONS = [
             button="That's my ID", attrs={"autocomplete": "off", "autocapitalize": "characters", "spellcheck": "false"}, lines=(
                 "Now your Slack ID, {display_name}. Not your username. Your ID.",
                 "Open your profile in Slack, tap the three dots and pick Copy member ID. It starts with a U or a W.")),
-    AskChoice(key="region", face="phone", choices=tuple(REGIONS), lines=(
-        "Where in the world are you, {display_name}?", "I need to know how far I have to shout.")),
     AskText(key="timezone", face="clipboard", label="Time zone, like Asia/Kolkata", validators=(validate_timezone,), max_length=64,
             prefill="timezone", suggestions=suggested_timezones, button="That's my zone", attrs={"autocomplete": "off", "autocapitalize": "off", "spellcheck": "false"}, lines=(
-                "And your time zone, so I don't phone you at silly o'clock.",
+                "Your time zone next, so I don't phone you at silly o'clock.",
                 "Your browser usually knows. I've asked it nicely.")),
+    AskChoice(key="region", face="phone", choices=tuple(REGIONS), lines=(
+        "And where in the world are you, {display_name}?", "I need to know how far I have to shout.")),
     AskChoice(key="expertise", face="eyeroll", choices=tuple(EXPERTISE), lines=(
         "How much of this have you done before?", "Be honest. I can tell.")),
 ]

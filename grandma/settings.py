@@ -160,7 +160,7 @@ CONSTANCE_CONFIG_FIELDSETS = runtime.FIELDSETS
 CONSTANCE_ADDITIONAL_FIELDS = dict(runtime.FIELDS)
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = env("TIME_ZONE", default="Asia/Kolkata")    # what the ADMIN shows times in (stored values stay UTC, USE_TZ); the dashboard uses each person's own zone
+TIME_ZONE = env("TIME_ZONE", default="Asia/Kolkata")    # the admin's default zone for times (stored values stay UTC, USE_TZ); a staff member with a time zone on their Profile sees their own (accounts/admin_gate.py); the dashboard uses each person's own zone
 USE_I18N = True
 USE_TZ = True
 

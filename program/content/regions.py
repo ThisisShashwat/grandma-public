@@ -3,6 +3,8 @@
 REGIONS is the default of the admin setting of the same name (program/runtime.py, one `CODE: Label` per line); onboarding reads the live text through
 `regions()`. The model keeps these as its `choices` and a two character column, so a code is exactly two capital letters or digits."""
 import re
+from functools import lru_cache
+from importlib.resources import files
 
 CODE = re.compile(r"[A-Z0-9]{2}")
 CATCH_ALL = "XX"
@@ -54,27 +56,28 @@ def regions(text):
 
 
 EU_COUNTRIES = frozenset("AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE".split())
-COUNTRY_ALIASES = {"GB": "UK"}       # the browser says GB, the list says UK
+COUNTRY_ALIASES = {"GB": "UK"}       # the zone table says GB, the list says UK
 
 
-def guess(accept_language, rows):
-    """The code of the region a browser's Accept-Language header points at, or "" when it points at none. `rows` is the (code, label) pairs on offer.
-    The tag with the highest q that names a country decides (en-IN: IN); a country that is itself on offer wins (DE when DE is listed), else GB is UK and
-    an EU country is EU when those are listed. A bare language (en) names no country, so nothing is guessed. It is only ever a hint she says aloud: the
-    person still taps their own answer, and a header is easy to get wrong (many people in India browse in en-US)."""
+@lru_cache(maxsize=1)
+def zone_countries():
+    """Time zone name -> two letter country code, from the tz database's own table (the `tzdata` package: zone.tab). Empty when the table is missing,
+    which only means no guess is ever made."""
+    try:
+        text = files("tzdata.zoneinfo").joinpath("zone.tab").read_text(encoding="utf-8")
+    except (ModuleNotFoundError, FileNotFoundError, OSError):
+        return {}
+    rows = (line.split("	") for line in text.splitlines() if line and not line.startswith("#"))
+    return {row[2]: row[0] for row in rows if len(row) >= 3}
+
+
+def guess(zone, rows):
+    """The code of the region a time zone (the person's own, from their browser, already answered) points at, or "" for none. `rows` is the (code, label)
+    pairs on offer. A country that is itself on offer wins (DE when DE is listed), else GB is UK and an EU country is EU when those are listed. The
+    catch-all is never guessed. It is only a hint she says aloud: the person still taps their own answer."""
+    country = zone_countries().get(zone, "")
     offered = {code for code, _ in rows} - {CATCH_ALL}
-    best, best_q = "", -1.0
-    for part in str(accept_language)[:300].split(","):
-        tag, _, params = part.strip().partition(";")
-        pieces = tag.replace("_", "-").split("-")
-        country = next((p.upper() for p in pieces[1:] if len(p) == 2 and p.isalpha()), "")
-        try:
-            q = float(params.strip().removeprefix("q=")) if params.strip().startswith("q=") else 1.0
-        except ValueError:
-            continue
-        if country and q > best_q:
-            best, best_q = country, q
-    for code in (best, COUNTRY_ALIASES.get(best, ""), "EU" if best in EU_COUNTRIES else ""):
+    for code in (country, COUNTRY_ALIASES.get(country, ""), "EU" if country in EU_COUNTRIES else ""):
         if code and code in offered:
             return code
     return ""
