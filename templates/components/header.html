@@ -11,12 +11,14 @@
     <a href="{{ url('leaderboard') }}">Leaderboard</a>
     <a href="{{ url('home') }}#faq">FAQ</a>
     <a data-link="slack" {{ link_attrs("slack") }}>Slack</a>
-    {% if signed_in %}
-    <a href="{{ url('dashboard') }}">Dashboard</a>
-    <form class="nav-leave" method="post" action="{{ url('logout') }}">{{ csrf_input }}<button>Log out</button></form>
-    {% else %}
-    <a href="{{ url('login') }}">Sign in</a>
-    <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
-    {% endif %}
+    {# the same bytes for everybody, so the page never reads the session: static/js/core/auth.js shows one of the two sets (accounts/signed_in_flag.py) #}
+    <span data-auth="out">
+      <a href="{{ url('login') }}">Sign in</a>
+      <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
+    </span>
+    <span data-auth="in" hidden>
+      <a href="{{ url('dashboard') }}">Dashboard</a>
+      <form class="nav-leave" method="post" action="{{ url('logout') }}"><button>Log out</button></form>
+    </span>
   </nav>
 </header>

@@ -6,6 +6,6 @@
     </div>
     <h2>Grandma is waiting.</h2>
     <p class="countdown" data-cd>Grandma calls soon</p>
-    <p>{% if signed_in %}<a class="btn btn--big" href="{{ url('dashboard') }}">My dashboard</a>{% else %}<a class="btn btn--big" data-link="signup" data-confetti="big" {{ link_attrs("signup") }}>Sign up</a>{% endif %}</p>
+    <p><span data-auth="out"><a class="btn btn--big" data-link="signup" data-confetti="big" {{ link_attrs("signup") }}>Sign up</a></span><span data-auth="in" hidden><a class="btn btn--big" href="{{ url('dashboard') }}">My dashboard</a></span></p>
   </div>
 </section>

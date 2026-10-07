@@ -6,8 +6,9 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.http import Http404, HttpResponseNotAllowed, HttpResponseRedirect
+from django.http import Http404, HttpResponseNotAllowed, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render, resolve_url
+from django.middleware.csrf import get_token
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
@@ -55,6 +56,14 @@ class Login(LoginView):
 
     def get_default_redirect_url(self):
         return landing(self.request.user)
+
+
+@never_cache
+@require_GET
+def csrf_token(request):
+    """A CSRF token for a script (the header's Log out button): the pages are the same for everybody and carry none. Same origin only: no CORS header
+    is sent, so no other site can read the answer."""
+    return JsonResponse({"token": get_token(request)})
 
 
 @invited

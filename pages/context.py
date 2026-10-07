@@ -51,7 +51,6 @@ def context(request):
     cfg = live()
     urls = program_links(cfg)
     return {
-        "signed_in": getattr(getattr(request, "user", None), "is_authenticated", False),
         "site": config.SITE, "footer": config.FOOTER, "link": partial(link, urls), "link_attrs": partial(link_attrs, urls),
         "site_data": site_data(cfg), "pool": POOL, "tiers": TIERS, "levels": LEVELS, "faces": FACES,
         "free_asks": cfg.REDEALS_FREE,

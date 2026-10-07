@@ -98,6 +98,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "accounts.signed_in_flag.signed_in_flag",      # the plain "signed in" hint cookie the public pages' header reads (they never touch the session)
     "accounts.admin_gate.admin_gate",          # gates the admin address (docs/owner.md 2026-10-05)
     "submissions.middleware.CollectFirst",     # a result waiting at Grandma's goes before the pages that matter (docs/submissions.md)
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

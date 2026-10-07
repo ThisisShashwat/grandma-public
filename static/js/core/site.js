@@ -7,6 +7,7 @@ import { initAnnotations } from "./annotations.js";
 import { initDev } from "./dev.js";
 import { initPreload } from "./preload.js";
 import { initOnce } from "./once.js";
+import { initAuth } from "./auth.js";
 
 initArt();
 initCountdown(data.launch);
@@ -15,3 +16,4 @@ initAnnotations();
 initDev();
 initPreload();
 initOnce();
+initAuth();

@@ -13,6 +13,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),       # POST only (Django 5 and later), CSRF checked
     path("connect/hackatime/", views.connect_hackatime, name="connect_hackatime"),             # connecting Hackatime: 404 until it is switched on (accounts/hackatime.py)
     path("connect/hackatime/callback/", views.connect_hackatime_callback, name="connect_hackatime_callback"),
+    path("csrf/", views.csrf_token, name="csrf_token"),          # the Log out button of the always identical header fetches its token here
     path("welcome/", views.welcome, name="welcome"),
     path("beta/", views.beta, name="beta"),
 ]
