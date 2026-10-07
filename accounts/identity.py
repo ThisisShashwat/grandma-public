@@ -2,13 +2,13 @@
 
 OFF by default, and off means nothing at all changes: Hack Club is not even asked for the extra scopes. It is on only when BOTH `HCA_IDENTITY` is true in the
 environment and `PII_KEYS` holds at least one Fernet key (environment only, never in the admin or the database, newest first). Why both: `birthdate` and
-`address` are scopes Hack Club only gives to apps it has marked official, so asking for them before HQ has approved this app would break every sign-in; and
+`address` are scopes Hack Club only gives to apps it has marked official (the owner says this app already is, 2026-10-07; if it were not, every sign-in would be refused); and
 without a key there is nowhere safe to put them.
 
 What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "birthdate": "YYYY-MM-DD", "address": {street_address,
 locality, region, postal_code, country, formatted}}, only the parts Hack Club sent and that pass the checks below. It is refreshed at every Hack Club sign-in
 (a person may move house or fix a typo at Hack Club). It is never on a public page, never in the admin, never in a log, a session or the audit log
-(the audit log may name that it changed, never what it holds), and nothing reads it yet: the export to HQ waits for HQ's answer to question 11 in docs/hq-questions.md.
+(the audit log may name that it changed, never what it holds), and nothing reads it yet: the export to HQ waits for HQ's answer to question 11 in docs/hq-questions.md (who stores what).
 """
 import json
 from datetime import date
