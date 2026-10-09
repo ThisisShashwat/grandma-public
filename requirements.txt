@@ -16,4 +16,5 @@ better-profanity==0.7.0
 whitenoise>=6.9
 gunicorn>=23; sys_platform != "win32"
 psycopg[binary]>=3.2
+django-storages[s3]>=1.14
 tzdata>=2025.2

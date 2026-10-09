@@ -17,6 +17,7 @@ import re
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.urls import reverse
@@ -154,6 +155,24 @@ def keep_identity(profile, userinfo):
     return True
 
 
+def grant_staff(profile, userinfo):
+    """The only way an admin is made: a Hack Club sign-in whose Slack ID (verified by Hack Club, in the `slack_id` claim) is in the environment list
+    STAFF_SLACK_IDS becomes staff, superuser and a beta member, at the first sign-in and at every later one. Nobody else is ever promoted here, an empty
+    list promotes nobody, and nothing is ever taken away (untick by hand in the admin). The audit entry names the fields, never the Slack ID."""
+    slack_id = (userinfo or {}).get("slack_id")
+    if not settings.STAFF_SLACK_IDS or not isinstance(slack_id, str) or slack_id not in settings.STAFF_SLACK_IDS:
+        return
+    user = profile.user
+    changed = [name for name, have in (("is_staff", user.is_staff), ("is_superuser", user.is_superuser), ("beta_access", profile.beta_access)) if not have]
+    if not changed:
+        return
+    user.is_staff = user.is_superuser = True
+    profile.beta_access = True
+    user.save(update_fields=["is_staff", "is_superuser"])
+    profile.save(update_fields=["beta_access"])
+    audit.record("accounts.staff_grant", actor=user, subject=user, target=profile, details={"fields": changed})
+
+
 def sign_in(profile, email="", userinfo=None):
     """Sign in a returning person: check they may sign in, update the check time, keep the email current and record the login. A present email
     that differs from the stored one replaces it (they may change it at Hack Club; `hca_sub` stays the identity) and is audited as a profile
@@ -172,6 +191,7 @@ def sign_in(profile, email="", userinfo=None):
     profile.save(update_fields=["hca_checked_at", *changed, *(["identity"] if new_identity else [])])
     if changed:
         audit.record("profile.update", actor=profile.user, subject=profile.user, target=profile, details={"fields": changed})
+    grant_staff(profile, userinfo)
     audit.record("accounts.hca_login", actor=profile.user, subject=profile.user, target=profile, details={"created": False})
     return profile, None
 
@@ -190,6 +210,7 @@ def create(sub, slack_id, email="", display_name="", userinfo=None):
     )
     if keep_identity(profile, userinfo or {}):
         profile.save(update_fields=["identity"])
+    grant_staff(profile, {"slack_id": slack_id})
     audit.record("accounts.hca_login", actor=user, subject=user, target=profile, details={"created": True})
     return profile
 

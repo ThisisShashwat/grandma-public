@@ -4,6 +4,8 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import re
+
 import environ
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.csp import CSP
@@ -62,6 +64,9 @@ def validate_hackatime_token_keys(keys):
 
 HCA_IDENTITY = env.bool("HCA_IDENTITY", default=False)     # ask Hack Club for birthdate and address too and keep name, birthday and address ENCRYPTED (accounts/identity.py); needs PII_KEYS and an app Hack Club has marked official (the owner's is)
 PII_KEYS = env.list("PII_KEYS", default=[])                # comma separated Fernet keys, newest first, environment only: they open Profile.identity (python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+STAFF_SLACK_IDS = env.list("STAFF_SLACK_IDS", default=[])  # the ONLY people who become staff and superuser: a Hack Club sign-in whose verified Slack ID is listed here (accounts/hca.py grant_staff). Nothing else makes an admin
+if any(not re.fullmatch(r"[UW][A-Z0-9]{8,11}", _id) for _id in STAFF_SLACK_IDS):
+    raise ImproperlyConfigured("STAFF_SLACK_IDS must be comma separated Slack member IDs such as U01ABC23DEF.")
 validate_hackatime_token_keys(PII_KEYS)                    # the same check: a malformed key stops Django at startup
 HACKATIME_TOKEN_KEYS = env.list("HACKATIME_TOKEN_KEYS", default=[])          # comma separated Fernet keys, newest first, environment only, never derived from SECRET_KEY, never in the admin or the database
 validate_hackatime_token_keys(HACKATIME_TOKEN_KEYS)
@@ -178,6 +183,33 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 
+# PUBLIC uploads on Cloudflare R2 (S3 compatible). All five or none: with none, uploads stay in MEDIA_ROOT as before. The keys are SECRETS (environment only).
+# Only the public screenshots go there. Order proofs (PRIVATE_MEDIA_ROOT, orders/storage.py) never do: they use their own storage class.
+R2_ENDPOINT_URL = env("R2_ENDPOINT_URL", default="")         # https://<account id>.r2.cloudflarestorage.com
+R2_BUCKET = env("R2_BUCKET", default="")
+R2_ACCESS_KEY_ID = env("R2_ACCESS_KEY_ID", default="")
+R2_SECRET_ACCESS_KEY = env("R2_SECRET_ACCESS_KEY", default="")
+R2_PUBLIC_URL = env("R2_PUBLIC_URL", default="").rstrip("/")  # where the bucket is readable by anybody: https://pub-xxxx.r2.dev or your own domain, no path
+_r2 = (R2_ENDPOINT_URL, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_URL)
+if any(_r2) and not all(_r2):
+    raise ImproperlyConfigured("R2 needs all five of R2_ENDPOINT_URL, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and R2_PUBLIC_URL, or none of them.")
+R2_ENABLED = all(_r2)
+_r2_public = urlsplit(R2_PUBLIC_URL)
+if R2_ENABLED:
+    if urlsplit(R2_ENDPOINT_URL).scheme != "https" or _r2_public.scheme != "https" or not _r2_public.netloc or _r2_public.path or _r2_public.query:
+        raise ImproperlyConfigured("R2_ENDPOINT_URL and R2_PUBLIC_URL must be https addresses, and R2_PUBLIC_URL must have no path or query.")
+    from botocore.config import Config as _BotoConfig
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": R2_BUCKET, "endpoint_url": R2_ENDPOINT_URL, "access_key": R2_ACCESS_KEY_ID, "secret_key": R2_SECRET_ACCESS_KEY,
+            "region_name": "auto", "signature_version": "s3v4", "custom_domain": _r2_public.netloc, "url_protocol": "https:",
+            "querystring_auth": False, "default_acl": None, "file_overwrite": False,       # public, plain addresses; random names are never overwritten
+            "object_parameters": {"CacheControl": "public, max-age=31536000, immutable"},      # the names are random and never reused
+            "client_config": _BotoConfig(request_checksum_calculation="when_required", response_checksum_validation="when_required"),      # R2 does not take the newer default checksums
+        },
+    }
+
 # Uploads (the screenshots people hand in, submissions/images.py). Outside static, gitignored. Django serves them only when SERVE_MEDIA
 # is on (grandma/urls.py); a real server must serve MEDIA_ROOT itself, as plain images (docs/submissions.md, docs/security.md).
 MEDIA_ROOT = Path(env("MEDIA_ROOT", default=str(BASE_DIR / "media")))      # on a host: the persistent folder for PUBLIC uploads
@@ -247,7 +279,7 @@ CSP_POLICY = {
     "script-src": [CSP.SELF, *CSP_SCRIPTS],
     "style-src": [CSP.SELF, CSP.NONCE, ROUGH_NOTATION_STYLE, "https://fonts.googleapis.com"],
     "style-src-attr": [CSP.UNSAFE_INLINE],
-    "img-src": [CSP.SELF, "data:"],
+    "img-src": [CSP.SELF, "data:", *([f"https://{_r2_public.netloc}"] if R2_ENABLED else [])],
     "font-src": [CSP.SELF, "https://fonts.gstatic.com"],
     "connect-src": [CSP.SELF],
     "object-src": [CSP.NONE],

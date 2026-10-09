@@ -42,7 +42,7 @@ def external_id(project):
 
 
 def site_address(path):
-    return settings.SITE_URL.rstrip("/") + path
+    return path if path.startswith("https://") else settings.SITE_URL.rstrip("/") + path      # a screenshot on R2 already has a full address
 
 
 def email_of(submission):
