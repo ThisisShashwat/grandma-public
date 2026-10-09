@@ -52,7 +52,7 @@ def order_page(request, item):
     nonce = form["nonce"].value() if form is not None and form.is_bound and not form["nonce"].errors else uuid.uuid4().hex
     face = "sideeye" if record.blocked or (form is not None and form.errors) else "writing"
     return render(request, "pages/order.html", {"sheet": record, "form": form, "nonce": nonce, "portrait": dict(zip(("file", "alt"), portrait(face))),
-                                                "max_mb": cfg.ORDER_SCREENSHOT_MAX_MB})
+                                                "max_mb": cfg.ORDER_SCREENSHOT_MAX_MB, "shot": cfg.ORDER_CART_SCREENSHOT})
 
 
 @onboarded

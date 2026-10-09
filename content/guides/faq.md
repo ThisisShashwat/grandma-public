@@ -112,7 +112,7 @@ No. AI may take under 30% of your total time, and you must be able to explain ev
 :::
 
 ::: faq Do I have to say how I used AI?
-Yes. The hand-in note has a box for it: what for, and roughly how much. Honesty is easier than being caught. How this site was made is on the [AI disclosure](/guides/ai-disclosure/) page.
+Yes. The hand-in note has a box for it: what for, and roughly how much. Honesty is easier than being caught. Where the pictures come from is on the [AI disclosure](/guides/ai-disclosure/) page.
 :::
 
 ## Submitting

@@ -58,7 +58,7 @@ People need to be able to use your project. The link must not point to a host th
 
 ## The AI declaration
 
-When you submit, you say how you used AI. The limit is under 30% of your total time, and you must understand what you hand in. Be honest. It is much easier than being caught. [How this site was made](/guides/ai-disclosure/) is on its own page.
+When you submit, you say how you used AI. The limit is under 30% of your total time, and you must understand what you hand in. Be honest. It is much easier than being caught. [Where the pictures come from](/guides/ai-disclosure/) is on its own page.
 
 ## The screenshot and the recording
 

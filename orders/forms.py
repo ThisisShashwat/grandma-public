@@ -35,7 +35,8 @@ class OrderForm(forms.Form):
             self.fields[name] = forms.IntegerField(min_value=0, max_value=rules.MAX_QUANTITY, required=False, error_messages={"invalid": "A whole number, dear."})
         if proves:
             self.fields["product_url"] = forms.CharField(max_length=links.MAX_LENGTH, error_messages=NEEDS)
-            self.fields["cart_screenshot"] = forms.FileField(error_messages={"required": "I need a screenshot of the cart, dear.", "empty": "That file is empty, dear.", "missing": "I need a screenshot of the cart, dear."})
+            if cfg.ORDER_CART_SCREENSHOT:
+                self.fields["cart_screenshot"] = forms.FileField(error_messages={"required": "I need a screenshot of the cart, dear.", "empty": "That file is empty, dear.", "missing": "I need a screenshot of the cart, dear."})
 
     def clean_nonce(self):
         nonce = self.cleaned_data["nonce"]

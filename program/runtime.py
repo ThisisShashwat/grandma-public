@@ -48,6 +48,7 @@ CONFIG = {
     "MAX_ROUNDS": (3, "How many times one project may be handed in, counting the first time. When you ask for changes, the person fixes it and hands it in again as the next round; "
                       "on the last round you can only approve or reject. Between 1 and 10.", "rounds"),
 
+    "ORDER_CART_SCREENSHOT": (True, "Ask for a screenshot of the cart with a grant, and keep it privately. Off: a person gives only the link to the product, no picture is asked for, uploaded or stored (use it while there is nowhere safe to keep the pictures). Pictures already kept are not touched, and staff can still open them."),
     "ORDER_SCREENSHOT_MAX_MB": (5, "The biggest cart or part screenshot a person may upload with an order, in megabytes.", "megabytes"),
     "ORDER_SCREENSHOT_MAX_SIDE": (6000, "The longest side of an order screenshot, in pixels. Anything bigger is refused.", "pixels"),
     "ORDER_SCREENSHOT_MAX_MEGAPIXELS": (20, "The most pixels (width times height, in millions) an order screenshot may have. Checked before it is decoded.", "megapixels"),
@@ -103,7 +104,7 @@ FIELDSETS = (
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_BOARD", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST", "DEALING_EXPIRY_DAYS")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
-    ("Orders", ("ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
+    ("Orders", ("ORDER_CART_SCREENSHOT", "ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
     ("Suggestion board", ("SUGGEST_COST", "VOTE_COST")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Home page", ("HOME_PANTRY_PEEK", "HOME_RIBBON_PEEK", "HOME_PEEK_COUNT")),

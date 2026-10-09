@@ -29,7 +29,7 @@
         {% elif sheet.manual %}
         <p>That one I do by hand, dear. Tell me what you'd like and I'll see.</p>
         {% else %}
-        <p>{{ sheet.name }}, is it? Show me exactly what you're buying, and the cart with the tax and the shipping in it.</p>
+        <p>{{ sheet.name }}, is it? Show me exactly what you're buying{% if shot %}, and the cart with the tax and the shipping in it{% endif %}.</p>
         <p>I pay only for what I've seen.</p>
         {% endif %}
       </div>
@@ -94,6 +94,7 @@
           <p class="nf-hint">The exact page of what you are buying{% if sheet.options %}, even if it is dearer than the grant: the upgrades make up the difference{% endif %}.</p>
         </div>
 
+        {% if shot %}
         <div class="nf">
           <label class="nf-label" for="cart_screenshot">A screenshot of your cart</label>
           <input class="nf-file" id="cart_screenshot" name="cart_screenshot" type="file" accept="image/png,image/jpeg,image/webp" required aria-describedby="shot-hint{% if form['cart_screenshot'].errors %} err-cart_screenshot{% endif %}">
@@ -101,6 +102,7 @@
           <p class="nf-hint" id="shot-hint">The real cart, with the tax and the shipping in it, so I can see what the money is for. PNG, JPEG or WebP, {{ max_mb }} MB at the very most.
             I wipe out whatever your camera wrote into it, such as where you were. Keep your address out of it, dear.</p>
         </div>
+        {% endif %}
         {% endif %}
 
         <div class="nf">
@@ -121,7 +123,7 @@
           <p class="order-promise-title" id="promise-title">Grandma checks before she pays</p>
           <ul>
             <li>Your cookies leave the jar the moment you order.</li>
-            <li>I look at the link and the cart. If it is all as you said, I pay for it with a Hack Club Bank grant.</li>
+            <li>I look at the link{% if shot %} and the cart{% endif %}. If it is all as you said, I pay for it with a Hack Club Bank grant.</li>
             <li>If it isn't, I say why and every cookie comes back. Change your mind before I look, and you can take it back yourself.</li>
           </ul>
         </aside>

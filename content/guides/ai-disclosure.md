@@ -2,14 +2,14 @@
 title: AI disclosure
 order: 120
 section: Help
-summary: "Grandma says honesty is the best policy, so here is how this site was made."
+summary: "Grandma says honesty is the best policy, so here is where her pictures come from."
 ---
 Grandma asks you to be honest about AI, so it would be rude not to be honest about it here. This is Shashwat speaking, the person who runs the program.
 
 
 ## The pictures
 
-Some of Grandma's pictures were generated with Gemini. I drew the first bunch myself, by hand, on a drawing tablet. Then I gave those to Gemini and had it create the other frames in exactly the same art style. Grandma says the likeness is very flattering.
+Every picture on this site, Grandma included, is drawn by hand, by me, on a drawing tablet. None of them was made by AI. Grandma says the likeness is very flattering.
 
 ## That is the disclosure
 

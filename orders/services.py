@@ -20,12 +20,14 @@ from ledger import rules as ledger_rules
 from ledger import services as ledger
 from orders import rules
 from orders.models import Order, OrderLine
+from pages.live import live
 from projects import services as project_services
 from shop.models import ShopItem
 from submissions.services import holds_ribbon_user
 
 GONE = "That isn't on my shelf any more, dear."
 NEEDS_PROOF = "Show me what you're buying, dear: the link and a screenshot of the cart."
+NEEDS_LINK = "Show me what you're buying, dear: the link to it."
 NEEDS_REF = "Paste the reference of the grant you issued before you mark it fulfilled."
 BAD_PAGE = "That page has gone stale, dear. Open it again."
 OWN_ORDER = "You cannot decide on your own order. Ask another staff member."
@@ -133,11 +135,12 @@ def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, product_url=
     refuse(None if base else GONE)
     proves = base.kind == ShopItem.Kind.GRANT
     counts = chosen_upgrades(base, upgrade_items, upgrades or {})
-    refuse(NEEDS_PROOF if proves and not (product_url and cart_screenshot) else "")
+    wants_picture = proves and live().ORDER_CART_SCREENSHOT      # read here, not from the form: with it off no picture is ever stored
+    refuse((NEEDS_PROOF if wants_picture else NEEDS_LINK) if proves and not (product_url and (cart_screenshot or not wants_picture)) else "")
     refuse(rules.url_problem(product_url) if proves else "")
     offer = priced(user, base, counts, quantity)
     order = Order(user=user, item=base, nonce=nonce, total_cookies=offer.cookies, total_value=offer.value,
-                  product_url=product_url.strip() if proves else "", user_note=user_note, cart_screenshot=(cart_screenshot or "") if proves else "")
+                  product_url=product_url.strip() if proves else "", user_note=user_note, cart_screenshot=(cart_screenshot or "") if wants_picture else "")
     order.full_clean(exclude=["cart_screenshot"])
     order.save()
     save_lines(order, offer)
