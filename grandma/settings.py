@@ -100,6 +100,8 @@ MIDDLEWARE = [
     "pages.preview_gate.preview_gate",                 # an optional password in front of everything below, static files included (PREVIEW_PASSWORD, empty is off)
     "pages.static_cache.static_cache",                 # one year for a static address with ?v=, one hour without (replaces WhiteNoise's header)
     "whitenoise.middleware.WhiteNoiseMiddleware",      # serves the collected static files with DEBUG off (a real server may serve STATIC_ROOT itself instead)
+    "pages.body_cap.body_cap",                         # a body that says it is too big is refused before anything reads it (FORM_BODY_MAX_KB, UPLOAD_BODY_MAX_MB)
+    "pages.rate_limit.rate_limit",                     # after WhiteNoise, so static files are never counted (RATE_LIMITS_ENABLED and the RATE_LIMIT_* numbers)
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "audit.middleware.RequestId",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -250,6 +252,22 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_FAILURE_VIEW = "pages.views.csrf_failure"      # Grandma's "stale slip" page (HTTP 403)
 
+# Request limits (pages/body_cap.py, pages/rate_limit.py). Bodies: only the three picture pages may be big. Rates per minute; every number can be changed in the environment.
+FORM_BODY_MAX_KB = env.int("FORM_BODY_MAX_KB", default=128)
+UPLOAD_BODY_MAX_MB = env.int("UPLOAD_BODY_MAX_MB", default=22)         # above the biggest admin allowed screenshot (20 MB) plus the form around it
+RATE_LIMITS_ENABLED = env.bool("RATE_LIMITS_ENABLED", default=True)
+RATE_LIMIT_GET = env.int("RATE_LIMIT_GET", default=600)                 # a GET per address, counted in each worker's memory
+RATE_LIMIT_POST_IP = env.int("RATE_LIMIT_POST_IP", default=120)        # a POST per address (a school may share one)
+RATE_LIMIT_POST_SESSION = env.int("RATE_LIMIT_POST_SESSION", default=60)
+RATE_LIMIT_SIGN_IN = env.int("RATE_LIMIT_SIGN_IN", default=30)         # the sign-in and connect addresses, per address
+# The shared counter: a database table (made by `manage.py createcachetable`, which the Dockerfile runs at start) so every worker agrees; local memory in development.
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "ratelimit_local": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "ratelimit-get", "OPTIONS": {"MAX_ENTRIES": 20000}},
+    "ratelimit": ({"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "ratelimit-post"} if DEBUG else
+                  {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "grandma_ratelimit", "OPTIONS": {"MAX_ENTRIES": 50000, "CULL_FREQUENCY": 4}}),
+}
+
 # Production security: on whenever DEBUG is off, each one can be overridden from the environment.
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
@@ -257,7 +275,8 @@ SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
 SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0 if DEBUG else 31536000)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG)
 SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
-if env.bool("BEHIND_PROXY", default=False):     # set when a reverse proxy terminates HTTPS and sets X-Forwarded-Proto
+BEHIND_PROXY = env.bool("BEHIND_PROXY", default=False)
+if BEHIND_PROXY:     # set when a reverse proxy terminates HTTPS and sets X-Forwarded-Proto
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Content Security Policy (Django's own, django.middleware.csp): what a page may load and run. Enforced; CSP_REPORT_ONLY=True in the
