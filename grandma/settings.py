@@ -100,6 +100,7 @@ MIDDLEWARE = [
     "pages.preview_gate.preview_gate",                 # an optional password in front of everything below, static files included (PREVIEW_PASSWORD, empty is off)
     "pages.static_cache.static_cache",                 # one year for a static address with ?v=, one hour without (replaces WhiteNoise's header)
     "whitenoise.middleware.WhiteNoiseMiddleware",      # serves the collected static files with DEBUG off (a real server may serve STATIC_ROOT itself instead)
+    "pages.probes.probes",                             # /healthz and /readyz answer whatever Host header the host's probe sends (Django would refuse a pod address with a 400)
     "pages.body_cap.body_cap",                         # a body that says it is too big is refused before anything reads it (FORM_BODY_MAX_KB, UPLOAD_BODY_MAX_MB)
     "pages.rate_limit.rate_limit",                     # after WhiteNoise, so static files are never counted (RATE_LIMITS_ENABLED and the RATE_LIMIT_* numbers)
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
@@ -167,7 +168,25 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Settings staff edit in the admin ("Constance"), stored in the database. What they are and their defaults: program/runtime.py.
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-CONSTANCE_CONFIG = runtime.CONFIG
+# SETTING_DEFAULTS: what an admin setting is while nobody has saved it in the admin of THIS environment, as comma separated KEY=value pairs, for example
+# SETTING_DEFAULTS=HCA_LOGIN=true,HACKATIME_ENABLED=true. The code defaults (program/runtime.py) and the tests stay as they are; a value saved in the admin always wins.
+# It is how a fresh server gets Hack Club sign-in on before anybody can reach the admin (the admin needs a staff account, which needs the sign-in).
+_defaults = {}
+for _pair in env.list("SETTING_DEFAULTS", default=[]):
+    _key, _, _value = _pair.partition("=")
+    if _key not in runtime.CONFIG or not _value:
+        raise ImproperlyConfigured(f"SETTING_DEFAULTS: '{_pair}' is not KEY=value for a known admin setting.")
+    _kind = type(runtime.CONFIG[_key][0])
+    if _kind is bool:
+        if _value.lower() not in ("true", "false", "1", "0", "yes", "no", "on", "off"):
+            raise ImproperlyConfigured(f"SETTING_DEFAULTS: {_key} must be true or false.")
+        _defaults[_key] = _value.lower() in ("true", "1", "yes", "on")
+    else:
+        try:
+            _defaults[_key] = _kind(_value)
+        except ValueError:
+            raise ImproperlyConfigured(f"SETTING_DEFAULTS: {_key} must be a {_kind.__name__}.") from None
+CONSTANCE_CONFIG = {key: (_defaults.get(key, row[0]), *row[1:]) for key, row in runtime.CONFIG.items()}
 CONSTANCE_CONFIG_FIELDSETS = runtime.FIELDSETS
 CONSTANCE_ADDITIONAL_FIELDS = dict(runtime.FIELDS)
 

@@ -8,7 +8,6 @@ from constance.utils import get_values
 from django.conf import settings
 from django.dispatch import receiver
 
-from program.runtime import CONFIG
 
 log = logging.getLogger(__name__)
 RETRY_SECONDS = 5          # after a failed read, how long the old answer is used before the database is tried again
@@ -34,7 +33,7 @@ def live():
         if not seconds:
             raise
         log.warning("admin settings could not be read, using the last known ones")
-        values = _cache[1] if _cache else SimpleNamespace(**{key: row[0] for key, row in CONFIG.items()})
+        values = _cache[1] if _cache else SimpleNamespace(**{key: row[0] for key, row in settings.CONSTANCE_CONFIG.items()})
         _cache = (time.monotonic() + RETRY_SECONDS, values)
         return values
     if seconds:
