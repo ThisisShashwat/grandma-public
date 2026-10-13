@@ -1,7 +1,7 @@
 """The screenshot a person uploads, made safe before it is stored. Nothing about the file is trusted: not its name, its type or
 its size. Pillow has to decode it as a PNG, JPEG or WebP of sane dimensions, and what is stored is a NEW image built from the
 decoded pixels alone, so EXIF (camera, GPS position), comments, text chunks, colour profiles and anything hidden in the file
-are gone. The file gets a random name made here. Privacy matters: the people are 13 to 18 and their photos carry locations."""
+are gone. The picture is also shrunk (never enlarged) to a storable size, see shrink. The file gets a random name made here. Privacy matters: the people are 13 to 18 and their photos carry locations."""
 import io
 import uuid
 
@@ -12,6 +12,8 @@ from PIL import Image, ImageOps
 FORMATS = {"PNG": ("png", {}), "JPEG": ("jpg", {"quality": 90}), "WEBP": ("webp", {"quality": 90})}
 MAX_SIDE = 6000              # pixels, width or height
 MAX_PIXELS = 20_000_000      # width times height: what the decoder may be asked to hold in memory
+STORED_SIDE = 3000           # a stored picture is shrunk until its long side is at most this ...
+STORED_PIXELS = 6_000_000    # ... and its width times height at most this, whichever shrinks more (tall full page shots stay readable)
 
 NOT_A_PICTURE = "That isn't a picture I can read, dear. A PNG, JPEG or WebP, please."
 
@@ -47,12 +49,22 @@ def clean_screenshot(upload, max_bytes, max_side=MAX_SIDE, max_pixels=MAX_PIXELS
         raise ValidationError(NOT_A_PICTURE) from None
 
 
+def shrink(pixels):
+    """The same picture, never enlarged and in the same proportions, small enough to store: long side at most STORED_SIDE and
+    width times height at most STORED_PIXELS. Expects an RGB or RGBA image (a palette image would be resized without smoothing)."""
+    width, height = pixels.size
+    scale = min(1, STORED_SIDE / max(width, height), (STORED_PIXELS / (width * height)) ** 0.5)
+    if scale == 1:
+        return pixels
+    return pixels.resize((max(1, int(width * scale)), max(1, int(height * scale))), Image.LANCZOS)
+
+
 def reencode(picture, kind):
-    """A fresh image of the same format that carries the pixels and nothing else."""
+    """A fresh, downscaled (see shrink) image of the same format that carries the pixels and nothing else."""
     upright = ImageOps.exif_transpose(picture)         # honour the camera's rotation before the EXIF that says so is dropped
     see_through = upright.mode in ("RGBA", "LA", "PA") or "transparency" in upright.info
     mode = "RGBA" if see_through and kind != "JPEG" else "RGB"
-    pixels = upright.convert(mode)
+    pixels = shrink(upright.convert(mode))
     fresh = Image.new(mode, pixels.size)
     fresh.paste(pixels)                                 # a new image has an empty .info: no metadata can come along
     out = io.BytesIO()
