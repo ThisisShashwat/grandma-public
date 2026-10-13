@@ -59,11 +59,12 @@ CONFIG = {
                                       "Off (the default) puts noindex, nofollow on them: the pages stay open to anyone with the link, but they are not found by searching, "
                                       "because the people on them are 13 to 18."),
 
-    "HOME_PANTRY_PEEK": (False, "Show a few Pantry items on the home page, in a section called A peek in the Pantry, right after How Grandma pays. "
-                                "They are picked from the real shop, in shop order, never a ribbon only item. Off (the default) shows nothing and the home page is as it was."),
+    "HOME_PANTRY_PEEK": (True, "Show a few Pantry items on the home page, in a section called A peek in the Pantry, right after Grandma's Demands. "
+                               "They are picked from the real shop, in shop order, never a ribbon only item, and only items ticked Show on the home page in the shop's admin list. "
+                               "On is the default; off shows nothing."),
     "HOME_RIBBON_PEEK": (False, "Show the newest projects of the Blue Ribbon wall on the home page, in a section called Pinned on Grandma's wall, right after the Pantry peek. "
                                 "It shows exactly what the wall shows (only ribbons their makers have collected). Off (the default) shows nothing and the home page is as it was."),
-    "HOME_PEEK_COUNT": (4, "How many items each home page peek shows, 1 to 12 (the Pantry peek and the Blue Ribbon wall peek). The Pantry peek takes the first ones in shop order "
+    "HOME_PEEK_COUNT": (4, "How many items each home page peek shows, 1 to 12 (the Pantry peek and the Blue Ribbon wall peek). The Pantry peek takes the first ticked ones in shop order "
                            "and skips by hand items and sold out items; the wall peek takes the newest.", "peek_count"),
 
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "

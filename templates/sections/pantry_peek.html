@@ -1,15 +1,27 @@
 {% import "macros/shop.html" as shopui %}
-{# The home page's peek into the Pantry (off by default, admin setting HOME_PANTRY_PEEK). `peek` is a tuple of shop.catalog.Product: public fields only.
-   The cards are the Pantry's own (macros/shop.html, static/css/sections/shop.css, linked by home.html while the peek is on). #}
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# The home page's peek into the Pantry (on by default, admin setting HOME_PANTRY_PEEK; each item has a "Show on the home page" tick). `peek` is a tuple of shop.catalog.Product:
+   public fields only. A thin row of cards that scrolls sideways on a narrow screen. Each card is ONE link to the Pantry (there is no page per item, and never a buy button
+   here), with the picture, the name, the hours range the shop shows ("about 4 to 8 hours": macros/shop.html) and the cookie price. Styles: static/css/sections/shop.css. #}
 <section class="scene" id="pantry-peek">
   <div class="wrap">
-    <h2>A peek in the Pantry</h2>
-    <p class="sub">A few things Grandma keeps on her shelves. Cookies pay for every one.</p>
-    <ul class="items">
+    <div class="peek-head">
+      <h2>A peek in the Pantry</h2>
+      <a class="peek-more" href="{{ url('shop') }}">See the whole Pantry</a>
+    </div>
+    <p class="shelf-blurb">A few things Grandma keeps on her shelves. Cookies pay for every one.</p>
+    <ul class="items peek-row">
       {% for p in peek %}
-      <li>{{ shopui.card(p) }}</li>
+      <li>
+        <a class="item peek-card" href="{{ url('shop') }}">
+          {{ art.fig(p.art, "", "item-art") }}
+          <h3>{{ p.name }}</h3>
+          <p class="worth">{{ shopui.hours(p.hours_low, p.hours_high) }}</p>
+          <p class="peek-price">{{ ui.mark("{:,}".format(p.cookies)) }} cookies</p>
+        </a>
+      </li>
       {% endfor %}
     </ul>
-    <p class="peek-more"><a class="btn" href="{{ url('shop') }}">See the whole Pantry</a></p>
   </div>
 </section>

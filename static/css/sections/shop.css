@@ -78,5 +78,14 @@
 /* the way to get a grant: only for a signed-in, onboarded person (orders/) */
 .get-btn { margin-top: 0.3rem; font-size: 1.4rem; }
 
-/* the home page's peek (templates/sections/pantry_peek.html) reuses everything above; this is the gap before its link */
-.peek-more { margin: 2.5rem 0 0; }
+/* the home page's peek (templates/sections/pantry_peek.html) reuses the cards above as a thin row of links that scrolls sideways (never wraps into a grid) */
+.peek-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 1.5rem; }
+.peek-more { margin-bottom: 0.4em; font-family: var(--display); font-size: 1.6rem; color: var(--ribbon); }
+.peek-row { display: flex; gap: 1.75rem; overflow-x: auto; padding: 0.8rem 0.6rem 1.5rem; scroll-snap-type: x proximity; }
+.peek-row > li { flex: 0 0 min(13.5rem, 72%); scroll-snap-align: start; }
+.peek-card { color: inherit; text-decoration: none; }
+.peek-card:hover { background: var(--note-pink); }
+.peek-card .item-art { width: min(100%, 7.5rem); }
+.peek-card h3 { font-size: 1.55rem; }
+.peek-card .worth { margin: 0; }
+.peek-price { align-self: flex-start; margin: auto 0 0; padding: 0.1em 0.8em; background: var(--canvas); border: 3px solid var(--ink); border-radius: var(--wobble-b); font-family: var(--display); font-size: 1.5rem; line-height: 1.3; }
