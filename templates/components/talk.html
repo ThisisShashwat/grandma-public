@@ -1,7 +1,9 @@
 {% import "macros/art.html" as art %}
 {% import "macros/notes.html" as hand %}
+{% import "macros/ui.html" as ui %}
 {# One step of a dialogue (talk/flow.py): Grandma's portrait, her speech bubble, and what she wants from you.
    kind is say, asktext, askchoice, deal, again or end. Every answer is a normal form POST, no JavaScript needed.
+   askchoice: a step's `suggested` choice is drawn with the muted yellow scribble (never selected).
    deal: the notes on her fridge below the bubble, tick the ones to keep. again: confirming a paid re-deal.
    A step with celebrate pops her picture in and sets off confetti (a Blue Ribbon, static/js/features/celebrate.js). #}
 <div class="talk">
@@ -53,7 +55,8 @@
       {% elif kind == "askchoice" %}
       <div class="talk-picks" role="group">
         {% for value, label in choices %}
-        <button class="pick{% if field.value() == value %} is-picked{% endif %}" name="{{ step.key }}" value="{{ value }}">{{ label }}</button>
+        {% set guess = step.suggested and value == step.suggested %}
+        <button class="pick{% if field.value() == value %} is-picked{% endif %}{% if guess %} is-guess{% endif %}" name="{{ step.key }}" value="{{ value }}">{{ ui.mark(label) if guess else label }}</button>
         {% endfor %}
       </div>
       {% if field.errors %}<p class="oops" role="alert">{% for message in field.errors %}{{ message }} {% endfor %}</p>{% endif %}

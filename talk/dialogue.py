@@ -47,6 +47,7 @@ class AskText(Step):
 class AskChoice(Step):
     key: str
     choices: Callable[[dict], tuple] | tuple     # (value, label) pairs, or a function of the answers so far that returns them
+    suggested: str = ""          # the value of the choice she points at: drawn highlighted, never selected (the person still taps one), "" for none
 
 
 @dataclass(frozen=True, kw_only=True)

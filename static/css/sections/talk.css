@@ -31,6 +31,7 @@
 .pick:nth-child(3n+1) { rotate: -1.2deg; }
 .pick:nth-child(3n+2) { rotate: 1deg; background: var(--note-blue); }
 .pick:nth-child(3n+3) { rotate: -0.6deg; background: var(--note-pink); }
+.pick.is-guess { position: relative; background: var(--canvas); }   /* her guess: a plain note under the muted yellow scribble (ui.mark), still not picked */
 .pick:hover { background: var(--pink); }
 .pick.is-picked { box-shadow: 4px 4px 0 var(--ink); }
 

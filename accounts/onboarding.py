@@ -48,7 +48,7 @@ def question(step, cfg, slack_known, region_guess="", own_names=frozenset()):
         rows = regions.regions(cfg.REGIONS)
         label = dict(rows).get(region_guess)
         lines = step.lines + (script.region_guess_line(label),) if label else step.lines
-        return replace(step, choices=rows, lines=lines)
+        return replace(step, choices=rows, lines=lines, suggested=region_guess if label else "")
     return step
 
 
