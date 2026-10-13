@@ -6,7 +6,7 @@ HCA_CLIENT_SECRET are in the environment (`enabled`), and the library is only se
 
 A first Hack Club sign-in CREATES an account with an unusable password (never staff, never superuser) and attaches its Slack ID to the Profile.
 The gate (ysws_eligible is True) is checked at first login only: returning participants are never polled or re-checked, so aging out mid-program
-does not lock them out. A returning sign-in finds the account by `hca_sub` and signs in. Staff and superusers may sign in this way; the admin itself
+does not lock them out. It does not apply to a Slack ID listed in STAFF_SLACK_IDS (adult staff are not ysws_eligible and must still become admins). A returning sign-in finds the account by `hca_sub` and signs in. Staff and superusers may sign in this way; the admin itself
 is gated separately (accounts/admin_gate.py). Hack Club is asked for five scopes (openid, profile, slack_id, verification_status, email) and we keep five fields (owner, 2026-10-07: the display name comes from Hack Club, FIRST NAME ONLY: `given_name` or else `nickname`, never the family name or the full name, and only if it passes the display name rules; the question in /welcome/ is skipped then): the stable `sub` id, the Slack ID and the
 email (both private, never shown on a public page; the email because Ari, HQ's review tool, requires it on every ship) and the time of the last sign-in. The email is kept current on every
 sign-in; a missing or malformed one never blocks anything and is never invented. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
@@ -154,12 +154,17 @@ def keep_identity(profile, userinfo):
     return True
 
 
+def is_listed_staff(userinfo):
+    """Is the Slack ID of this sign-in (the `slack_id` claim, verified by Hack Club) exactly one of the environment list STAFF_SLACK_IDS?"""
+    slack_id = (userinfo or {}).get("slack_id")
+    return bool(settings.STAFF_SLACK_IDS) and isinstance(slack_id, str) and slack_id in settings.STAFF_SLACK_IDS
+
+
 def grant_staff(profile, userinfo):
     """The only way an admin is made: a Hack Club sign-in whose Slack ID (verified by Hack Club, in the `slack_id` claim) is in the environment list
     STAFF_SLACK_IDS becomes staff, superuser and a beta member, at the first sign-in and at every later one. Nobody else is ever promoted here, an empty
     list promotes nobody, and nothing is ever taken away (untick by hand in the admin). The audit entry names the fields, never the Slack ID."""
-    slack_id = (userinfo or {}).get("slack_id")
-    if not settings.STAFF_SLACK_IDS or not isinstance(slack_id, str) or slack_id not in settings.STAFF_SLACK_IDS:
+    if not is_listed_staff(userinfo):
         return
     user = profile.user
     changed = [name for name, have in (("is_staff", user.is_staff), ("is_superuser", user.is_superuser), ("beta_access", profile.beta_access)) if not have]
@@ -229,7 +234,7 @@ def identify(userinfo, require_eligible):
         if profile is not None:
             return sign_in(profile, email, userinfo)
 
-        ok, reason = check(userinfo, require_eligible)
+        ok, reason = check(userinfo, require_eligible and not is_listed_staff(userinfo))        # listed staff are adults: the age gate never refuses them
         if not ok:
             return None, reason
 
