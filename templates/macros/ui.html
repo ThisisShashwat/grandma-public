@@ -1,7 +1,7 @@
 {% import "macros/art.html" as art %}
 {# Hand-drawn marks (Rough Notation, wired by static/js/core/annotations.js).
-   Accent = muted yellow highlight. Underlines are blue, circles and cross-offs red. #}
-{% set mark_colors = {"highlight": "#fff3a6", "underline": "#2f4fc4", "circle": "#e8222a", "crossed-off": "#e8222a"} %}
+   Accent = muted yellow highlight. Underlines are blue, circles, strikes and cross-offs red. #}
+{% set mark_colors = {"highlight": "#fff3a6", "underline": "#2f4fc4", "circle": "#e8222a", "crossed-off": "#e8222a", "strike-through": "#e8222a"} %}
 
 {% macro mark(text, type="highlight", cls="") -%}
 <span{% if cls %} class="{{ cls }}"{% endif %} data-annotate="{{ type }}" data-color="{{ mark_colors[type] }}">{{ text }}</span>

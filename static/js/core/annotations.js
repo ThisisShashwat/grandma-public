@@ -1,7 +1,8 @@
 import { $$, debounce } from "./dom.js";
 import { reduce, hasGsap, hasScroll } from "./env.js";
 
-/* Hand-drawn marks (Rough Notation) on every [data-annotate="highlight|underline|circle|crossed-off"], colored by data-color.
+/* Hand-drawn marks (Rough Notation) on every [data-annotate="highlight|underline|circle|strike-through"], colored by data-color.
+   A strike-through gets a thinner pen (2): a crossed-off X hid letters, and both the struck words and the red fix beside them must stay readable.
 
    Rough Notation draws each mark once at the spot the text was at. When the window resizes and the text re-wraps,
    a mark can end up on the wrong words (the library only notices size changes, not moves, and cannot see inline
@@ -32,7 +33,7 @@ const setup = () => {
     const mark = RoughNotation.annotate(node, {
       type: node.dataset.annotate,
       color: node.dataset.color || "#000",
-      strokeWidth: 3,
+      strokeWidth: node.dataset.annotate === "strike-through" ? 2 : 3,
       padding: 4,
       multiline: true,
       animate: !reduce,
