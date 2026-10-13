@@ -11,6 +11,7 @@ from django.http import HttpResponse
 
 NOINDEX = "noindex, nofollow, noarchive"
 PROBES = ("/healthz", "/readyz")      # a host's health checks cannot answer a password prompt, and they say nothing
+OPEN = PROBES + ("/ari/result/",)     # Ari's server posts its decisions here and cannot answer a password prompt either; the address is a 404 until Ari is on and then needs its HMAC signature
 CHALLENGE = 'Basic realm="Grandma preview", charset="UTF-8"'
 
 
@@ -31,7 +32,7 @@ def refused():
 
 def preview_gate(get_response):
     def middleware(request):
-        if not settings.PREVIEW_PASSWORD or request.path in PROBES:
+        if not settings.PREVIEW_PASSWORD or request.path in OPEN:
             return get_response(request)
         given = given_password(request)
         response = get_response(request) if given is not None and hmac.compare_digest(given, settings.PREVIEW_PASSWORD.encode()) else refused()
