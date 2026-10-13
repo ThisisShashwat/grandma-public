@@ -7,17 +7,19 @@
   <nav aria-label="Main">
     <a href="{{ url('guides') }}">Guides</a>
     <a href="{{ url('shop') }}">Pantry</a>
-    <a href="{{ url('ribbons') }}">Ribbons</a>
-    <a href="{{ url('leaderboard') }}">Leaderboard</a>
+    {# the same bytes for everybody, so the page never reads the session: static/js/core/auth.js shows one of the two sets (accounts/signed_in_flag.py). The signed out bar has no Sign in (Sign up goes to the same place), Ribbons or Leaderboard (the pages stay public) #}
+    <span data-auth="in" hidden>
+      <a href="{{ url('ribbons') }}">Ribbons</a>
+      <a href="{{ url('leaderboard') }}">Leaderboard</a>
+    </span>
     <a href="{{ url('home') }}#faq">FAQ</a>
     <a data-link="slack" {{ link_attrs("slack") }}>Slack</a>
-    {# the same bytes for everybody, so the page never reads the session: static/js/core/auth.js shows one of the two sets (accounts/signed_in_flag.py) #}
     <span data-auth="out">
-      <a href="{{ url('login') }}">Sign in</a>
       <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
     </span>
     <span data-auth="in" hidden>
       <a href="{{ url('dashboard') }}">Dashboard</a>
+      <a href="{{ url('settings') }}">Settings</a>
       <form class="nav-leave" method="post" action="{{ url('logout') }}"><button>Log out</button></form>
     </span>
   </nav>
