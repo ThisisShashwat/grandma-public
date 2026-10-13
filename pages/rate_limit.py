@@ -5,8 +5,9 @@ What is counted: a GET per address in this process's memory (cheap on purpose: t
 several workers the real limit is a few times the number); a POST per address and per session in the shared cache table, and the sign-in and
 connect addresses per address in the shared table. Static files never get here (WhiteNoise answers them first) and the health probes are exempt.
 Keys hold a hash of the address and of the session cookie, never the value itself, and expire within a minute. If the shared store is down the
-request goes through (a limit must never be what takes the site down). With the site behind a proxy and AXES_PROXY_COUNT left at 0 the address
-is the proxy's, the same for everybody, so the address rules are skipped (the session rule still applies): set AXES_PROXY_COUNT to the number of proxies.
+request goes through (a limit must never be what takes the site down). With the site behind a proxy and AXES_PROXY_COUNT left at 0, or with fewer
+X-Forwarded-For entries than AXES_PROXY_COUNT, the address is the proxy's, the same for everybody, so the address rules are skipped (the session rule
+still applies): set AXES_PROXY_COUNT to the number of proxies.
 Every number is an environment setting; RATE_LIMITS_ENABLED=False switches the lot off."""
 import hashlib
 import logging
@@ -43,11 +44,19 @@ def count(alias, key):
         return 1
 
 
+def address_known(request):
+    """Is client_ip the client's own address? Behind a proxy only with a count of 1 or more AND at least that many X-Forwarded-For entries: with fewer,
+    client_ip falls back to REMOTE_ADDR (the proxy's own), the same for everybody, and counting it would 429 the whole site together."""
+    if not settings.BEHIND_PROXY:
+        return True
+    entries = [part for part in request.META.get("HTTP_X_FORWARDED_FOR", "").split(",") if part.strip()]
+    return 1 <= settings.TRUSTED_PROXY_COUNT <= len(entries)
+
+
 def checks(request):
     """(alias, key, limit) for every rule this request falls under."""
     out = []
-    address_known = not (settings.BEHIND_PROXY and settings.TRUSTED_PROXY_COUNT < 1)
-    ip = digest(client_ip(request) or "unknown") if address_known else None
+    ip = digest(client_ip(request) or "unknown") if address_known(request) else None
     if request.method in SAFE:
         if ip:
             out.append(("ratelimit_local", f"get:{ip}", settings.RATE_LIMIT_GET))
