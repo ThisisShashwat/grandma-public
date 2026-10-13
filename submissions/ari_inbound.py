@@ -9,7 +9,6 @@ import re
 import time
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.conf import settings
 from django.db import transaction
 
 from accounts.public_id import PATTERN
@@ -33,11 +32,6 @@ LOVED, RIBBON = "grandma_loved_it", "blue_ribbon"                        # the c
 UNMET = "Some of your notes are not met yet, dear: {names}. Fix them and hand it in again."
 CHANGES = "I can't take it as it is, dear. Look it over once more and hand it in again."
 CENTS = Decimal("0.01")
-
-
-def receiving(enabled):
-    """Does the address exist? `enabled` is the ARI_ENABLED switch (read strictly by the view). Not while it is off or the outbound secret is missing: a 404 for everybody."""
-    return bool(enabled and settings.ARI_OUTBOUND_SECRET)
 
 
 def trusted(raw, *, signature, timestamp, delivery_id, secret, now=None):

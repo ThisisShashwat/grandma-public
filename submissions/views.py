@@ -122,14 +122,21 @@ def collect(request):
 @csrf_exempt
 def ari_result(request):
     """What an Ari reviewer decided, POSTed by Ari (submissions/ari_inbound.py, docs/security.md "The Ari webhook"). A 404 for everybody and every method but POST, and for a
-    POST until the ARI_ENABLED switch is on and the outbound secret is set (it never says which is missing). The switch is read STRICTLY (constance directly, not live()): a
-    database that cannot be read is a 500, which Ari retries, never a 404, which it takes as final. Not a page of a person: no session, no CSRF (Ari has no cookie), the
-    HMAC signature of the exact bytes is the only door. A bad signature, timestamp or delivery id is a bare 401 and nothing is read further or written."""
-    if request.method != "POST" or not ari_inbound.receiving(config.ARI_ENABLED):
+    POST while the outbound secret is not set. While the ARI_ENABLED switch is off a POST with a bad or missing signature is the same 404 (nothing leaks to people without
+    the secret), but one whose signature verifies is a bare 503 with Retry-After: Ari retries a 5xx for hours and takes a 404 as final, so a decision sent while the
+    switch was off is not lost; nothing is read further or written. The switch is read STRICTLY (constance directly, not live()): a database that cannot be read is a 500,
+    which Ari retries, never a 404, which it takes as final. Not a page of a person: no session, no CSRF (Ari has no cookie), the HMAC signature of the exact bytes is the
+    only door. With the switch on, a bad signature, timestamp or delivery id is a bare 401 and nothing is read further or written."""
+    if request.method != "POST" or not settings.ARI_OUTBOUND_SECRET:
         raise Http404
-    raw, headers = request.body, request.headers
-    if not ari_inbound.trusted(raw, signature=headers.get("X-Ari-Signature", ""), timestamp=headers.get("X-Ari-Timestamp", ""),
-                               delivery_id=headers.get("X-Ari-Delivery-Id", ""), secret=settings.ARI_OUTBOUND_SECRET):
+    enabled, raw, headers = config.ARI_ENABLED, request.body, request.headers
+    signed = ari_inbound.trusted(raw, signature=headers.get("X-Ari-Signature", ""), timestamp=headers.get("X-Ari-Timestamp", ""),
+                                 delivery_id=headers.get("X-Ari-Delivery-Id", ""), secret=settings.ARI_OUTBOUND_SECRET)
+    if not enabled:
+        if signed:
+            return HttpResponse(status=503, headers={"Retry-After": "3600"})
+        raise Http404
+    if not signed:
         return HttpResponse(status=401)
     payload = ari_inbound.parse(raw)
     if payload is None:
