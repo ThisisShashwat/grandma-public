@@ -97,6 +97,8 @@ class ShopItem(models.Model):
     )
     active = models.BooleanField(default=True)
     ribbon_only = models.BooleanField(default=False, help_text="Only people who hold a Blue Ribbon can see and buy this item. Everybody else does not know it exists.")
+    show_on_home = models.BooleanField(default=True, help_text="Show it in the Pantry peek on the home page, while the peek is switched on in the settings. "
+                                       "The peek takes the first ticked items in shop order and skips by hand and sold out ones. Untick to keep an item on the shelves only.")
     sort_order = models.PositiveSmallIntegerField(default=0)
 
     objects = ShopItemQuerySet.as_manager()

@@ -25,9 +25,12 @@ _cache = {}                # count -> (expires at, picks), one per process
 
 
 def read(count):
-    """The first `count` products of the Pantry in shop order (shelf by shelf), skipping the by hand ones and the sold out ones, which a peek does not need."""
+    """The first `count` products of the Pantry in shop order (shelf by shelf), skipping the by hand ones and the sold out ones, which a peek does not need,
+    and keeping only the items ticked "Show on the home page" in the admin. The tick is not in the public Product record (that list is pinned): it is read as
+    a set of slugs beside it, in the same cached read."""
+    ticked = set(ShopItem.objects.filter(show_on_home=True).values_list("slug", flat=True))
     shelved = (product for shelf in catalog.build(ribbon=False).shelves for product in shelf.products)
-    return tuple(islice((p for p in shelved if p.available and not p.manual), count))
+    return tuple(islice((p for p in shelved if p.available and not p.manual and p.slug in ticked), count))
 
 
 def pick(count):

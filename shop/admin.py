@@ -10,15 +10,16 @@ from .models import RateClass, ShopItem
 
 @admin.register(ShopItem)
 class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ("name", "kind", "category", "stackable", "usd_value", "rate_class", "price", "rate", "active", "ribbon_only")
-    list_filter = ("kind", "category", "stackable", "rate_class", "active", "ribbon_only")
+    list_display = ("name", "kind", "category", "stackable", "usd_value", "rate_class", "price", "rate", "active", "ribbon_only", "show_on_home")
+    list_editable = ("show_on_home",)           # tick it from the list: the home page peek (shop/peek.py)
+    list_filter = ("kind", "category", "stackable", "rate_class", "active", "ribbon_only", "show_on_home")
     search_fields = ("name", "slug", "tagline")
     prepopulated_fields = {"slug": ("name",)}
     list_select_related = ("rate_class",)
     actions = ["recompute_prices"]
     readonly_fields = ("cookies", "effective_rate", "upgrade_check")
     fieldsets = (
-        ("The item", {"fields": ("name", "slug", "tagline", "description", "art", "kind", "category", "active", "ribbon_only", "sort_order")}),
+        ("The item", {"fields": ("name", "slug", "tagline", "description", "art", "kind", "category", "active", "ribbon_only", "show_on_home", "sort_order")}),
         ("Who can buy how many", {"fields": ("stackable", "max_per_user", "stock", "base_item")}),
         ("Price", {"fields": ("usd_value", "rate_class", "cookies", "cookies_override", "effective_rate", "upgrade_check")}),
     )
