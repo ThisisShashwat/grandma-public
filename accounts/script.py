@@ -73,9 +73,6 @@ SKIP_OFFER = AskChoice(
 
 # The Hack Club basics (part 0): the only part experience may skip. Draft copy by Claude, 2026-10-07, for the owner to read.
 PART_BASICS = [
-    Say(face="finger", lines=(
-        "One more thing, dear, and it's about Hack Club, not about me.",
-        "Hack Club is a nonprofit of teenagers who make things. I only run one little corner of it.")),
     Say(face="magnifier", lines=(
         "To ship something means to finish it and put it where other people can use it. A real link, not a promise.",
         "A half built thing in a folder on your laptop has not shipped, dear. I don't count those.")),
