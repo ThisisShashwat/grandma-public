@@ -67,6 +67,9 @@ class Submission(models.Model):
     ari_ship_id = models.CharField(max_length=40, blank=True, editable=False, help_text="Ari's id for this hand-in (like AR-4821), from its answer when it took the ship.")
     reviewer_label = models.CharField(max_length=254, blank=True, editable=False, help_text="Who decided it in Ari: the reviewer's email or Slack id, as text. Staff only. Empty for a decision made in this admin.")
     demand_checks = models.JSONField(default=list, blank=True, editable=False, help_text="What the Ari reviewer ticked for each demand the person kept: a list of demand id and met.")
+    ari_justification = models.JSONField(default=dict, blank=True, editable=False,
+                                         help_text="What the Ari reviewer wrote to back the hours: the Hackatime projects with their dates, the Hackatime id, timelapse links, the technical features and why hours were cut. "
+                                                   "Kept for HQ's audit. PRIVATE: staff only, never on a page, never shown to the person.")
     needs_staff = models.BooleanField(default=False, editable=False,
                                       help_text="Ari sent something this site could not apply by itself (hours too big or missing, a decision after the person collected, a revert after they spent the cookies). "
                                                 "Look at it, fix it by hand if needed, then clear this with the admin action.")

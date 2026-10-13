@@ -62,8 +62,10 @@ class SubmissionAdmin(admin.ModelAdmin):
         ("Ari", {"fields": ARI, "description": "Filled by Ari's decisions (never typed here). Needs staff means Ari sent something this site did not apply by itself (a revert, a decision "
                                                "after the person collected, bad hours, a failed fraud check): look at it, decide it in the Review form if it must be decided, then "
                                                "clear the flag with the list action. While it is set, nothing more from Ari is applied to this submission."}),
+        ("What Ari's reviewer wrote to back the hours (private)", {"fields": ("justification",), "classes": ("collapse",),
+                                                                  "description": "Kept for HQ's audit. Staff only: never shown to the person, never on a public page."}),
     )
-    readonly_fields = PARTICIPANT + RESULT + ARI
+    readonly_fields = PARTICIPANT + RESULT + ARI + ("justification",)
 
     def has_change_permission(self, request, obj=None):
         """Once the person has collected, the whole result is frozen: it opens view only, and a form opened earlier is a 403 when posted (no success message)."""
@@ -117,6 +119,11 @@ class SubmissionAdmin(admin.ModelAdmin):
         if obj.tracked_seconds is None:
             return "no Hackatime check"
         return f"{obj.tracked_seconds / 3600:.2f} hours (checked at {timezone.localtime(obj.tracked_at):%Y-%m-%d %H:%M %Z})"
+
+    @admin.display(description="justification")
+    def justification(self, obj):
+        """Ari's `review.justification` as stored (submissions/ari_inbound.py justification_of), one line per part; format_html escapes every value."""
+        return format_html("<dl>{}</dl>", format_html_join("", "<dt><b>{}</b></dt><dd>{}</dd>", obj.ari_justification.items())) if obj.ari_justification else "none"
 
     @admin.display(description="repository")
     def repo_link(self, obj):

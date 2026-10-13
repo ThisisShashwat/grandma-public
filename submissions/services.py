@@ -23,9 +23,9 @@ CHECK_YOUR_HOURS = "Check your hours first, dear. I won't take it until Hackatim
 UNFIT_NOTES = "One of the notes you kept doesn't suit this kind of project, dear. Swap it with Change my demands on your project page. Stuck? Ask the staff in the Slack."
 OWN_PROJECT = "You cannot review your own project. Ask another reviewer."
 REVIEW_FIELDS = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note", "reviewed_by", "reviewed_at", "cookies_awarded")
-ARI_FIELDS = REVIEW_FIELDS + ("reviewer_label", "demand_checks", "needs_staff")
+ARI_FIELDS = REVIEW_FIELDS + ("reviewer_label", "demand_checks", "ari_justification", "needs_staff")
 CLEARED = {"status": rules.SUBMITTED, "approved_hours": None, "quality": False, "ribbon": False, "public_note": "", "internal_note": "", "reviewed_by": None,
-           "reviewed_at": None, "cookies_awarded": None, "claimed_at": None, "reviewer_label": "", "demand_checks": []}      # a decision taken back
+           "reviewed_at": None, "cookies_awarded": None, "claimed_at": None, "reviewer_label": "", "demand_checks": [], "ari_justification": {}}      # a decision taken back
 
 
 class AlreadyCollected(Exception):
@@ -303,17 +303,18 @@ def flag_staff(submission, event, delivery, why):
 
 @transaction.atomic
 def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours=None, quality=False, ribbon=False, public_note="", internal_note="", reviewer_label="",
-                       demand_checks=(), max_rounds=rules.NO_ROUND_CAP, now=None):
+                       demand_checks=(), justification=None, max_rounds=rules.NO_ROUND_CAP, now=None):
     """Save the decision an Ari reviewer made (already a confirmed one: second pass is on there), as `review` would, without a reviewer user. Returns what happened:
     NOOP (the same decision is already stored), APPLIED, IGNORED (the project is no longer in review: abandoned, or finished by staff), or REFUSED / NEEDS_STAFF with
     `needs_staff` set and nothing else changed: a different decision once the person collected, a different one after staff decided in the admin, an approval with no,
     zero or too many hours, changes without a note. While `needs_staff` is set on the submission nothing is applied at all (NEEDS_STAFF, held): Ari may take a decision
     back before an older delivery of it arrives, and that late delivery must not pay; staff clear the flag (`clear_needs_staff`) once they have looked. The round cap is
     not applied (the owner, 2026-10-06) unless the caller passes `max_rounds` (the system rejection turned into changes requested does: ari_inbound.decide). A decision
-    different from the stored one replaces it while it is not collected. The cookies are worked out as always and paid only when the person collects (`claim`)."""
+    different from the stored one replaces it while it is not collected. `justification` is what the reviewer wrote to back the hours (already cleaned, ari_inbound.justification_of):
+    PRIVATE, stored with the decision for HQ's audit and replaced by the next one. The cookies are worked out as always and paid only when the person collects (`claim`)."""
     current = locked_for_ari(submission_id)
     new = {"status": status, "approved_hours": approved_hours, "quality": quality, "ribbon": ribbon, "public_note": public_note[:1000], "internal_note": internal_note[:2000],
-           "reviewer_label": reviewer_label[:254], "demand_checks": list(demand_checks)}
+           "reviewer_label": reviewer_label[:254], "demand_checks": list(demand_checks), "ari_justification": dict(justification or {})}
     if current.reviewed_at is not None and all(getattr(current, field) == value for field, value in new.items()):
         return rules.NOOP
     if current.claimed_at:

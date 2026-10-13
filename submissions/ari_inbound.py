@@ -32,6 +32,8 @@ LOVED, RIBBON = "grandma_loved_it", "blue_ribbon"                        # the c
 UNMET = "Some of your notes are not met yet, dear: {names}. Fix them and hand it in again."
 CHANGES = "I can't take it as it is, dear. Look it over once more and hand it in again."
 CENTS = Decimal("0.01")
+JUSTIFICATION_KEYS = ("hackatime_projects", "hackatime_user_id", "lapse_links", "technical_features", "deflation_reason")      # review.justification (docs/ari.txt): what HQ audits; its extra prompts and unified_db_record are not kept
+MAX_JUSTIFICATION_TEXT, MAX_JUSTIFICATION = 4000, 20000        # characters of one text, and of the whole thing serialised
 
 
 def trusted(raw, *, signature, timestamp, delivery_id, secret, now=None):
@@ -97,6 +99,23 @@ def answers_of(review):
     return {f["key"]: f.get("value") for f in fields if isinstance(f, dict) and isinstance(f.get("key"), str)} if isinstance(fields, list) else {}
 
 
+def justification_of(review):
+    """What the reviewer wrote to back the hours (`review.justification`), for HQ's audit: PRIVATE, only the five known keys, each plain text cleaned and cut to 4000 characters
+    (the Hackatime id may come as a whole number and becomes text; any other type is dropped), the whole at most 20000 characters serialised (a key that would not fit is left
+    out). {} when it is absent, not an object or empty."""
+    raw = review.get("justification")
+    raw = raw if isinstance(raw, dict) else {}
+    kept = {}
+    for key in JUSTIFICATION_KEYS:
+        value = raw.get(key)
+        if key == "hackatime_user_id" and isinstance(value, int) and not isinstance(value, bool):
+            value = str(value)
+        value = clean(value)[:MAX_JUSTIFICATION_TEXT].strip() if isinstance(value, str) else ""
+        if value and len(json.dumps(kept | {key: value}, ensure_ascii=False)) <= MAX_JUSTIFICATION:
+            kept[key] = value
+    return kept
+
+
 def checks_of(answers, kept):
     """What the reviewer ticked per demand: demand_1_met is the first kept demand, and so on (a box beyond the demands kept is ignored)."""
     return [{"demand": demand.id, "met": answers[f"demand_{number}_met"] is True} for number, demand in enumerate(kept, start=1) if f"demand_{number}_met" in answers]
@@ -127,7 +146,7 @@ def decide(submission, payload, delivery_id):
         submission.pk, event=event, delivery=delivery_id, status=status, approved_hours=hours_of(review) if approved else None,
         quality=approved and answers.get(LOVED) is True, ribbon=approved and answers.get(RIBBON) is True,
         public_note=changes_note(note, checks, kept) if status == rules.CHANGES_REQUESTED and not system else note, internal_note=clean(text_of(review, "audit_note")),
-        reviewer_label=clean(text_of(reviewer, "email")) or clean(text_of(reviewer, "slack_id")), demand_checks=checks, max_rounds=live().MAX_ROUNDS if system else rules.NO_ROUND_CAP)
+        reviewer_label=clean(text_of(reviewer, "email")) or clean(text_of(reviewer, "slack_id")), demand_checks=checks, justification=justification_of(review), max_rounds=live().MAX_ROUNDS if system else rules.NO_ROUND_CAP)
 
 
 def fraud(submission, payload, delivery_id):
