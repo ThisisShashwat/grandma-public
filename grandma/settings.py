@@ -275,10 +275,10 @@ CSRF_FAILURE_VIEW = "pages.views.csrf_failure"      # Grandma's "stale slip" pag
 FORM_BODY_MAX_KB = env.int("FORM_BODY_MAX_KB", default=128)
 UPLOAD_BODY_MAX_MB = env.int("UPLOAD_BODY_MAX_MB", default=22)         # above the biggest admin allowed screenshot (20 MB) plus the form around it
 RATE_LIMITS_ENABLED = env.bool("RATE_LIMITS_ENABLED", default=True)
-RATE_LIMIT_GET = env.int("RATE_LIMIT_GET", default=600)                 # a GET per address, counted in each worker's memory
-RATE_LIMIT_POST_IP = env.int("RATE_LIMIT_POST_IP", default=120)        # a POST per address (a school may share one)
+RATE_LIMIT_GET = env.int("RATE_LIMIT_GET", default=1200)                # a GET per address, counted in each worker's memory (a school or a carrier shares one address)
+RATE_LIMIT_POST_IP = env.int("RATE_LIMIT_POST_IP", default=600)        # a POST per address (a school or a carrier may share one)
 RATE_LIMIT_POST_SESSION = env.int("RATE_LIMIT_POST_SESSION", default=60)
-RATE_LIMIT_SIGN_IN = env.int("RATE_LIMIT_SIGN_IN", default=30)         # the sign-in and connect addresses, per address
+RATE_LIMIT_SIGN_IN = env.int("RATE_LIMIT_SIGN_IN", default=300)        # the sign-in and connect addresses, per address (a whole class may sign in at once)
 # The shared counter: a database table (made by `manage.py createcachetable`, which the Dockerfile runs at start) so every worker agrees; local memory in development.
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
