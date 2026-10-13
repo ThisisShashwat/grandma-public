@@ -43,6 +43,11 @@ QUESTIONS = [
 ]
 
 
+# What connecting lets her do, before the button (only while the connection is on: the greyed-out stub connects nothing).
+HACKATIME_PRIVACY = ("I only look at your project list and the hours of the projects you tick. I keep the key encrypted and show it to nobody. "
+                     "Cut me off whenever you like, in Hackatime's Privacy and Security settings, and I'll just ask you to connect again.")
+
+
 def hackatime_step(enabled=False, connected=False):
     """The Hackatime step (accounts/hackatime.py). Switched off (the default) it is a greyed-out button that lets people carry on, because nobody could
     finish onboarding otherwise. Switched on it is the real thing: the button goes to the connect page, there is no Go on, and the step is not played
@@ -55,6 +60,7 @@ def hackatime_step(enabled=False, connected=False):
     return Say(face="finger", link=("Connect Hackatime", reverse("connect_hackatime")), locked=True, when=lambda answers: not connected, lines=(
         "Now the important bit.",
         "I count your hours with a thing called Hackatime. No Hackatime, no hours. No hours, no cookies.",
+        HACKATIME_PRIVACY,
         "Press the button and Hackatime will ask if I may take a look."))
 
 
