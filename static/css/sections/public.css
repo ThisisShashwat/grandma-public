@@ -90,3 +90,6 @@
   .pub-rank { grid-row: auto; }
   .pub-cookies { text-align: right; }
 }
+
+/* the line under the heading of the home page's Blue Ribbon wall peek (templates/sections/ribbon_peek.html) */
+.sub { font-size: 1.2rem; margin-bottom: 1.75rem; }

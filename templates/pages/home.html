@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{# The Pantry peek: switched on by the admin setting HOME_PANTRY_PEEK (default off, then nothing below renders and the page is as it always was).
-   `peek` is the shop's first few items (shop/peek.py), empty when the switch is off or the shop has nothing to show. #}
+{# The Pantry peek: on by default (admin setting HOME_PANTRY_PEEK; each shop item has a "Show on the home page" tick). `peek` is the shop's first few ticked items
+   (shop/peek.py, kept in memory for a minute), empty when the switch is off or the shop has nothing to show: then nothing below renders. #}
 {% set peek = pantry_peek(home_peek_count) %}
 {# The Blue Ribbon wall peek: the same kind of switch, HOME_RIBBON_PEEK (default off). `ribbon_peek` is the wall's newest projects (showcase/peek.py), empty when off or the wall is empty. #}
 {% set ribbon_peek = ribbon_wall_peek(home_ribbon_count) %}
 
 {% block styles %}
-{% for name in ["hero", "how", "fridge", "pay", "faq", "cta", "hackclub"] %}
+{% for name in ["hero", "how", "fridge", "faq", "cta", "hackclub"] %}
 <link rel="stylesheet" href="{{ static('css/sections/' ~ name ~ '.css') }}">
 {% endfor %}
 {% if peek %}
@@ -25,8 +25,7 @@
 {% include "sections/hero.html" %}
 {% include "sections/how.html" %}
 {% include "sections/demands.html" %}
-{% include "sections/pay.html" %}
-{# THE ONE LINE TO MOVE: the next line is where the Pantry peek sits. Cut it and paste it between any two sections (the owner decides where). #}
+{# THE ONE LINE TO MOVE: the next line is where the Pantry peek sits (it took the place of "How Grandma pays", the calculator, which now lives in the guides). Cut it and paste it between any two sections (the owner decides where). #}
 {% if peek %}{% include "sections/pantry_peek.html" %}{% endif %}
 {# ALSO MOVABLE: the next line is where the Blue Ribbon wall peek sits, right after the Pantry peek. Cut it and paste it between any two sections. #}
 {% if ribbon_peek %}{% include "sections/ribbon_peek.html" %}{% endif %}
