@@ -1,0 +1,25 @@
+{% import "macros/art.html" as art %}
+{% import "macros/ui.html" as ui %}
+{# The pitch right under the hero, in Grandma's voice. The three sticky notes are real demands from the pool (program/content/demands.py), drawn with the fridge's own
+   .note (static/css/sections/fridge.css), so a name changed there changes here. The last words link to the #grandma channel (admin setting LINK_SLACK_GRANDMA): plain text while it is empty. #}
+{% set samples = ["Two Colors", "Offline", "No Jargon"] %}
+<section class="scene pitch" id="pitch">
+  <div class="wrap">
+    <h2>Grandma is nitpicky. {{ ui.mark("Very.") }}</h2>
+    <p class="lede">She has demands, and they are ridiculous:</p>
+    <ul class="pitch-notes">
+      {% for d in pool if d.name in samples %}
+      <li class="note"><b>{{ d.name }}</b>{{ d.line }}<span class="tier">{{ tiers[d.tier] }}</span></li>
+      {% endfor %}
+    </ul>
+    <p class="lede">And many, many more.</p>
+    <div class="pitch-body">
+      <div>
+        <p>You build whatever you want: a website, an app, a game, a bot, anything made of code. You just have to build it her way. Pull off her demands and she pays you in cookies, and every demand you pull off makes the payout bigger.</p>
+        <p>She never tells you what to build, only how annoyingly to build it. Then you spend your cookies in the Pantry on real things for your next project.</p>
+        <p>A Hack Club program for teenagers. Come and chat in {% if link("slack_grandma") != "#" %}<a data-link="slack_grandma" {{ link_attrs("slack_grandma") }}>#grandma on Slack</a>{% else %}#grandma on Slack{% endif %}.</p>
+      </div>
+      {{ art.fig("grandma-finger-wag.png", "Grandma wagging her finger", "aside-fig pitch-fig") }}
+    </div>
+  </div>
+</section>

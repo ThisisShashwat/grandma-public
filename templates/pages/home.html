@@ -6,7 +6,7 @@
 {% set ribbon_peek = ribbon_wall_peek(home_ribbon_count) %}
 
 {% block styles %}
-{% for name in ["hero", "how", "fridge", "faq", "cta", "hackclub"] %}
+{% for name in ["hero", "pitch", "how", "fridge", "faq", "cta", "hackclub"] %}
 <link rel="stylesheet" href="{{ static('css/sections/' ~ name ~ '.css') }}">
 {% endfor %}
 {% if peek %}
@@ -23,6 +23,7 @@
 
 {% block main %}
 {% include "sections/hero.html" %}
+{% include "sections/pitch.html" %}
 {% include "sections/how.html" %}
 {% include "sections/demands.html" %}
 {# THE ONE LINE TO MOVE: the next line is where the Pantry peek sits (it took the place of "How Grandma pays", the calculator, which now lives in the guides). Cut it and paste it between any two sections (the owner decides where). #}
