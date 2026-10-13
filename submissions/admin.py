@@ -18,6 +18,7 @@ PARTICIPANT = ("project", "round", "owner", "submitted_at", "hackatime_project",
                "recording_link", "ticked", "ai_declaration_text", "kept_notes")
 REVIEW = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note")
 RESULT = ("cookies_preview", "reviewed_by", "reviewed_at", "cookies_awarded", "claimed_at")
+ARI = ("ari_ship_id", "reviewer_label", "demand_checks", "needs_staff")        # what Ari (HQ's review tool) said, all read only (submissions/ari_inbound.py)
 
 
 class ReviewForm(forms.ModelForm):
@@ -46,8 +47,9 @@ class ReviewForm(forms.ModelForm):
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
     form = ReviewForm
-    list_display = ("project", "round", "owner", "status", "submitted_at", "cookies_awarded", "collected")
-    list_filter = ("status", "project__category")
+    list_display = ("project", "round", "owner", "status", "submitted_at", "cookies_awarded", "collected", "needs_staff")
+    list_filter = ("status", "needs_staff", "project__category")
+    actions = ["clear_needs_staff"]
     list_select_related = ("project", "project__user", "reviewed_by")
     search_fields = ("project__name", "project__user__username")
     fieldsets = (
@@ -57,8 +59,11 @@ class SubmissionAdmin(admin.ModelAdmin):
                                                      "Grandma tells the person the public note in her voice and hands over the cookies when they next visit. "
                                                      "The person never sees the internal note. Once they have collected, the approved hours and the tracked time are public, in words, on the project page. The hours are your own number: what Hackatime says (above) is evidence, never filled in for you."}),
         ("Result", {"fields": RESULT}),
+        ("Ari", {"fields": ARI, "description": "Filled by Ari's decisions (never typed here). Needs staff means Ari sent something this site did not apply by itself (a revert, a decision "
+                                               "after the person collected, bad hours, a failed fraud check): look at it, decide it in the Review form if it must be decided, then "
+                                               "clear the flag with the list action. While it is set, nothing more from Ari is applied to this submission."}),
     )
-    readonly_fields = PARTICIPANT + RESULT
+    readonly_fields = PARTICIPANT + RESULT + ARI
 
     def has_change_permission(self, request, obj=None):
         """Once the person has collected, the whole result is frozen: it opens view only, and a form opened earlier is a 403 when posted (no success message)."""
@@ -84,6 +89,12 @@ class SubmissionAdmin(admin.ModelAdmin):
         except (services.AlreadyCollected, ValidationError):
             raise PermissionDenied from None        # only a race gets here (the form checks the same rules): nothing is saved, and the admin writes no success message or log entry
         self.message_user(request, saved_message(obj))
+
+    @admin.action(description="Clear the needs staff flag", permissions=["change"])
+    def clear_needs_staff(self, request, queryset):
+        """Staff looked at what Ari sent: take the flag off the chosen submissions (services.clear_needs_staff writes the audit entry, once each)."""
+        cleared = sum(services.clear_needs_staff(pk, by=request.user) for pk in queryset.filter(needs_staff=True).values_list("pk", flat=True))
+        self.message_user(request, f"Cleared the flag on {cleared} submission{'' if cleared == 1 else 's'}.")
 
     # the list and the read only parts of the form
 
