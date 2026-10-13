@@ -4,7 +4,7 @@ from dataclasses import replace
 from django.db import transaction
 from django.utils import timezone
 
-from accounts import hackatime, script
+from accounts import hackatime, identity, script
 from accounts.models import FILLED_IN
 from accounts.validators import canonical_timezone, polite_unless, validate_display_name
 from accounts.services import profile_of, request_profile
@@ -52,10 +52,17 @@ def question(step, cfg, slack_known, region_guess="", own_names=frozenset()):
     return step
 
 
-def dialogue(cfg, hackatime_connected=False, slack_known=False, name_known=False, region_guess="", own_names=frozenset()):
-    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, whether their Slack ID is already known, and whether Hack Club already gave their name (the question is then skipped, never removed, so the places in the dialogue never shift)."""
+def own_names_of(profile):
+    """The names the rude word check lets through for this person: the ones Hack Club gave (the stored identity, accounts/identity.py) and the display name
+    a Hack Club account started with. That name is offered back in the box and is theirs (owner, 2026-10-07: never refused), even when no identity is kept."""
+    given = {" ".join(profile.display_name.split()).casefold()} if profile.hca_sub and profile.display_name else set()
+    return identity.own_names(profile.identity) | given
+
+
+def dialogue(cfg, hackatime_connected=False, slack_known=False, region_guess="", own_names=frozenset()):
+    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime and whether their Slack ID is already known.
+    The name is always asked: a Hack Club first name is already among the answers (ProfileStore.load), so it is the box's starting value."""
     questions = [question(step, cfg, slack_known, region_guess, own_names) for step in script.QUESTIONS]
-    questions = [replace(step, when=lambda answers: not name_known) if getattr(step, "key", None) == "display_name" else step for step in questions]
     on = hackatime.enabled(cfg)
     return [
         *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(on, hackatime_connected),
