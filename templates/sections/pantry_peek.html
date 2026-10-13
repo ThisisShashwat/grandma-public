@@ -3,7 +3,7 @@
 {% import "macros/ui.html" as ui %}
 {# The home page's peek into the Pantry (on by default, admin setting HOME_PANTRY_PEEK; each item has a "Show on the home page" tick). `peek` is a tuple of shop.catalog.Product:
    public fields only. A thin row of cards that scrolls sideways on a narrow screen. Each card is ONE link to the Pantry (there is no page per item, and never a buy button
-   here), with the picture, the name, the hours range the shop shows ("about 4 to 8 hours": macros/shop.html) and the cookie price. Styles: static/css/sections/shop.css. #}
+   here), with the picture, the name, the hours range the shop shows ("about 4 to 8 hours": macros/shop.html) and the cookie price, all of it under the scribble (text after a mark would be covered by its end). Styles: static/css/sections/shop.css. #}
 <section class="scene" id="pantry-peek">
   <div class="wrap">
     <div class="peek-head">
@@ -18,7 +18,7 @@
           {{ art.fig(p.art, "", "item-art") }}
           <h3>{{ p.name }}</h3>
           <p class="worth">{{ shopui.hours(p.hours_low, p.hours_high) }}</p>
-          <p class="peek-price">{{ ui.mark("{:,}".format(p.cookies)) }} cookies</p>
+          <p class="peek-price">{{ ui.mark("{:,} cookies".format(p.cookies)) }}</p>
         </a>
       </li>
       {% endfor %}
