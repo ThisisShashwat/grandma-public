@@ -343,9 +343,15 @@ def revert_ari_decision(submission_id, *, event, delivery, needs_staff):
     """Ari took a decision back (reverted or requeued): block and revert here too. The submission goes back to handed in with the decision cleared. Already collected: the
     cookies are taken back with one debit (`submission:{id}:revert:{delivery}`, so a repeat writes once) and the project goes back to in review, but ONLY while the person's
     balance covers it and this is the project's latest round; otherwise nothing changes except the staff flag (we never go below zero, and a half undone state could pay
-    twice). `needs_staff` flags it for staff either way (a reverted ship may never come back to Ari's queue). Returns NOOP, REVERTED or NEEDS_STAFF."""
+    twice). `needs_staff` flags it for staff either way (a reverted ship may never come back to Ari's queue). A decision staff made in the admin is never undone (NOOP), and a
+    submission with no decision stored is only flagged when Ari reverted (NEEDS_STAFF the first time). Returns NOOP, REVERTED or NEEDS_STAFF."""
     current = locked_for_ari(submission_id)
-    if current.status == rules.SUBMITTED:
+    if current.reviewed_by_id:              # staff decided it in the admin: Ari taking back its own decision is not about that one
+        return rules.NOOP
+    if current.status == rules.SUBMITTED:   # nothing here to undo; but a reverted ship is out of Ari's queue for good, so staff must hear that (once)
+        if needs_staff and not current.needs_staff:
+            flag_staff(current, event, delivery, "reverted")
+            return rules.NEEDS_STAFF
         return rules.NOOP
     user, project, owed = current.project.user, current.project, 0
     if current.claimed_at:

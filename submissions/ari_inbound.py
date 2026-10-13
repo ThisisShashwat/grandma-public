@@ -12,16 +12,21 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.conf import settings
 from django.db import transaction
 
+from accounts.public_id import PATTERN
 from projects import services as project_services
 from projects.models import Project
 from submissions import ari, rules, services
 from submissions.models import AriEvent
 
 MAX_AGE, MAX_AHEAD = 300, 60          # seconds: Ari says ignore anything older than 5 minutes; a minute of clock skew is allowed so a true delivery is never lost to a 4xx
-DELIVERY_ID = re.compile(r"[A-Za-z0-9_-]{1,64}")        # it ends up in a ledger key (max 100 characters), so it must be short and plain
-PREFIX = "grandma-"
+TIMESTAMP = re.compile(r"[0-9]{1,12}")                  # unix seconds: plain digits only (int() would also take spaces, a sign and underscores)
+DELIVERY_ID = re.compile(r"[\w.:-]{1,64}", re.ASCII)   # it ends up in a ledger key (max 100 characters), so it must be short and plain; the format is not in Ari's docs, so a little room
+SHIP_ID = re.compile(r"[\w.:-]{1,40}", re.ASCII)        # Ari's id for a ship (AR-4821): Submission.ari_ship_id holds 40 characters
+EXTERNAL_ID = re.compile(rf"grandma-({PATTERN})")       # what ari.external_id makes: the project's public id, nothing else is ours
+MAX_MINUTES = 10**7                                     # far above any real answer: only keeps the arithmetic below from overflowing on a silly number (the real cap is rules.MAX_HOURS)
 STATUS_OF = {"review.approved": rules.APPROVED, "review.changes": rules.CHANGES_REQUESTED, "review.rejected": rules.REJECTED}
 TAKEN_BACK = {"review.reverted": True, "review.requeued": False}        # event -> whether staff are flagged (a reverted ship may never come back to Ari's queue)
+FRAUD = "review.fraud"
 LOVED, RIBBON = "grandma_loved_it", "blue_ribbon"                        # the custom review fields the owner makes in Ari (docs/research/ari-webhooks.md)
 UNMET = "Some of your notes are not met yet, dear: {names}. Fix them and hand it in again."
 CHANGES = "I can't take it as it is, dear. Look it over once more and hand it in again."
@@ -36,11 +41,9 @@ def receiving(cfg):
 def trusted(raw, *, signature, timestamp, delivery_id, secret, now=None):
     """Whether this really is Ari's: a fresh timestamp, a plain delivery id, and X-Ari-Signature equal (constant time) to the hex HMAC-SHA256, with the outbound
     secret, of `timestamp + "." + delivery_id + "." + raw body` (docs/ari.txt, How delivery works)."""
-    try:
-        age = (now or time.time()) - int(timestamp)
-    except ValueError:
+    if not (secret and TIMESTAMP.fullmatch(timestamp) and DELIVERY_ID.fullmatch(delivery_id)):
         return False
-    if not -MAX_AHEAD <= age <= MAX_AGE or not DELIVERY_ID.fullmatch(delivery_id):
+    if not -MAX_AHEAD <= (now or time.time()) - int(timestamp) <= MAX_AGE:
         return False
     expected = ari.sign(f"{timestamp}.{delivery_id}.".encode() + raw, secret)
     return hmac.compare_digest(expected.encode(), signature.lower().encode())
@@ -50,7 +53,7 @@ def parse(raw):
     """The message as a dict with a string `event`, or None."""
     try:
         payload = json.loads(raw)
-    except ValueError:
+    except (ValueError, RecursionError):       # not JSON, or nested so deep that the parser gives up
         return None
     return payload if isinstance(payload, dict) and isinstance(payload.get("event"), str) else None
 
@@ -61,24 +64,27 @@ def text_of(payload, key):
 
 
 def find_submission(external_id, ari_id):
-    """The submission an event is about: the project's LATEST one when it has no Ari id yet (it adopts this one) or the same id, else the older one with this id. None
-    for an id that is not ours or a ship of another version (that is ignored: a stale message must not touch a newer round)."""
-    project = Project.objects.filter(public_id=external_id[len(PREFIX):]).first() if external_id.startswith(PREFIX) else None
-    latest = project.submissions.order_by("-round", "-id").first() if project else None
-    if latest is None:
+    """The submission an event is about: the one of this project that already has this Ari id (so a late message about an older round never touches a newer one), else
+    the project's LATEST one when it has no Ari id yet (it adopts this one: the id of the 202 is not guaranteed). None for anything that is not ours, has no ship id, or is a
+    ship we do not know."""
+    match = EXTERNAL_ID.fullmatch(external_id)
+    project = Project.objects.filter(public_id=match[1]).first() if match and SHIP_ID.fullmatch(ari_id) else None
+    if project is None:
         return None
-    if latest.ari_ship_id in ("", ari_id):
-        if ari_id and not latest.ari_ship_id:
-            latest.ari_ship_id = ari_id
-            latest.save(update_fields=["ari_ship_id"])
+    known = project.submissions.filter(ari_ship_id=ari_id).first()
+    latest = project.submissions.order_by("-round", "-id").first()
+    if known is None and latest and not latest.ari_ship_id:
+        latest.ari_ship_id = ari_id
+        latest.save(update_fields=["ari_ship_id"])
         return latest
-    return project.submissions.filter(ari_ship_id=ari_id).first() if ari_id else None
+    return known
 
 
 def hours_of(review):
-    """approved_minutes / 60 to 2 places (never Ari's rounded approved_hours), or None when the minutes are missing or not a finite number."""
+    """approved_minutes / 60 to 2 places (never Ari's rounded approved_hours), or None when the minutes are missing, not a number, not above zero or absurdly big (the
+    limit of rules.ari_hours_problem decides the rest)."""
     minutes = review.get("approved_minutes")
-    if isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or not Decimal(str(minutes)).is_finite():
+    if isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or not 0 < minutes <= MAX_MINUTES:        # NaN and infinity fail the comparison too
         return None
     return (Decimal(str(minutes)) / 60).quantize(CENTS, ROUND_HALF_UP)
 
@@ -117,16 +123,27 @@ def decide(submission, payload, delivery_id):
         reviewer_label=(text_of(reviewer, "email") or text_of(reviewer, "slack_id")), demand_checks=checks)
 
 
+def fraud(submission, payload, delivery_id):
+    """review.fraud (only with Ari's relay mode): it changes nothing about the ship, so only a verdict that is not a plain pass is told to staff."""
+    check = payload.get("fraud") if isinstance(payload.get("fraud"), dict) else {}
+    if check.get("verdict") == "passed":
+        return rules.IGNORED
+    services.flag_staff(submission, payload["event"], delivery_id, "fraud check")
+    return rules.NEEDS_STAFF
+
+
 def outcome_of(payload, delivery_id):
-    """What this site does with one message. Events we do not act on (ship.updated, review.fraud, anything new) are only recorded."""
+    """What this site does with one message. Events we do not act on (ship.updated: the maker's own words stay as they handed them in; anything new) are only recorded."""
     event = payload["event"]
-    if event not in STATUS_OF and event not in TAKEN_BACK:
+    if event not in STATUS_OF and event not in TAKEN_BACK and event != FRAUD:
         return rules.IGNORED
     submission = find_submission(text_of(payload, "external_id"), text_of(payload, "id"))
     if submission is None:
         return rules.IGNORED
     if event in TAKEN_BACK:
         return services.revert_ari_decision(submission.pk, event=event, delivery=delivery_id, needs_staff=TAKEN_BACK[event])
+    if event == FRAUD:
+        return fraud(submission, payload, delivery_id)
     return decide(submission, payload, delivery_id)
 
 
