@@ -13,6 +13,7 @@ from django.conf import settings
 from django.db import transaction
 
 from accounts.public_id import PATTERN
+from pages.live import live
 from projects import services as project_services
 from projects.models import Project
 from submissions import ari, rules, services
@@ -27,6 +28,7 @@ MAX_MINUTES = 10**7                                     # far above any real ans
 STATUS_OF = {"review.approved": rules.APPROVED, "review.changes": rules.CHANGES_REQUESTED, "review.rejected": rules.REJECTED}
 TAKEN_BACK = ("review.reverted", "review.requeued")      # both leave needs_staff set: a delayed older approval must not pay on a decision Ari took back
 FRAUD = "review.fraud"
+SYSTEM = "system@ari"                                    # the reviewer email of Ari's own automatic decisions (docs/ari.txt: "the system reviewer"), compared in lower case
 LOVED, RIBBON = "grandma_loved_it", "blue_ribbon"                        # the custom review fields the owner makes in Ari (docs/research/ari-webhooks.md)
 UNMET = "Some of your notes are not met yet, dear: {names}. Fix them and hand it in again."
 CHANGES = "I can't take it as it is, dear. Look it over once more and hand it in again."
@@ -115,18 +117,23 @@ def changes_note(note, checks, kept):
 
 
 def decide(submission, payload, delivery_id):
-    """review.approved, review.changes, review.rejected."""
+    """review.approved, review.changes, review.rejected. A rejection by Ari's own system reviewer (an unreachable repo or demo, a timeout: its note tells the maker to fix
+    the link and hand in again) is changes requested, with Ari's note and under the MAX_ROUNDS cap like staff; with no note or no round left nothing is applied and
+    staff are told (services.apply_ari_decision refuses it). A human reviewer's rejection stays final."""
     event, status = payload["event"], STATUS_OF[payload["event"]]
     review = payload.get("review") if isinstance(payload.get("review"), dict) else {}
     reviewer = review.get("reviewer") if isinstance(review.get("reviewer"), dict) else {}
     answers, kept, note = answers_of(review), project_services.kept_demands(submission.project), clean(text_of(review, "note_to_maker"))
     checks = checks_of(answers, kept)
+    system = status == rules.REJECTED and text_of(reviewer, "email").lower() == SYSTEM
+    if system:
+        status = rules.CHANGES_REQUESTED
     approved = status == rules.APPROVED
     return services.apply_ari_decision(
         submission.pk, event=event, delivery=delivery_id, status=status, approved_hours=hours_of(review) if approved else None,
         quality=approved and answers.get(LOVED) is True, ribbon=approved and answers.get(RIBBON) is True,
-        public_note=changes_note(note, checks, kept) if status == rules.CHANGES_REQUESTED else note, internal_note=clean(text_of(review, "audit_note")),
-        reviewer_label=clean(text_of(reviewer, "email")) or clean(text_of(reviewer, "slack_id")), demand_checks=checks)
+        public_note=changes_note(note, checks, kept) if status == rules.CHANGES_REQUESTED and not system else note, internal_note=clean(text_of(review, "audit_note")),
+        reviewer_label=clean(text_of(reviewer, "email")) or clean(text_of(reviewer, "slack_id")), demand_checks=checks, max_rounds=live().MAX_ROUNDS if system else rules.NO_ROUND_CAP)
 
 
 def fraud(submission, payload, delivery_id):

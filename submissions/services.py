@@ -303,14 +303,14 @@ def flag_staff(submission, event, delivery, why):
 
 @transaction.atomic
 def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours=None, quality=False, ribbon=False, public_note="", internal_note="", reviewer_label="",
-                       demand_checks=(), now=None):
+                       demand_checks=(), max_rounds=rules.NO_ROUND_CAP, now=None):
     """Save the decision an Ari reviewer made (already a confirmed one: second pass is on there), as `review` would, without a reviewer user. Returns what happened:
     NOOP (the same decision is already stored), APPLIED, IGNORED (the project is no longer in review: abandoned, or finished by staff), or REFUSED / NEEDS_STAFF with
     `needs_staff` set and nothing else changed: a different decision once the person collected, a different one after staff decided in the admin, an approval with no,
     zero or too many hours, changes without a note. While `needs_staff` is set on the submission nothing is applied at all (NEEDS_STAFF, held): Ari may take a decision
     back before an older delivery of it arrives, and that late delivery must not pay; staff clear the flag (`clear_needs_staff`) once they have looked. The round cap is
-    not applied (the owner, 2026-10-06). A decision different from the stored one replaces it while it is not collected. The cookies are worked out as always and paid
-    only when the person collects (`claim`)."""
+    not applied (the owner, 2026-10-06) unless the caller passes `max_rounds` (the system rejection turned into changes requested does: ari_inbound.decide). A decision
+    different from the stored one replaces it while it is not collected. The cookies are worked out as always and paid only when the person collects (`claim`)."""
     current = locked_for_ari(submission_id)
     new = {"status": status, "approved_hours": approved_hours, "quality": quality, "ribbon": ribbon, "public_note": public_note[:1000], "internal_note": internal_note[:2000],
            "reviewer_label": reviewer_label[:254], "demand_checks": list(demand_checks)}
@@ -327,7 +327,7 @@ def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours
     if current.needs_staff:
         flag_staff(current, event, delivery, "held")
         return rules.NEEDS_STAFF
-    problem = rules.review_problem(status, new["public_note"], current.round, rules.NO_ROUND_CAP, was=current.status)
+    problem = rules.review_problem(status, new["public_note"], current.round, max_rounds, was=current.status)
     problem = problem or (rules.ari_hours_problem(approved_hours) if status == rules.APPROVED else "")
     if problem:
         flag_staff(current, event, delivery, "refused")
