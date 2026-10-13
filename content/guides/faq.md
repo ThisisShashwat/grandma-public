@@ -170,5 +170,5 @@ Anybody with the link to your project page, once you have collected the result f
 :::
 
 ::: faq Where do I ask more questions?
-In Slack. Ask for help in <span data-slack="help"></span> and chat in <span data-slack="grandma"></span>. Somebody there is less grumpy than Grandma.
+In Slack. Ask for help in <span data-slack="help"></span>, chat in <span data-slack="grandma"></span> and read the news in <span data-slack="bulletin"></span>. Somebody there is less grumpy than Grandma.
 :::

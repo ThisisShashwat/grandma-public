@@ -16,8 +16,9 @@ from program.content.demands import LEVELS, POOL, TIERS
 from program.content.faces import FACES
 
 PLACEHOLDER = re.compile(r'<div data-widget="([\w-]+)"[^>]*></div>')
-CHANNEL = re.compile(r'<span data-slack="(grandma|help)"></span>')
-CHANNELS = {"grandma": ("#grandma", "slack_grandma"), "help": ("#grandma-help", "slack_help")}     # name shown, key of the admin link
+CHANNEL = re.compile(r'<span data-slack="(grandma|help|bulletin)"></span>')
+CHANNELS = {"grandma": ("#grandma", "slack_grandma"), "help": ("#grandma-help", "slack_help"),
+            "bulletin": ("#grandma-bulletin", "slack_bulletin")}     # name shown, key of the admin link
 
 
 def payout_calculator():
@@ -158,7 +159,7 @@ def channel(which, links):
 
 def expand(html, links=None):
     """Swap every widget placeholder for its widget, wrapped in a div the guide styles can find, and every
-    <span data-slack="grandma"></span> or "help" for that channel's name (a link only when its address is set). `links` is the
+    <span data-slack="grandma"></span> or "help" or "bulletin" for that channel's name (a link only when its address is set). `links` is the
     program's links by name (pages.context.program_links)."""
     html = PLACEHOLDER.sub(lambda m: f'<div class="widget widget--{m[1]}">{WIDGETS[m[1]]()}</div>' if m[1] in WIDGETS else "", html)
     return CHANNEL.sub(lambda m: channel(m[1], links or {}), html)

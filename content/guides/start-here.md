@@ -27,4 +27,4 @@ You always pick the project. Grandma only picks how. A website, an app or a game
 
 ## Lost already?
 
-The [FAQ](/guides/faq/) has the short answers. If you are still stuck, ask in <span data-slack="help"></span>, or come and chat in <span data-slack="grandma"></span>. Somebody there is probably less grumpy than Grandma.
+The [FAQ](/guides/faq/) has the short answers. If you are still stuck, ask in <span data-slack="help"></span>, come and chat in <span data-slack="grandma"></span>, or read the news in <span data-slack="bulletin"></span>. Somebody there is probably less grumpy than Grandma.

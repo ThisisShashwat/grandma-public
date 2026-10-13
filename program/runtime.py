@@ -12,8 +12,8 @@ from program.tutorial import DEPTHS
 
 # key: (default, help text shown in the admin, optional name of a field in FIELDS)
 CONFIG = {
-    "LAUNCH": ("2026-10-05T12:00:00Z",   # TODO: real launch moment
-               "When the program opens, as a UTC time like 2026-10-05T12:00:00Z (or with an offset like +05:30). "
+    "LAUNCH": ("2026-10-15T15:00:00Z",
+               "When the program opens, as a UTC time like 2026-10-15T15:00:00Z, which is 20:30 in India (or with an offset like +05:30). "
                "The countdown on the home page counts down to it.", "launch"),
     "BETA_MODE": (True, "While on, only people with beta access (and staff) can use the participant features: onboarding, the dashboard, Talk to Grandma, projects, "
                         "submitting and orders. Everybody else is sent to a page saying the kitchen is open to a few testers. Give access in the admin under Profiles. "
@@ -21,10 +21,11 @@ CONFIG = {
 
     "LINK_SIGNUP": ("/login/","Where the Sign up buttons go. The default /login/ is the Hack Club sign-in, whose first sign-in makes the account. "
                               "A web link, a mailto: link or a path on this site starting with / is accepted. Empty means a placeholder link that goes nowhere.", "link"),
-    "LINK_SLACK": ("", "The Slack join link.", "link"),
-    "LINK_SLACK_GRANDMA": ("", "The #grandma channel in Slack, where people chat. Empty means the guides show the name as plain text, not a link.", "link"),
-    "LINK_SLACK_HELP": ("", "The #grandma-help channel in Slack, where people ask for help. Empty means the guides show the name as plain text, not a link. "
+    "LINK_SLACK": ("https://hackclub.com/slack/", "The Slack join link, for people who are not in the Hack Club Slack yet.", "link"),
+    "LINK_SLACK_GRANDMA": ("https://hackclub.slack.com/channels/grandma", "The #grandma channel in Slack, where people chat. Empty means the guides show the name as plain text, not a link.", "link"),
+    "LINK_SLACK_HELP": ("https://hackclub.slack.com/channels/grandma-help", "The #grandma-help channel in Slack, where people ask for help. Empty means the guides show the name as plain text, not a link. "
                             "The dashboard's Slack help button goes here.", "link"),
+    "LINK_SLACK_BULLETIN": ("https://hackclub.slack.com/channels/grandma-bulletin", "The #grandma-bulletin channel in Slack, where the news goes. Empty means the guides show the name as plain text, not a link.", "link"),
     "LINK_BOARD": ("", "Where complaints (new demands) get sent.", "link"),
     "LINK_CONTACT": ("", "How to reach the organizer, for example mailto:you@example.com.", "link"),
 
@@ -102,7 +103,7 @@ CONFIG = {
 # the admin's groups, in this order (a tuple, because constance sorts a plain dict by title)
 FIELDSETS = (
     ("Launch", ("LAUNCH", "BETA_MODE")),
-    ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_BOARD", "LINK_CONTACT")),
+    ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_SLACK_BULLETIN", "LINK_BOARD", "LINK_CONTACT")),
     ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST", "DEALING_EXPIRY_DAYS")),
     ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
     ("Orders", ("ORDER_CART_SCREENSHOT", "ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
