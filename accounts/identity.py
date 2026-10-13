@@ -6,18 +6,21 @@ Hack Club for the extra scopes. With neither set nothing changes and Hack Club i
 `address` are scopes Hack Club only gives to apps it has marked official (the owner says this app already is, 2026-10-07; if it were not, every sign-in would be refused); and
 without a key there is nowhere safe to put them.
 
-What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "birthdate": "YYYY-MM-DD", "address": {street_address,
-locality, region, postal_code, country, formatted}}, only the parts Hack Club sent and that pass the checks below. It is refreshed at every Hack Club sign-in
+What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "birthdate": "YYYY-MM-DD", "address": {line_1, line_2,
+street_address, locality, region, postal_code, country, formatted}}, only the parts Hack Club sent and that pass the checks below. Hack Club sends the street as line 1,
+a newline and line 2 (`street` splits it; `street_address` stays as both lines joined by ", "). It is refreshed at every Hack Club sign-in
 (a person may move house or fix a typo at Hack Club). It is never on a public page, never in the admin, never in a log, a session or the audit log
 (the audit log may name that it changed, never what it holds), and nothing reads it yet: the export to HQ waits for HQ's answer to question 11 in docs/hq-questions.md (who stores what).
 """
 import json
+import re
 from datetime import date
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.conf import settings
 
-ADDRESS_KEYS = ("formatted", "street_address", "locality", "region", "postal_code", "country")
+ADDRESS_KEYS = ("formatted", "locality", "region", "postal_code", "country")        # the street is read apart: `street`
+NEWLINE = re.compile(r"\r\n|\r|\n")
 MAX_TEXT = 200
 
 
@@ -40,6 +43,15 @@ def text(value, limit=MAX_TEXT):
     return value.strip() if isinstance(value, str) and value.strip() and value.strip().isprintable() and len(value.strip()) <= limit else ""
 
 
+def street(value):
+    """Hack Club's `street_address` (line 1, a newline, line 2) as {"line_1", "line_2", "street_address"}: the first two non-empty lines, each kept only if it passes `text`
+    (a bad line 1 never turns line 2 into line 1), and the kept ones joined by ", " under the old key `street_address` ("" when none). The newline is the only control
+    character let through, and only here (every other claim keeps `text`'s strictness)."""
+    parts = [part for part in map(str.strip, NEWLINE.split(value)) if part][:2] if isinstance(value, str) else []
+    lines = {key: line for key, line in ((f"line_{number}", text(part)) for number, part in enumerate(parts, start=1)) if line}
+    return {**lines, "street_address": ", ".join(lines.values())}
+
+
 def clean(userinfo):
     """The identity claims of a sign-in as a small dict (the name always, the birthday and the address only when `enabled`), or {} when Hack Club sent nothing usable. Never raises, never invents."""
     out = {}
@@ -57,7 +69,11 @@ def clean(userinfo):
         except (TypeError, ValueError):
             pass
         raw = userinfo.get("address")
-        address = {"formatted": text(raw, 400)} if isinstance(raw, str) else {key: text(raw.get(key)) for key in ADDRESS_KEYS} if isinstance(raw, dict) else {}
+        address = {}
+        if isinstance(raw, str):
+            address = {"formatted": text(raw, 400)}
+        elif isinstance(raw, dict):
+            address = {key: text(raw.get(key)) for key in ADDRESS_KEYS} | street(raw.get("street_address"))
         address = {key: value for key, value in address.items() if value}
         if address:
             out["address"] = address
