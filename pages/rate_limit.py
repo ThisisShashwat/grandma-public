@@ -35,12 +35,15 @@ def count(alias, key):
     """How many times `key` has been seen in this minute, this one included."""
     cache = caches[alias]
     name = f"rl:{key}:{int(time.time() // WINDOW)}"
+    try:                                    # incr first: an add on a key that exists makes the database cache run a failing INSERT (Postgres logs it)
+        return cache.incr(name)
+    except ValueError:                      # no counter yet this minute
+        pass
     if cache.add(name, 1, WINDOW + 5):
         return 1
-    try:
+    try:                                    # another request made it between our two calls
         return cache.incr(name)
-    except ValueError:                      # it expired between the two calls
-        cache.add(name, 1, WINDOW + 5)
+    except ValueError:                      # it expired in between: this one is the first
         return 1
 
 
