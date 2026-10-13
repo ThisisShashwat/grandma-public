@@ -6,7 +6,7 @@ Hack Club for the extra scopes. With neither set nothing changes and Hack Club i
 `address` are scopes Hack Club only gives to apps it has marked official (the owner says this app already is, 2026-10-07; if it were not, every sign-in would be refused); and
 without a key there is nowhere safe to put them.
 
-What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "given_name": "First", "family_name": "Last", "birthdate": "YYYY-MM-DD", "address": {line_1, line_2,
+What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "given_name": "First", "family_name": "Last", "birthdate": "YYYY-MM-DD", "verification_status": "verified", "ysws_eligible": true, "address": {line_1, line_2,
 street_address, locality, region, postal_code, country, formatted}}, only the parts Hack Club sent and that pass the checks below. Hack Club sends the street as line 1,
 a newline and line 2 (`street` splits it; `street_address` stays as both lines joined by ", "). It is refreshed at every Hack Club sign-in
 (a person may move house or fix a typo at Hack Club). It is never on a public page, never in the admin, never in a log, a session or the audit log
@@ -61,7 +61,12 @@ def clean(userinfo):
     nickname = text(userinfo.get("nickname"), 60)
     if nickname:
         out["nickname"] = nickname
-    if enabled():                      # birthday and address only when the owner switched them on (HCA_IDENTITY)
+    if enabled():                      # birthday, address and the eligibility Hack Club gave only when the owner switched them on (HCA_IDENTITY)
+        status = text(userinfo.get("verification_status"), 40)
+        if status:
+            out["verification_status"] = status
+        if isinstance(userinfo.get("ysws_eligible"), bool):
+            out["ysws_eligible"] = userinfo["ysws_eligible"]
         try:
             born = date.fromisoformat(userinfo.get("birthdate") or "")
             if 1900 <= born.year <= date.today().year:
