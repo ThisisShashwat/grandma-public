@@ -6,22 +6,25 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponseNotAllowed, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render, resolve_url
 from django.middleware.csrf import get_token
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_safe
+from django.views.decorators.http import require_GET, require_http_methods, require_safe
 
-from accounts import hackatime, hca, onboarding
-from accounts.access import has_access, invited
-from accounts.forms import LoginForm
+from accounts import hackatime, hca, onboarding, profile_edit
+from accounts.access import has_access, invited, onboarded
+from accounts.forms import LoginForm, SettingsForm
 from accounts.script import HACKATIME_REFUSALS, HCA_REFUSALS
 from accounts.services import profile_of, request_profile
+from accounts.validators import suggested_timezones
 from pages.live import live
 from program.content import regions
 from talk import flow
+from talk.portraits import portrait
 
 
 log = logging.getLogger(__name__)
@@ -80,6 +83,33 @@ def welcome(request):
                                          region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS)), own_names=onboarding.own_names_of(profile)),
                     store=store, finish=partial(onboarding.finish, cfg),
                     then=resolve_url("dashboard"), title="Welcome")
+
+
+@onboarded
+@never_cache
+@require_http_methods(["GET", "HEAD", "POST"])
+def settings_page(request):
+    """Settings: the display name, time zone and region of the signed in person, who is always the one being changed (nothing in the request names a
+    person). POST then redirect, so a refresh never saves twice; the confirmation is shown once, from the session."""
+    cfg, profile = live(), request_profile(request)
+    rows = regions.regions(cfg.REGIONS)
+    form = SettingsForm(request.POST if request.method == "POST" else None, initial={key: getattr(profile, key) for key in profile_edit.EDITABLE},
+                        regions=rows, own_names=onboarding.own_names_of(profile))
+    if request.method == "POST" and form.is_valid():
+        try:
+            changed = profile_edit.update(request.user, form.cleaned_data)
+        except ValidationError:
+            form.add_error(None, profile_edit.REFUSED)
+        else:
+            request.session["settings_saved"] = "changed" if changed else "same"
+            return redirect("settings")
+    saved = request.session.pop("settings_saved", "") if request.method == "GET" else ""
+    file, alt = portrait("approved" if saved == "changed" else "sideeye" if form.errors else "clipboard")
+    connect = hackatime.enabled(cfg) and not profile.hackatime_connected
+    return render(request, "pages/settings.html", {
+        "form": form, "saved": saved, "regions": rows, "zones": suggested_timezones(), "portrait": {"file": file, "alt": alt},
+        "hack_club": bool(profile.hca_sub), "hackatime": profile.hackatime_connected,
+        "hackatime_link": f"{reverse('connect_hackatime')}?{urlencode({'next': reverse('settings')})}" if connect else ""})
 
 
 @login_required

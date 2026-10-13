@@ -15,5 +15,6 @@ urlpatterns = [
     path("connect/hackatime/callback/", views.connect_hackatime_callback, name="connect_hackatime_callback"),
     path("csrf/", views.csrf_token, name="csrf_token"),          # the Log out button of the always identical header fetches its token here
     path("welcome/", views.welcome, name="welcome"),
+    path("settings/", views.settings_page, name="settings"),     # the display name, time zone and region, after onboarding
     path("beta/", views.beta, name="beta"),
 ]

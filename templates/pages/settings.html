@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% import "macros/art.html" as art %}
+
+{% block title %}Settings{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static('css/sections/submit.css') }}">
+{% endblock %}
+
+{# The settings page (accounts/views.py settings_page): the three answers a person may change after /welcome/. Grandma's note again (submit.css), the
+   form only validates and every field is drawn here by hand. Only this person's own values are on the page, and it is never cached. #}
+{% macro oops(name) -%}
+{% if form[name].errors %}<p class="oops" id="err-{{ name }}" role="alert">{% for message in form[name].errors %}{{ message }} {% endfor %}</p>{% endif %}
+{%- endmacro %}
+
+{% block main %}
+<section class="scene scene--sky submit-scene">
+  <div class="wrap submit">
+    <figure class="fig aside-fig submit-face">{{ art.img(portrait.file, portrait.alt, none, false) }}</figure>
+
+    <div class="submit-main">
+      <div class="talk-bubble submit-bubble">
+        {% if saved == "changed" %}
+        <p>There. I've crossed out the old and written in the new, dear.</p>
+        {% elif saved == "same" %}
+        <p>Nothing's different, dear, so I've left my book alone.</p>
+        {% else %}
+        <p>Changed something, dear? That's allowed.</p>
+        <p>Only these three, mind. The rest stays as it is.</p>
+        {% endif %}
+      </div>
+
+      <form class="submit-note" method="post" action="{{ url('settings') }}">
+        {{ csrf_input }}
+        <h1>Settings</h1>
+        {% if form.non_field_errors() %}<p class="oops" role="alert">{% for message in form.non_field_errors() %}{{ message }} {% endfor %}</p>{% endif %}
+        {% if form.errors %}<p class="oops" role="alert">Something isn't right, dear. Look for the pink notes.</p>{% endif %}
+
+        <div class="nf">
+          <label class="nf-label" for="display_name">What should I call you?</label>
+          <input class="input" id="display_name" name="display_name" maxlength="30" required autocomplete="nickname" autocapitalize="words" spellcheck="false"
+                 value="{{ form['display_name'].value() or '' }}"{% if form['display_name'].errors %} aria-invalid="true" aria-describedby="err-display_name"{% endif %}>
+          {{ oops("display_name") }}
+          <p class="nf-hint">This one is public, dear: it goes on my wall, next to your projects. Two to thirty characters.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="timezone">Your time zone</label>
+          <input class="input" id="timezone" name="timezone" maxlength="64" required autocomplete="off" autocapitalize="off" spellcheck="false" list="zones"
+                 value="{{ form['timezone'].value() or '' }}"{% if form['timezone'].errors %} aria-invalid="true" aria-describedby="err-timezone"{% endif %}>
+          <datalist id="zones">{% for zone in zones %}<option value="{{ zone }}">{% endfor %}</datalist>
+          {{ oops("timezone") }}
+          <p class="nf-hint">A name like Asia/Kolkata or Europe/Berlin, so I don't ring you at silly o'clock.</p>
+        </div>
+
+        <div class="nf">
+          <label class="nf-label" for="region">Where in the world are you?</label>
+          {% set current = form['region'].value() %}
+          <select class="input" id="region" name="region" required{% if form['region'].errors %} aria-invalid="true" aria-describedby="err-region"{% endif %}>
+            {% if current not in regions|map("first")|list %}<option value="" disabled selected>Pick one</option>{% endif %}
+            {% for code, label in regions %}<option value="{{ code }}"{% if code == current %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          {{ oops("region") }}
+          <p class="nf-hint">Only roughly, dear. I need to know how far I have to shout.</p>
+        </div>
+
+        <div class="nf">
+          <span class="nf-label">What's connected</span>
+          <p class="nf-status">Hack Club: {{ "connected" if hack_club else "not connected" }}.</p>
+          <p class="nf-status">Hackatime: {{ "connected" if hackatime else "not connected yet" }}.{% if hackatime_link %} <a href="{{ hackatime_link }}">Connect Hackatime</a>{% endif %}</p>
+        </div>
+
+        <p class="submit-actions">
+          <button class="btn btn--big">Save</button>
+          <a class="btn btn--plain" href="{{ url('dashboard') }}">Back to my dashboard</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
