@@ -6,7 +6,7 @@ Hack Club for the extra scopes. With neither set nothing changes and Hack Club i
 `address` are scopes Hack Club only gives to apps it has marked official (the owner says this app already is, 2026-10-07; if it were not, every sign-in would be refused); and
 without a key there is nowhere safe to put them.
 
-What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "birthdate": "YYYY-MM-DD", "address": {line_1, line_2,
+What is kept, as ONE encrypted JSON text on the Profile (`Profile.identity`): {"name": "First Last", "given_name": "First", "family_name": "Last", "birthdate": "YYYY-MM-DD", "address": {line_1, line_2,
 street_address, locality, region, postal_code, country, formatted}}, only the parts Hack Club sent and that pass the checks below. Hack Club sends the street as line 1,
 a newline and line 2 (`street` splits it; `street_address` stays as both lines joined by ", "). It is refreshed at every Hack Club sign-in
 (a person may move house or fix a typo at Hack Club). It is never on a public page, never in the admin, never in a log, a session or the audit log
@@ -55,9 +55,9 @@ def street(value):
 def clean(userinfo):
     """The identity claims of a sign-in as a small dict (the name always, the birthday and the address only when `enabled`), or {} when Hack Club sent nothing usable. Never raises, never invents."""
     out = {}
-    name = " ".join(filter(None, (text(userinfo.get("given_name"), 60), text(userinfo.get("family_name"), 60)))) or text(userinfo.get("name"), 120)
-    if name:
-        out["name"] = name
+    given, family = text(userinfo.get("given_name"), 60), text(userinfo.get("family_name"), 60)
+    name = " ".join(filter(None, (given, family))) or text(userinfo.get("name"), 120)
+    out.update({key: value for key, value in (("name", name), ("given_name", given), ("family_name", family)) if value})        # HQ's record wants first and last apart; `name` stays (own_names reads it)
     nickname = text(userinfo.get("nickname"), 60)
     if nickname:
         out["nickname"] = nickname
