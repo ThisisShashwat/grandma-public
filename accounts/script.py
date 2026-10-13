@@ -1,4 +1,4 @@
-"""What Grandma says during onboarding. Text and steps only: the opening, the software-only rule, the questions, the Hackatime step and the two tutorial parts.
+"""What Grandma says during onboarding. Text and steps only: the opening, the software-only rule, the questions, the tutorial parts and, last, the Hackatime step.
 Who sees which part is decided in accounts/onboarding.py; how a step is built is talk/dialogue.py."""
 from django.urls import reverse
 
@@ -38,9 +38,11 @@ QUESTIONS = [
                 "Your browser usually knows. I've asked it nicely.")),
     AskChoice(key="region", face="phone", choices=tuple(REGIONS), lines=(
         "And where in the world are you, {display_name}?", "I need to know how far I have to shout.")),
-    AskChoice(key="expertise", face="eyeroll", choices=tuple(EXPERTISE), lines=(
-        "How much of this have you done before?", "Be honest. I can tell.")),
 ]
+
+# Asked after the two lessons about this program, so that her reaction to the answer (the skip offer, the Hack Club basics) comes right after it.
+EXPERIENCE = AskChoice(key="expertise", face="eyeroll", choices=tuple(EXPERTISE), lines=(
+    "How much of this have you done before?", "Be honest. I can tell."))
 
 
 def hackatime_step(enabled=False, connected=False):

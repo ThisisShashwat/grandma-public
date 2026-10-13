@@ -65,13 +65,14 @@ def dialogue(cfg, hackatime_connected=False, slack_known=False, region_guess="",
     questions = [question(step, cfg, slack_known, region_guess, own_names) for step in script.QUESTIONS]
     on = hackatime.enabled(cfg)
     return [
-        *script.OPENING, script.SOFTWARE_ONLY, *questions, script.hackatime_step(on, hackatime_connected),
-        script.hackatime_connected_step(on, hackatime_connected),
+        *script.OPENING, script.SOFTWARE_ONLY, *questions,
         *(replace(step, when=plays(1, cfg)) for step in script.PART_ONE),
         *(replace(step, when=plays(2, cfg)) for step in script.PART_TWO),
+        script.EXPERIENCE,
         replace(script.SKIP_OFFER, when=asks_to_skip(cfg)),
         *(replace(step, when=plays(0, cfg)) for step in script.PART_BASICS),
         *(replace(step, when=plays(1, cfg)) for step in script.TUTORIAL_CLOSE),
+        script.hackatime_step(on, hackatime_connected), script.hackatime_connected_step(on, hackatime_connected),
         script.ENDING,
     ]
 
