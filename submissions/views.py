@@ -3,9 +3,10 @@ again) and /grandma/collect/ (she hands the result back). All are for one signed
 project: the only id in an address is the project to fix, and it is only found among the person's own projects with changes requested."""
 from functools import partial
 
+from constance import config
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -120,13 +121,12 @@ def collect(request):
 
 @csrf_exempt
 def ari_result(request):
-    """What an Ari reviewer decided, POSTed by Ari (submissions/ari_inbound.py, docs/security.md "The Ari webhook"). A 404 for everybody, whatever the method, until the
-    ARI_ENABLED switch is on and the outbound secret is set (it never says which is missing). Not a page of a person: no session, no CSRF (Ari has no cookie), the HMAC
-    signature of the exact bytes is the only door. A bad signature, timestamp or delivery id is a bare 401 and nothing is read further or written."""
-    if not ari_inbound.receiving(live()):
+    """What an Ari reviewer decided, POSTed by Ari (submissions/ari_inbound.py, docs/security.md "The Ari webhook"). A 404 for everybody and every method but POST, and for a
+    POST until the ARI_ENABLED switch is on and the outbound secret is set (it never says which is missing). The switch is read STRICTLY (constance directly, not live()): a
+    database that cannot be read is a 500, which Ari retries, never a 404, which it takes as final. Not a page of a person: no session, no CSRF (Ari has no cookie), the
+    HMAC signature of the exact bytes is the only door. A bad signature, timestamp or delivery id is a bare 401 and nothing is read further or written."""
+    if request.method != "POST" or not ari_inbound.receiving(config.ARI_ENABLED):
         raise Http404
-    if request.method != "POST":
-        return HttpResponseNotAllowed(["POST"])
     raw, headers = request.body, request.headers
     if not ari_inbound.trusted(raw, signature=headers.get("X-Ari-Signature", ""), timestamp=headers.get("X-Ari-Timestamp", ""),
                                delivery_id=headers.get("X-Ari-Delivery-Id", ""), secret=settings.ARI_OUTBOUND_SECRET):

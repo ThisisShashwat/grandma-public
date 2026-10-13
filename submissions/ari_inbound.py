@@ -25,7 +25,7 @@ SHIP_ID = re.compile(r"[\w.:-]{1,40}", re.ASCII)        # Ari's id for a ship (A
 EXTERNAL_ID = re.compile(rf"grandma-({PATTERN})")       # what ari.external_id makes: the project's public id, nothing else is ours
 MAX_MINUTES = 10**7                                     # far above any real answer: only keeps the arithmetic below from overflowing on a silly number (the real cap is rules.MAX_HOURS)
 STATUS_OF = {"review.approved": rules.APPROVED, "review.changes": rules.CHANGES_REQUESTED, "review.rejected": rules.REJECTED}
-TAKEN_BACK = {"review.reverted": True, "review.requeued": False}        # event -> whether staff are flagged (a reverted ship may never come back to Ari's queue)
+TAKEN_BACK = ("review.reverted", "review.requeued")      # both leave needs_staff set: a delayed older approval must not pay on a decision Ari took back
 FRAUD = "review.fraud"
 LOVED, RIBBON = "grandma_loved_it", "blue_ribbon"                        # the custom review fields the owner makes in Ari (docs/research/ari-webhooks.md)
 UNMET = "Some of your notes are not met yet, dear: {names}. Fix them and hand it in again."
@@ -33,9 +33,9 @@ CHANGES = "I can't take it as it is, dear. Look it over once more and hand it in
 CENTS = Decimal("0.01")
 
 
-def receiving(cfg):
-    """Does the address exist? Not while Ari is off or the outbound secret is missing: it is a 404 for everybody."""
-    return bool(cfg.ARI_ENABLED and settings.ARI_OUTBOUND_SECRET)
+def receiving(enabled):
+    """Does the address exist? `enabled` is the ARI_ENABLED switch (read strictly by the view). Not while it is off or the outbound secret is missing: a 404 for everybody."""
+    return bool(enabled and settings.ARI_OUTBOUND_SECRET)
 
 
 def trusted(raw, *, signature, timestamp, delivery_id, secret, now=None):
@@ -61,6 +61,12 @@ def parse(raw):
 def text_of(payload, key):
     value = payload.get(key)
     return value if isinstance(value, str) else ""
+
+
+def clean(text):
+    """Text that is safe to store: no NUL characters and no lone surrogates (JSON can carry both; Postgres refuses a NUL and cannot encode a surrogate, which would make
+    the same delivery a 500 forever)."""
+    return text.replace("\x00", "").encode("utf-8", "ignore").decode("utf-8")
 
 
 def find_submission(external_id, ari_id):
@@ -113,14 +119,14 @@ def decide(submission, payload, delivery_id):
     event, status = payload["event"], STATUS_OF[payload["event"]]
     review = payload.get("review") if isinstance(payload.get("review"), dict) else {}
     reviewer = review.get("reviewer") if isinstance(review.get("reviewer"), dict) else {}
-    answers, kept, note = answers_of(review), project_services.kept_demands(submission.project), text_of(review, "note_to_maker")
+    answers, kept, note = answers_of(review), project_services.kept_demands(submission.project), clean(text_of(review, "note_to_maker"))
     checks = checks_of(answers, kept)
     approved = status == rules.APPROVED
     return services.apply_ari_decision(
         submission.pk, event=event, delivery=delivery_id, status=status, approved_hours=hours_of(review) if approved else None,
         quality=approved and answers.get(LOVED) is True, ribbon=approved and answers.get(RIBBON) is True,
-        public_note=changes_note(note, checks, kept) if status == rules.CHANGES_REQUESTED else note, internal_note=text_of(review, "audit_note"),
-        reviewer_label=(text_of(reviewer, "email") or text_of(reviewer, "slack_id")), demand_checks=checks)
+        public_note=changes_note(note, checks, kept) if status == rules.CHANGES_REQUESTED else note, internal_note=clean(text_of(review, "audit_note")),
+        reviewer_label=clean(text_of(reviewer, "email")) or clean(text_of(reviewer, "slack_id")), demand_checks=checks)
 
 
 def fraud(submission, payload, delivery_id):
@@ -141,7 +147,7 @@ def outcome_of(payload, delivery_id):
     if submission is None:
         return rules.IGNORED
     if event in TAKEN_BACK:
-        return services.revert_ari_decision(submission.pk, event=event, delivery=delivery_id, needs_staff=TAKEN_BACK[event])
+        return services.revert_ari_decision(submission.pk, event=event, delivery=delivery_id)
     if event == FRAUD:
         return fraud(submission, payload, delivery_id)
     return decide(submission, payload, delivery_id)
@@ -151,7 +157,7 @@ def receive(payload, delivery_id):
     """Handle one verified message in one transaction with its AriEvent row, whose delivery id is unique: a repeat of a delivery is a no-op, and a fault of ours rolls
     the row back too, so Ari's retry is handled afresh. Returns the outcome."""
     with transaction.atomic():
-        row, created = AriEvent.objects.get_or_create(delivery_id=delivery_id, defaults={"event": payload["event"][:40], "external_id": text_of(payload, "external_id")[:100]})
+        row, created = AriEvent.objects.get_or_create(delivery_id=delivery_id, defaults={"event": clean(payload["event"])[:40], "external_id": clean(text_of(payload, "external_id"))[:100]})
         if not created:
             return rules.NOOP
         row.outcome = outcome_of(payload, delivery_id)

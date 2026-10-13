@@ -307,8 +307,10 @@ def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours
     """Save the decision an Ari reviewer made (already a confirmed one: second pass is on there), as `review` would, without a reviewer user. Returns what happened:
     NOOP (the same decision is already stored), APPLIED, IGNORED (the project is no longer in review: abandoned, or finished by staff), or REFUSED / NEEDS_STAFF with
     `needs_staff` set and nothing else changed: a different decision once the person collected, a different one after staff decided in the admin, an approval with no,
-    zero or too many hours, changes without a note. The round cap is not applied (the owner, 2026-10-06). A decision different from the stored one replaces it while it
-    is not collected. The cookies are worked out as always and paid only when the person collects (`claim`)."""
+    zero or too many hours, changes without a note. While `needs_staff` is set on the submission nothing is applied at all (NEEDS_STAFF, held): Ari may take a decision
+    back before an older delivery of it arrives, and that late delivery must not pay; staff clear the flag (`clear_needs_staff`) once they have looked. The round cap is
+    not applied (the owner, 2026-10-06). A decision different from the stored one replaces it while it is not collected. The cookies are worked out as always and paid
+    only when the person collects (`claim`)."""
     current = locked_for_ari(submission_id)
     new = {"status": status, "approved_hours": approved_hours, "quality": quality, "ribbon": ribbon, "public_note": public_note[:1000], "internal_note": internal_note[:2000],
            "reviewer_label": reviewer_label[:254], "demand_checks": list(demand_checks)}
@@ -321,6 +323,9 @@ def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours
         return rules.IGNORED
     if current.reviewed_by_id:
         flag_staff(current, event, delivery, "staff decided")
+        return rules.NEEDS_STAFF
+    if current.needs_staff:
+        flag_staff(current, event, delivery, "held")
         return rules.NEEDS_STAFF
     problem = rules.review_problem(status, new["public_note"], current.round, rules.NO_ROUND_CAP, was=current.status)
     problem = problem or (rules.ari_hours_problem(approved_hours) if status == rules.APPROVED else "")
@@ -339,17 +344,18 @@ def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours
 
 
 @transaction.atomic
-def revert_ari_decision(submission_id, *, event, delivery, needs_staff):
+def revert_ari_decision(submission_id, *, event, delivery):
     """Ari took a decision back (reverted or requeued): block and revert here too. The submission goes back to handed in with the decision cleared. Already collected: the
     cookies are taken back with one debit (`submission:{id}:revert:{delivery}`, so a repeat writes once) and the project goes back to in review, but ONLY while the person's
     balance covers it and this is the project's latest round; otherwise nothing changes except the staff flag (we never go below zero, and a half undone state could pay
-    twice). `needs_staff` flags it for staff either way (a reverted ship may never come back to Ari's queue). A decision staff made in the admin is never undone (NOOP), and a
-    submission with no decision stored is only flagged when Ari reverted (NEEDS_STAFF the first time). Returns NOOP, REVERTED or NEEDS_STAFF."""
+    twice). Every revert leaves `needs_staff` set (a latch, no migration): a reverted ship may never come back to Ari's queue, and an OLDER delivery of the decision may
+    still arrive after this one, which apply_ari_decision then holds until staff clear the flag. A decision staff made in the admin is never undone (NOOP), and a
+    submission with no decision stored is flagged too (NEEDS_STAFF the first time). Returns NOOP, REVERTED or NEEDS_STAFF."""
     current = locked_for_ari(submission_id)
     if current.reviewed_by_id:              # staff decided it in the admin: Ari taking back its own decision is not about that one
         return rules.NOOP
-    if current.status == rules.SUBMITTED:   # nothing here to undo; but a reverted ship is out of Ari's queue for good, so staff must hear that (once)
-        if needs_staff and not current.needs_staff:
+    if current.status == rules.SUBMITTED:   # nothing here to undo, but the revert must be remembered (the latch): a delayed older approval would otherwise pay
+        if not current.needs_staff:
             flag_staff(current, event, delivery, "reverted")
             return rules.NEEDS_STAFF
         return rules.NOOP
@@ -368,7 +374,7 @@ def revert_ari_decision(submission_id, *, event, delivery, needs_staff):
             locked.save(update_fields=["status"])
     for field, value in CLEARED.items():
         setattr(current, field, value)
-    current.needs_staff = current.needs_staff or needs_staff
+    current.needs_staff = True
     current.save(update_fields=ARI_FIELDS + ("claimed_at",))
     audit.record("submission.ari_revert", subject=user, target=current, details=ari_details(event, delivery, cookies_taken=owed))
     return rules.REVERTED
