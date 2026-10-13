@@ -18,7 +18,7 @@ from projects.models import Project
 from submissions import ari, rules, services
 from submissions.models import AriEvent
 
-MAX_AGE, MAX_AHEAD = 300, 60          # seconds: Ari says ignore anything older than 5 minutes; a minute of clock skew is allowed so a true delivery is never lost to a 4xx
+MAX_AGE, MAX_AHEAD = 300, 300         # seconds, both ways like Ari's own check (its source accepts 300 either side): a slow or fast clock of ours must never turn a true delivery into a final 4xx
 TIMESTAMP = re.compile(r"[0-9]{1,12}")                  # unix seconds: plain digits only (int() would also take spaces, a sign and underscores)
 DELIVERY_ID = re.compile(r"[\w.:-]{1,64}", re.ASCII)   # it ends up in a ledger key (max 100 characters), so it must be short and plain; the format is not in Ari's docs, so a little room
 SHIP_ID = re.compile(r"[\w.:-]{1,40}", re.ASCII)        # Ari's id for a ship (AR-4821): Submission.ari_ship_id holds 40 characters
