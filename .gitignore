@@ -21,3 +21,9 @@ private_media/
 *.dump
 ari-projects.json
 tools/ari_projects.json
+# any environment dump or secrets scratch file (the prod variables for production, with secrets) never gets committed
+prod.env*
+dev.env*
+*.env.txt
+*env.local
+secrets*.txt
