@@ -131,7 +131,7 @@ def submit(user, *, project_id=None, hackatime_required=False, hours_check=None,
     check_hours(project, hackatime_required=hackatime_required, hours_check=hours_check)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text,
-                            hackatime_projects=list(project.tracked_names), tracked_seconds=project.tracked_seconds, tracked_at=project.tracked_at)
+                            hackatime_projects=list(project.tracked_names), tracked_seconds=project.tracked_seconds, tracked_at=project.tracked_at, tiers=tiers_of(project))
     submission.full_clean()
     submission.save()
     project.status = project_rules.IN_REVIEW
@@ -182,8 +182,14 @@ def record_hours(user, project_id, names, seconds, now=None):
 
 
 def tiers_of(project):
-    """The tiers of the demands this project kept: what the payout formula wants."""
+    """The tiers of the demands this project keeps NOW (in the order dealt). Only the hand-in reads this to freeze them; pay and mood read tiers_for."""
     return [demand.tier for demand in project_services.kept_demands(project)]
+
+
+def tiers_for(submission):
+    """The tiers of the demands the person kept when they handed this round in, which is all a round's pay and Grandma's mood may depend on. A round
+    handed in before they were frozen (`tiers` is null) falls back to the live tiers of its project."""
+    return submission.tiers if submission.tiers is not None else tiers_of(submission.project)
 
 
 def collected_ribbons(user_id):
@@ -203,9 +209,9 @@ def holds_ribbon_user(user):
 
 
 def cookies_for(submission):
-    """What this submission's saved review is worth in cookies (rules.award over the demands the project kept, with the permanent
-    ribbon term when the person already holds a ribbon, counted once if this review has the ribbon too)."""
-    return rules.award(submission.status, tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon,
+    """What this submission's saved review is worth in cookies (rules.award over the demands the person kept at hand-in, tiers_for, with the
+    permanent ribbon term when the person already holds a ribbon, counted once if this review has the ribbon too)."""
+    return rules.award(submission.status, tiers_for(submission), submission.approved_hours, submission.quality, submission.ribbon,
                        holds_ribbon(submission))
 
 

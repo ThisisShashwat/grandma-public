@@ -25,7 +25,7 @@ PAGES = ("dashboard", "dashboard_submissions", "dashboard_cookies", "project", "
 
 def outcome(submission, max_rounds):
     approved = submission.status == rules.APPROVED
-    mood = rules.mood(services.tiers_of(submission.project), submission.approved_hours, submission.quality, submission.ribbon) if approved else "sideeye"
+    mood = rules.mood(services.tiers_for(submission), submission.approved_hours, submission.quality, submission.ribbon) if approved else "sideeye"
     tracked = duration.text(submission.tracked_seconds) if submission.tracked_seconds is not None else ""
     reduced = bool(approved and submission.tracked_seconds is not None and submission.approved_hours is not None and (submission.approved_hours * 3600 < submission.tracked_seconds))
     return script.Outcome(approved=approved, ribbon=approved and submission.ribbon,

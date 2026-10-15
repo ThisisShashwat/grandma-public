@@ -41,6 +41,9 @@ class Submission(models.Model):
     tracked_seconds = models.PositiveIntegerField(null=True, blank=True, editable=False,
                                                   help_text="What Hackatime reported for it, copied from the project when they handed in. Staff only: the person never sees it.")
     tracked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="When that check was made.")
+    tiers = models.JSONField(null=True, blank=True, editable=False,
+                             help_text="The tiers of the demands they kept, frozen when they handed in: what this round pays is worked out from these, never from the live demands. "
+                                       "Empty only on a round handed in before this was kept (the live tiers are used then). Staff only.")
     repo_url = models.URLField(max_length=300, validators=[validate_repo_url])
     playable_url = models.URLField(max_length=300, validators=[validate_web_url],
                                    help_text="Where anyone can try it. Not on a host that falls asleep (the BLOCKED_HOSTS setting).")
