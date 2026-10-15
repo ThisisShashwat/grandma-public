@@ -52,6 +52,13 @@ def next_round(handed_in):
     return Ship(number=last_round + 1)
 
 
+def in_review_problem(waiting, cap):
+    """Why a person who has `waiting` hand-ins with the reviewers may not hand in another, or "". `cap` is the MAX_IN_REVIEW setting; 0 means no limit."""
+    if cap and waiting >= cap:
+        return f"I'm already reading {waiting} of yours, dear, and I take no more than {cap} at a time. Wait until I've told you what I think of one of them."
+    return ""
+
+
 def review_problem(status, public_note, number, max_rounds, was=""):
     """Why a reviewer may not save this decision for round `number`, or "". Asking for changes needs a note to tell the person what to
     change, and is not possible on the last round: there is no next round to fix it in. `was` is the status the row has now: a row that

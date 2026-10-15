@@ -1,7 +1,8 @@
 """The note a person fills in to hand a project to Grandma. The form only validates (every rule is enforced here, on the server, whatever
 the page showed); the page draws the fields by hand (templates/pages/submit.html). The checklist and the blocked playable hosts
 come from the admin settings (program/runtime.py), so the form is built per request with them. The order of work is cheap to costly: the
-fields, then the business check the view hands in as `precheck` (the hours, services.check_hours), and only then the picture is decoded."""
+fields, then the business check the view hands in as `precheck` (the cap on hand-ins in review and the hours, services.precheck), and only then the picture
+is decoded, one at a time per person (images.one_at_a_time)."""
 import re
 
 from django import forms
@@ -24,11 +25,12 @@ class SubmitForm(forms.Form):
     ai_declaration_text = forms.CharField(required=False, max_length=1000)
     declarations = forms.MultipleChoiceField(required=False, error_messages={"invalid_choice": NOT_ALL_TICKED})
 
-    def __init__(self, *args, cfg, precheck=None, **kwargs):
+    def __init__(self, *args, cfg, user_id, precheck=None, **kwargs):
         """The boxes shown, all of which must be ticked, are the checks from the settings. `precheck()`: the cheap business checks of the
-        hand-in (no arguments, raising ValidationError), run before the screenshot is decoded."""
+        hand-in (no arguments, raising ValidationError), run before the screenshot is decoded. `user_id`: whose decode lock to take (images.one_at_a_time)."""
         super().__init__(*args, **kwargs)
         self.precheck = precheck
+        self.user_id = user_id
         self.checks = submission.checks(cfg.SUBMISSION_CHECKS)
         self.blocked_hosts = submission.hosts(cfg.BLOCKED_HOSTS)
         self.max_bytes = cfg.SCREENSHOT_MAX_MB * 1024 * 1024
@@ -70,7 +72,8 @@ class SubmitForm(forms.Form):
             run_precheck(self, self.precheck)
         if not self.errors and "screenshot" in cleaned:
             try:
-                cleaned["screenshot"] = images.clean_screenshot(cleaned["screenshot"], self.max_bytes)
+                with images.one_at_a_time(self.user_id):
+                    cleaned["screenshot"] = images.clean_screenshot(cleaned["screenshot"], self.max_bytes)
             except ValidationError as error:
                 self.add_error("screenshot", error)
         return cleaned

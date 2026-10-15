@@ -92,12 +92,27 @@ def check_hours(project, *, hackatime_required=False, hours_check=None):
         raise ValidationError(CHECK_YOUR_HOURS)
 
 
+def check_in_review(user):
+    """Refuses a hand-in while the person already has MAX_IN_REVIEW of them waiting for a reviewer (status submitted, across all their projects; one
+    that is decided no longer counts, collected or not). 0 is no limit. Reads only: submit runs it under the person's lock, the form before it decodes."""
+    cap = live().MAX_IN_REVIEW
+    waiting = Submission.objects.filter(project__user=user, status=rules.SUBMITTED).count() if cap else 0
+    if problem := rules.in_review_problem(waiting, cap):
+        raise ValidationError(problem)
+
+
+def precheck(user, project, **hours_rules):
+    """The cheap refusals of a hand-in (the cap on hand-ins in review, the hours), made before the screenshot is decoded. submit makes them again under locks."""
+    check_in_review(user)
+    check_hours(project, **hours_rules)
+
+
 @transaction.atomic
 def submit(user, *, project_id=None, hackatime_required=False, hours_check=None, repo_url, playable_url, description, screenshot, recording_url, declarations, ai_declaration_text):
     """Hand in a project. Without `project_id`: the person's project in building, as round 1. With it: the person's own project with
     changes requested, as the next round (a reviewer already granted it, whatever MAX_ROUNDS says now). The project becomes `in_review`.
     ValidationError (a sentence for the person) when there is nothing to hand in, no round left, or a kept note does not suit the project's
-    category and subcategory (check_notes).
+    category and subcategory (check_notes), or the person already has MAX_IN_REVIEW hand-ins waiting for a reviewer (check_in_review).
     One at a time: a second click finds the project already in review. The Hackatime hours the project has been checked for (and the name they are
     under) are copied onto the submission as they are now, and stay as they were; `hackatime_required` (hackatime.required(cfg), read once per request)
     refuses a project with no checked hours, which is a ValidationError too. `hours_check`, when given, is called with the locked, re-read project (so
@@ -112,6 +127,7 @@ def submit(user, *, project_id=None, hackatime_required=False, hours_check=None,
     if ship.problem:
         raise ValidationError(ship.problem)
     check_notes(project)
+    check_in_review(user)
     check_hours(project, hackatime_required=hackatime_required, hours_check=hours_check)
     submission = Submission(project=project, round=ship.number, repo_url=repo_url, playable_url=playable_url, description=description,
                             screenshot=screenshot, recording_url=recording_url, declarations=declarations, ai_declaration_text=ai_declaration_text,
