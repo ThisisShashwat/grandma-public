@@ -36,6 +36,8 @@ CONFIG = {
     "REDEAL_COST": (10, "Cookies a re-deal costs once the free ones are used up. Whole cookies, 0 makes them all free.", "cookies"),
     "SUGGEST_COST": (5, "Cookies it costs to put a suggestion on the board (a new demand or a Pantry item). Whole cookies, 0 makes it free. Keep it above the vote cost.", "cookies"),
     "VOTE_COST": (1, "Cookies it costs to vote for somebody's suggestion. Whole cookies, 0 makes voting free. A vote does nothing but move the suggestion up the list.", "cookies"),
+    "MAX_NEW_PROJECTS_PER_DAY": (20, "The most projects one person may start in a rolling 24 hours, abandoned ones included. This is a generous limit against abuse (a script filling the "
+                                     "database), not a program rule: people may make as many projects as they like, one at a time. 0 means no limit. Whole numbers, 0 to 1000.", "per_person_cap"),
     "DEALING_EXPIRY_DAYS": (7, "How many days a hand may sit on Grandma's table, never confirmed, before the project is given up (it becomes abandoned and its person may start "
                                "another). Counted from when the hand was dealt. A project already being built is never touched. Whole days, 1 to 90.", "expiry_days"),
 
@@ -45,14 +47,19 @@ CONFIG = {
     "BLOCKED_HOSTS": (submission.default_hosts_text(),
                       "Hosts a playable link may not be on (free tiers that fall asleep when idle, tunnels to a laptop, notebooks), one per line. A host also blocks its "
                       "subdomains: streamlit.app blocks myapp.streamlit.app.", "hosts"),
-    "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes.", "megabytes"),
+    "SCREENSHOT_MAX_MB": (5, "The biggest screenshot a person may upload, in megabytes. Whatever is uploaded is shrunk before it is kept: no side over 2000 pixels and at most 4 million pixels in all.", "megabytes"),
     "MAX_ROUNDS": (3, "How many times one project may be handed in, counting the first time. When you ask for changes, the person fixes it and hands it in again as the next round; "
                       "on the last round you can only approve or reject. Between 1 and 10.", "rounds"),
+    "MAX_IN_REVIEW": (3, "The most hand-ins one person may have waiting for a reviewer at once, across all their projects. A hand-in that has been decided no longer counts, "
+                         "even before the person has collected it. At the limit Grandma tells them to wait. 0 means no limit. Whole numbers, 0 to 1000.", "per_person_cap"),
 
     "ORDER_CART_SCREENSHOT": (True, "Ask for a screenshot of the cart with a grant, and keep it privately. Off: a person gives only the link to the product, no picture is asked for, uploaded or stored (use it while there is nowhere safe to keep the pictures). Pictures already kept are not touched, and staff can still open them."),
-    "ORDER_SCREENSHOT_MAX_MB": (5, "The biggest cart or part screenshot a person may upload with an order, in megabytes.", "megabytes"),
+    "ORDER_SCREENSHOT_MAX_MB": (5, "The biggest cart or part screenshot a person may upload with an order, in megabytes. Whatever is uploaded is shrunk before it is kept: no side over 2000 pixels and at most 4 million pixels in all.", "megabytes"),
     "ORDER_SCREENSHOT_MAX_SIDE": (6000, "The longest side of an order screenshot, in pixels. Anything bigger is refused.", "pixels"),
-    "ORDER_SCREENSHOT_MAX_MEGAPIXELS": (20, "The most pixels (width times height, in millions) an order screenshot may have. Checked before it is decoded.", "megapixels"),
+    "ORDER_SCREENSHOT_MAX_MEGAPIXELS": (10, "The most pixels (width times height, in millions) an order screenshot may have when it is uploaded. Checked before it is decoded. "
+                                            "10 lets a 4K monitor screenshot (8.3 million) through; it is shrunk to 4 million before it is kept.", "megapixels"),
+    "MAX_ORDERS_PER_DAY": (10, "The most orders one person may place in a rolling 24 hours. Orders they took back and orders that were turned down count too, so placing and cancelling "
+                               "cannot be used to fill the disk. 0 means no limit. Whole numbers, 0 to 1000.", "per_person_cap"),
 
     "SHOW_REJECTED_PUBLICLY": (True, "Show rejected projects on the public profile and project pages (only after the person has heard the result). Off hides them."),
     "LEADERBOARD_SIZE": (50, "How many people the cookie board lists, the most cookies earned all time first.", "leaderboard_size"),
@@ -104,9 +111,9 @@ CONFIG = {
 FIELDSETS = (
     ("Launch", ("LAUNCH", "BETA_MODE")),
     ("Program links", ("LINK_SIGNUP", "LINK_SLACK", "LINK_SLACK_GRANDMA", "LINK_SLACK_HELP", "LINK_SLACK_BULLETIN", "LINK_BOARD", "LINK_CONTACT")),
-    ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST", "DEALING_EXPIRY_DAYS")),
-    ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS")),
-    ("Orders", ("ORDER_CART_SCREENSHOT", "ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS")),
+    ("Talk to Grandma (dealing notes)", ("DEAL_SIZE", "REDEALS_FREE", "REDEAL_COST", "MAX_NEW_PROJECTS_PER_DAY", "DEALING_EXPIRY_DAYS")),
+    ("Submitting", ("SUBMISSION_CHECKS", "BLOCKED_HOSTS", "SCREENSHOT_MAX_MB", "MAX_ROUNDS", "MAX_IN_REVIEW")),
+    ("Orders", ("ORDER_CART_SCREENSHOT", "ORDER_SCREENSHOT_MAX_MB", "ORDER_SCREENSHOT_MAX_SIDE", "ORDER_SCREENSHOT_MAX_MEGAPIXELS", "MAX_ORDERS_PER_DAY")),
     ("Suggestion board", ("SUGGEST_COST", "VOTE_COST")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Home page", ("HOME_PANTRY_PEEK", "HOME_RIBBON_PEEK", "HOME_PEEK_COUNT")),
@@ -123,6 +130,7 @@ FIELDS = {
     "deal_size": ("django.forms.IntegerField", {"min_value": 3, "max_value": 28}),
     "redeals_free": ("django.forms.IntegerField", {"min_value": 0, "max_value": 20}),
     "cookies": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
+    "per_person_cap": ("django.forms.IntegerField", {"min_value": 0, "max_value": 1000}),
     "expiry_days": ("django.forms.IntegerField", {"min_value": 1, "max_value": 90}),
     "peek_count": ("django.forms.IntegerField", {"min_value": 1, "max_value": 12}),
     "checks": ("pages.fields.ChecksField",),
