@@ -74,6 +74,9 @@ class Submission(models.Model):
                                       help_text="Ari sent something this site could not apply by itself (hours too big or missing, a decision after the person collected, a revert after they spent the cookies). "
                                                 "Look at it, fix it by hand if needed, then clear this with the admin action.")
 
+    taken_down_at = models.DateTimeField(null=True, blank=True, editable=False,
+                                         help_text="Staff took this round off every public page and deleted its screenshot (services.take_down). Staff only. The person's own pages are unchanged.")
+
     class Meta:
         ordering = ["-submitted_at", "-id"]
         constraints = [
