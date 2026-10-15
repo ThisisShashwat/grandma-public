@@ -5,16 +5,32 @@ gets a 403. A dedicated "can view costs" permission would be the next step (docs
 """
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
 from . import art
-from .models import RateClass, ShopItem
+from .models import RateClass, ShopItem, validate_art
 
 
 class ShopItemForm(forms.ModelForm):
     class Meta:
         model = ShopItem
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["art"].help_text = "Only used when no picture is uploaded above. The name of a file that already ships in static/assets, for example grandma-cookie-jar.png. Not the name of your upload."
+
+    def clean(self):
+        """An uploaded picture wins, so the file name box must never block it: whatever was typed there (the upload's own name, a typo, nothing) is dropped and the stored name stays."""
+        cleaned = super().clean()
+        if cleaned.get("art_upload"):
+            try:
+                validate_art(cleaned.get("art", ""))         # the model's own check runs later: a good name is kept, anything else is replaced before it can fail
+            except ValidationError:
+                self._errors.pop("art", None)                # an empty box is "required" at the form's level
+                cleaned["art"] = self.instance.art
+        return cleaned
 
     def clean_art_upload(self):
         """A new picture is made safe and small (shop/art.py); an unchanged or cleared one passes through."""
