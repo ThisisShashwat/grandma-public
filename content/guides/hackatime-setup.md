@@ -38,5 +38,5 @@ When you hand a project in, the note has a Check my hours button. It opens a lis
 You can cut Grandma off whenever you like. Open your Hackatime settings, go to **Privacy and Security**, find the list of authorized applications and press Revoke next to this site. Grandma then cannot read anything, and the next time she needs your hours she asks you to connect again.
 
 ::: note
-After Grandma has handed over a result, you see how much Hackatime tracked and how many hours the reviewer approved, and so does everyone who opens your project page; if the reviewer approves less, the note says why.
+After Grandma has handed over a result, you see how much Hackatime tracked and how many hours the reviewer approved, and so does everyone who opens your project page.
 :::

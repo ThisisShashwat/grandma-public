@@ -35,7 +35,7 @@ def approved(outcome):
     ribbon = [Say(face="ribbon", celebrate=True, lines=(
         "Wait. Wait, wait, wait.", "That is a Blue Ribbon, dear. I don't give those out.", "Well. I do. But very rarely. Hold still while I pin it on you."))] if outcome.ribbon else []
     if outcome.tracked:
-        counted_lines = ("Hackatime counted {tracked}. I approved {approved}.", "I took some off, dear. The reviewer's note says why.") if outcome.reduced else ("Hackatime counted {tracked}. I approved {approved}.",)
+        counted_lines = ("Hackatime counted {tracked}. I approved {approved}.", "I took some off, dear.") if outcome.reduced else ("Hackatime counted {tracked}. I approved {approved}.",)
     else:
         counted_lines = ("I approved {approved}.",)
     counted = Say(face="writing", lines=counted_lines)
