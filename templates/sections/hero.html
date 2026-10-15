@@ -5,7 +5,8 @@
   <div class="wrap split">
     <div>
       <p class="hero-credit">Program run by Shashwat.<br>Program sponsored by plastuchino.</p>
-      <h1>{{ site.name }}</h1>
+      {% set name = site.name.split(" ", 1) %}
+      <h1>{{ name[0] }}<br>{{ name[1] }}</h1>    {# the owner's break: "Help" on the first line, the rest ("Grandma Out") on the second, at every width #}
       <p class="lede">You pick what to build. {{ ui.mark("Grandma decides how.", "underline") }}</p>
       <p>Every project gets a few of Grandma's demands, like {{ ui.mark("no libraries") }}, {{ ui.mark("one button") }} or {{ ui.mark("two colors") }}. The more annoying the demand, the happier she is.</p>
       <p class="countdown" data-cd>Grandma calls soon</p>
