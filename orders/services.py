@@ -111,10 +111,19 @@ def priced(user, base, counts, quantity):
     return offer
 
 
+def check_daily_cap(user):
+    """Refuses an order when the person has already placed MAX_ORDERS_PER_DAY in the last 24 hours: every order counts, cancelled, turned down and
+    refunded ones too, so placing and cancelling cannot be used to fill the disk. 0 is no limit. Reads only: place_order runs it under the person's lock."""
+    cap = live().MAX_ORDERS_PER_DAY
+    placed = Order.objects.filter(user=user, created_at__gte=timezone.now() - rules.DAY).count() if cap else 0
+    refuse(rules.orders_problem(placed, cap))
+
+
 def precheck(user, item_id, *, quantity=1, upgrades=None):
-    """The cheap checks of place_order (the grant is still on the shelf, the upgrades, the limit, the stock, the balance), made without locks
+    """The cheap checks of place_order (the daily cap, the grant is still on the shelf, the upgrades, the limit, the stock, the balance), made without locks
     BEFORE the screenshot is decoded, which is the costly part (orders/forms.py). Only a fast refusal, never a promise: place_order checks
     everything again under locks. ValidationError with a sentence for the person."""
+    check_daily_cap(user)
     base, upgrade_items = locked_items(item_id, holds_ribbon_user(user), lock=False)
     refuse(None if base else GONE)
     priced(user, base, chosen_upgrades(base, upgrade_items, upgrades or {}), quantity)
@@ -131,6 +140,7 @@ def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, product_url=
     placed = Order.objects.filter(user=user, nonce=nonce).first()
     if placed:
         return placed
+    check_daily_cap(user)
     base, upgrade_items = locked_items(item_id, holds_ribbon_user(user))
     refuse(None if base else GONE)
     proves = base.kind == ShopItem.Kind.GRANT

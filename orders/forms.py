@@ -3,7 +3,7 @@ whatever the page showed, and the price is never in it); the page draws the fiel
 request for one grant: a plain grant has a quantity (if it stacks), upgrades (if it has them), a link and a cart screenshot; a by-hand
 item only a note. The pictures are decoded and re-encoded last, only once everything else is right (submissions/images.py), with the caps
 from the admin settings: the fields first, then the business checks the view hands in as `precheck` (the limit, the stock, the balance:
-services.precheck), and only then the decoding."""
+services.precheck), and only then the decoding, one picture at a time per person (images.one_at_a_time)."""
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -21,12 +21,14 @@ class OrderForm(forms.Form):
     nonce = forms.CharField(max_length=32, error_messages={**NEEDS, "max_length": "That page has gone stale, dear. Open it again."})
     user_note = forms.CharField(required=False, max_length=600)
 
-    def __init__(self, *args, cfg, proves, stackable, upgrades, precheck=None, **kwargs):
+    def __init__(self, *args, cfg, user_id, proves, stackable, upgrades, precheck=None, **kwargs):
         """`proves`: a plain grant, which shows its link and its cart. `upgrades`: (field name, item id) pairs. `precheck(quantity, upgrades)`:
-        the cheap business checks (services.precheck for this person and grant), raising ValidationError, run before any picture is decoded."""
+        the cheap business checks (services.precheck for this person and grant), raising ValidationError, run before any picture is decoded.
+        `user_id`: whose decode lock to take (images.one_at_a_time)."""
         super().__init__(*args, **kwargs)
         self.proves = proves
         self.precheck = precheck
+        self.user_id = user_id
         self.max_bytes, self.max_side, self.max_pixels = cfg.ORDER_SCREENSHOT_MAX_MB * 1024 * 1024, cfg.ORDER_SCREENSHOT_MAX_SIDE, cfg.ORDER_SCREENSHOT_MAX_MEGAPIXELS * 1_000_000
         self.upgrade_fields = dict(upgrades)
         if stackable:
@@ -74,7 +76,8 @@ class OrderForm(forms.Form):
         """Rebuild every upload from its pixels (EXIF and GPS gone, a random name)."""
         if cleaned.get("cart_screenshot"):
             try:
-                cleaned["cart_screenshot"] = images.clean_screenshot(cleaned["cart_screenshot"], self.max_bytes, self.max_side, self.max_pixels)
+                with images.one_at_a_time(self.user_id):
+                    cleaned["cart_screenshot"] = images.clean_screenshot(cleaned["cart_screenshot"], self.max_bytes, self.max_side, self.max_pixels)
             except ValidationError as error:
                 self.add_error("cart_screenshot", error)
 

@@ -2,6 +2,7 @@
 stock, and what is wrong with a link. No Django import and no database: the decisions are made here and orders/services.py only applies them.
 Every problem is a sentence in Grandma's voice, or "" when there is none. Why each rule exists: docs/orders.md."""
 import re
+from datetime import timedelta
 from decimal import Decimal
 from typing import NamedTuple
 
@@ -18,6 +19,7 @@ TRANSITIONS = {PENDING: (APPROVED, REJECTED, CANCELLED), APPROVED: (FULFILLED, R
 
 NONCE = re.compile(r"[0-9a-f]{32}")                 # what a page puts in its hidden field: a uuid4 in hex
 MAX_QUANTITY = 100                                  # no stackable item is bought more than this many at once, whatever its limit says
+DAY = timedelta(hours=24)                           # the window of the MAX_ORDERS_PER_DAY setting: rolling, not a calendar day
 
 
 def can_move(current, to):
@@ -56,6 +58,13 @@ def limit_problem(stackable, max_per_user, held, wanted):
         return "You've already got one of those, dear. One per person."
     left = max(cap - held, 0)
     return f"You may have {cap} of those and you hold {held} already, dear." + (f" {left} more at the very most." if left else "")
+
+
+def orders_problem(placed, cap):
+    """Why a person who placed `placed` orders in the last day (whatever became of them) may not place another, or "". `cap` is MAX_ORDERS_PER_DAY; 0 means no limit."""
+    if cap and placed >= cap:
+        return f"That's {placed} orders in one day, dear, and I take no more than {cap}. Come back tomorrow."
+    return ""
 
 
 def stock_problem(stock, wanted):
