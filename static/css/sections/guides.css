@@ -22,7 +22,8 @@
 
 @media (min-width: 56rem) {
   .guide-layout { grid-template-columns: 14.5rem minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); }
-  .g-side { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
+  /* the nav is tilted half a degree, which sticks out a few pixels: the side box scrolls up and down only, with room at both edges so the tilt is not cut (and no sideways scrollbar) */
+  .g-side { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; overflow-x: hidden; padding-inline: 6px; margin-inline: -6px; }
   .g-nav { rotate: -0.5deg; }
   /* the details element is always open here, without JavaScript: its content is shown even when it is closed */
   @supports selector(::details-content) {
