@@ -120,6 +120,12 @@ TUTORIAL_CLOSE = [
         "And that's everything. Questions go in the Slack.", "Somebody there is much less grumpy than me.")),
 ]
 
+# Played for everybody, right before the ending, even when the lessons were skipped: the hours before the talk do not count (hackatime.EARLIER_TOLERANCE). Draft copy by Claude, 2026-10-15, for the owner to read.
+TALK_FIRST = Say(face="finger", lines=(
+    "Last thing, and it's the one that matters. Listen close, dear.",
+    "You cannot start a project without talking to me first. Come and see me, I deal your demands, and only then do you build.",
+    "Start before that and none of those hours count. I will know."))
+
 ENDING = End(face="overjoyed", button="To my dashboard", lines=(
     "{display_name}, you're all set.", "Off you go. And wipe your feet on the way out."))
 

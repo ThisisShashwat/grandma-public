@@ -73,7 +73,7 @@ def dialogue(cfg, hackatime_connected=False, slack_known=False, region_guess="",
         *(replace(step, when=plays(0, cfg)) for step in script.PART_BASICS),
         *(replace(step, when=plays(1, cfg)) for step in script.TUTORIAL_CLOSE),
         script.hackatime_step(on, hackatime_connected), script.hackatime_connected_step(on, hackatime_connected),
-        script.ENDING,
+        script.TALK_FIRST, script.ENDING,
     ]
 
 

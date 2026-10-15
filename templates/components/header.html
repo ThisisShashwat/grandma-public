@@ -12,8 +12,8 @@
       <a href="{{ url('ribbons') }}">Ribbons</a>
       <a href="{{ url('leaderboard') }}">Leaderboard</a>
     </span>
-    <a href="{{ url('home') }}#faq">FAQ</a>
-    <a data-link="slack" {{ link_attrs("slack") }}>Slack</a>
+    <a href="{{ url('guide', args=['faq']) }}">FAQ</a>
+    <a data-link="slack_grandma" {{ link_attrs("slack_grandma") }}>Slack</a>
     <span data-auth="out">
       <a class="btn" data-link="signup" data-confetti {{ link_attrs("signup") }}>Sign up</a>
     </span>
