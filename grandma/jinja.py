@@ -35,7 +35,10 @@ def versioned_static(name):
 
 
 def art_src(name):
-    """The URL of a picture in static/assets: the `.webp` twin of a PNG when it exists next to it, else the file itself (the PNGs stay as the fallback)."""
+    """The URL of a picture in static/assets: the `.webp` twin of a PNG when it exists next to it, else the file itself (the PNGs stay as the fallback).
+    A ready address (an uploaded picture, `/media/...` or a full URL, see shop/models.py `art_source`) is returned as it is."""
+    if name.startswith(("/", "https://")):
+        return name
     if name.endswith(".png") and finders.find(f"assets/{name[:-4]}.webp"):
         name = f"{name[:-4]}.webp"
     return versioned_static(f"assets/{name}")

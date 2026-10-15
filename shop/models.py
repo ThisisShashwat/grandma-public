@@ -78,6 +78,8 @@ class ShopItem(models.Model):
     description = models.TextField(blank=True)
     art = models.CharField(max_length=80, default="cookie.png", validators=[validate_art],
                            help_text="A file inside static/assets, for example grandma-cookie-jar.png.")
+    art_upload = models.FileField("upload art", upload_to="shop/", blank=True,
+                                  help_text="Or upload a picture here (PNG, JPEG or WebP, 3 MB at most). It is shrunk to fit a card and stripped of anything hidden in the file, and it wins over the file name below. Clear it to go back to the file name.")
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.GRANT,
                             help_text="Everything is a card grant unless it cannot be: those staff hand over themselves.")
     category = models.CharField(max_length=10, choices=Category.choices, help_text="Which shelf of the page it sits on.")
@@ -117,6 +119,11 @@ class ShopItem(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def art_source(self):
+        """What the pages are given for the picture: the address of the uploaded one, else the file name in static/assets (grandma/jinja.py `art_src` takes both)."""
+        return self.art_upload.url if self.art_upload else self.art
 
     @property
     def effective_cookies(self):

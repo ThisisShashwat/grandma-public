@@ -73,7 +73,7 @@ def _product(item):
     grant = item.kind == ShopItem.Kind.GRANT
     low, high = payout.hours_range(item.effective_cookies)
     return Product(
-        slug=item.slug, name=item.name, tagline=item.tagline, description=item.description, art=item.art,
+        slug=item.slug, name=item.name, tagline=item.tagline, description=item.description, art=item.art_source,
         category=item.category, kind=item.get_kind_display(), manual=not grant, stackable=item.stackable,
         max_per_user=item.max_per_user if item.stackable else 1, stock_left=item.stock, available=item.stock != 0,
         cookies=item.effective_cookies, value_usd=item.usd_value if grant else None, hours_low=low, hours_high=high,

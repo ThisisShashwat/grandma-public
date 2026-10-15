@@ -3,13 +3,28 @@
 Only staff who were given shop permissions see these pages (Django's own model permissions); a staff account without them
 gets a 403. A dedicated "can view costs" permission would be the next step (docs/security.md).
 """
+from django import forms
 from django.contrib import admin
+from django.core.files.uploadedfile import UploadedFile
 
+from . import art
 from .models import RateClass, ShopItem
+
+
+class ShopItemForm(forms.ModelForm):
+    class Meta:
+        model = ShopItem
+        fields = "__all__"
+
+    def clean_art_upload(self):
+        """A new picture is made safe and small (shop/art.py); an unchanged or cleared one passes through."""
+        picture = self.cleaned_data["art_upload"]
+        return art.clean(picture) if isinstance(picture, UploadedFile) else picture
 
 
 @admin.register(ShopItem)
 class ShopItemAdmin(admin.ModelAdmin):
+    form = ShopItemForm
     list_display = ("name", "kind", "category", "stackable", "usd_value", "rate_class", "price", "rate", "active", "ribbon_only", "show_on_home")
     list_editable = ("show_on_home",)           # tick it from the list: the home page peek (shop/peek.py)
     list_filter = ("kind", "category", "stackable", "rate_class", "active", "ribbon_only", "show_on_home")
@@ -19,7 +34,7 @@ class ShopItemAdmin(admin.ModelAdmin):
     actions = ["recompute_prices"]
     readonly_fields = ("cookies", "effective_rate", "upgrade_check")
     fieldsets = (
-        ("The item", {"fields": ("name", "slug", "tagline", "description", "art", "kind", "category", "active", "ribbon_only", "show_on_home", "sort_order")}),
+        ("The item", {"fields": ("name", "slug", "tagline", "description", "art_upload", "art", "kind", "category", "active", "ribbon_only", "show_on_home", "sort_order")}),
         ("Who can buy how many", {"fields": ("stackable", "max_per_user", "stock", "base_item")}),
         ("Price", {"fields": ("usd_value", "rate_class", "cookies", "cookies_override", "effective_rate", "upgrade_check")}),
     )
