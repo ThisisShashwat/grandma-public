@@ -28,6 +28,16 @@ class Offer(NamedTuple):
     cost: int          # cookies this one costs, 0 while free ones are left
 
 
+DAY = timedelta(hours=24)       # the window of the MAX_NEW_PROJECTS_PER_DAY setting: rolling, not a calendar day
+
+
+def new_projects_problem(started, cap):
+    """Why a person who started `started` projects in the last day (abandoned ones count) may not start another, or "". `cap` is MAX_NEW_PROJECTS_PER_DAY; 0 means no limit."""
+    if cap and started >= cap:
+        return f"You have started {started} projects in one day, dear, and I allow no more than {cap}. Come back tomorrow."
+    return ""
+
+
 def offer(redeals_used, free, cost):
     """The next re-deal of a project that has used `redeals_used` of them: free while the free ones last, then `cost` cookies."""
     free_left = max(0, free - redeals_used)

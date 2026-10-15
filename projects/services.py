@@ -8,11 +8,13 @@ locks do the work. The random generator is always passed in: random.SystemRandom
 """
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils import timezone
 
 from accounts.models import Profile
 from accounts.services import profile_of
 from audit import services as audit
 from ledger import services as ledger
+from pages.live import live
 from program import draw
 from projects import rules
 from projects.models import Category, Demand, Project, ProjectDemand, Subcategory
@@ -137,11 +139,16 @@ def locked_project(user, *statuses):
 @transaction.atomic
 def start(user, *, idea, name, category, subcategory, size, rng):
     """Make the person's project and deal its first hand. Called when they have answered Grandma's four questions, and only
-    then. A person with a project in progress gets that one back (a double click or a second tab starts nothing new)."""
+    then. A person with a project in progress gets that one back (a double click or a second tab starts nothing new). ValidationError (a sentence
+    for the person, nothing written) when they have already started MAX_NEW_PROJECTS_PER_DAY in the last 24 hours, abandoned ones included (0 is no limit)."""
     lock_person(user)
     existing = working_project(user)
     if existing:
         return existing
+    cap = live().MAX_NEW_PROJECTS_PER_DAY
+    started = Project.objects.filter(user=user, created_at__gte=timezone.now() - rules.DAY).count() if cap else 0
+    if problem := rules.new_projects_problem(started, cap):
+        raise ValidationError(problem)
     project = Project(user=user, idea=idea, name=name, category=category, subcategory=subcategory,
                       hand=draw.deal(cards(), size, rng, category.id, subcategory.id if subcategory else None))
     project.full_clean()
