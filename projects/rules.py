@@ -28,7 +28,7 @@ class Offer(NamedTuple):
     cost: int          # cookies this one costs, 0 while free ones are left
 
 
-DAY = timedelta(hours=24)       # the window of the MAX_NEW_PROJECTS_PER_DAY setting: rolling, not a calendar day
+START_WINDOW = timedelta(hours=24)       # the window of the MAX_NEW_PROJECTS_PER_DAY setting: rolling, not a calendar day
 
 
 def new_projects_problem(started, cap):

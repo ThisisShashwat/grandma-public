@@ -115,7 +115,7 @@ def check_daily_cap(user):
     """Refuses an order when the person has already placed MAX_ORDERS_PER_DAY in the last 24 hours: every order counts, cancelled, turned down and
     refunded ones too, so placing and cancelling cannot be used to fill the disk. 0 is no limit. Reads only: place_order runs it under the person's lock."""
     cap = live().MAX_ORDERS_PER_DAY
-    placed = Order.objects.filter(user=user, created_at__gte=timezone.now() - rules.DAY).count() if cap else 0
+    placed = Order.objects.filter(user=user, created_at__gte=timezone.now() - rules.ORDER_WINDOW).count() if cap else 0
     refuse(rules.orders_problem(placed, cap))
 
 

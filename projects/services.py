@@ -146,7 +146,7 @@ def start(user, *, idea, name, category, subcategory, size, rng):
     if existing:
         return existing
     cap = live().MAX_NEW_PROJECTS_PER_DAY
-    started = Project.objects.filter(user=user, created_at__gte=timezone.now() - rules.DAY).count() if cap else 0
+    started = Project.objects.filter(user=user, created_at__gte=timezone.now() - rules.START_WINDOW).count() if cap else 0
     if problem := rules.new_projects_problem(started, cap):
         raise ValidationError(problem)
     project = Project(user=user, idea=idea, name=name, category=category, subcategory=subcategory,

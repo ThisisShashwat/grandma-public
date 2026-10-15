@@ -19,7 +19,7 @@ TRANSITIONS = {PENDING: (APPROVED, REJECTED, CANCELLED), APPROVED: (FULFILLED, R
 
 NONCE = re.compile(r"[0-9a-f]{32}")                 # what a page puts in its hidden field: a uuid4 in hex
 MAX_QUANTITY = 100                                  # no stackable item is bought more than this many at once, whatever its limit says
-DAY = timedelta(hours=24)                           # the window of the MAX_ORDERS_PER_DAY setting: rolling, not a calendar day
+ORDER_WINDOW = timedelta(hours=24)                           # the window of the MAX_ORDERS_PER_DAY setting: rolling, not a calendar day
 
 
 def can_move(current, to):
