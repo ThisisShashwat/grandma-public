@@ -1,4 +1,7 @@
 .hero { border-top: 0; }
+/* the owner's tiny two line credit above the title; the title is smaller than the sitewide h1 so "Help Grandma" fits the half width column and the name takes two lines, not three */
+.hero-credit { margin: 0 0 0.5rem; font-size: 0.95rem; line-height: 1.25; }
+.hero h1 { font-size: clamp(3.2rem, 6vw, 4.9rem); }
 .lede { font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.25; margin-bottom: 0.75em; }
 .hero .stage { max-width: 520px; margin-inline: auto; }
 
