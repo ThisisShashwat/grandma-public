@@ -82,7 +82,7 @@ def build_ship(submission):
         "maker": maker_of(submission),
         "repo_url": submission.repo_url,
         "demo_url": submission.playable_url or submission.recording_url,
-        "thumbnail_url": site_address(submission.screenshot.url),
+        "thumbnail_url": site_address(submission.screenshot.url) if submission.screenshot else "",      # empty only after a staff takedown deleted the file
         "track": "software",
         "hackatime_projects": list(submission.hackatime_projects),
         "evidence": EVIDENCE,

@@ -8,7 +8,7 @@ from django.db import transaction
 from audit import services as audit
 from projects import rules, services
 from projects.models import Category, Complaint, Demand, Project, ProjectDemand, Subcategory, Suggestion
-from projects.signals import project_abandoned
+from projects.signals import project_abandoned, project_takedown
 
 
 class SubcategoryInline(admin.TabularInline):
@@ -84,7 +84,7 @@ class ProjectAdmin(admin.ModelAdmin):
     search_fields = ("name", "user__username", "idea")
     list_select_related = ("user", "category")
     inlines = [KeptInline]
-    actions = ["abandon"]
+    actions = ["abandon", "take_down"]
     fields = ("user", "name", "idea", "category", "subcategory", "status", "created_at", "started_at", "dealt", "redeals_used")
     readonly_fields = ("user", "created_at", "started_at", "dealt", "redeals_used")
 
@@ -120,6 +120,13 @@ class ProjectAdmin(admin.ModelAdmin):
                 project_abandoned.send(sender=Project, project=project)
             count += 1
         self.message_user(request, f"Abandoned {count} projects.")
+
+    @admin.action(description="Take down this project (every round, and delete the screenshots)", permissions=["change"])
+    def take_down(self, request, queryset):
+        """Every round of the chosen projects goes off all public pages and loses its screenshot (submissions.services.take_down_project, audited per round).
+        It reaches that app through a signal, like Abandon does, so this layer never imports it. The project itself is untouched."""
+        done = sum(count for project in queryset for _, count in project_takedown.send(sender=Project, project=project, by=request.user))
+        self.message_user(request, f"{done} round{'' if done == 1 else 's'} taken down.")
 
 
 @admin.register(Complaint)

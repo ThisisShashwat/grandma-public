@@ -393,6 +393,44 @@ def clear_needs_staff(submission_id, *, by):
     return True
 
 
+# the staff takedown (docs/submissions.md "Takedown"): a round off every public page and its screenshot file deleted, as one audited action. The review, the cookies and the person's own pages are untouched.
+
+@transaction.atomic
+def take_down(submission, *, by, now=None):
+    """Take this round off every public page (showcase/public.py `ships` skips it) and delete its screenshot: the field is emptied in the transaction and the file is
+    deleted from storage only once it has committed (a failed delete is logged by Django and never breaks the action; a rollback keeps the file). Not undone by
+    `lift_takedown`: the file is gone. Returns whether anything changed (False if it was already down). The audit entry has ids and flags only."""
+    current = Submission.objects.select_for_update().select_related("project").get(pk=submission.pk)
+    if current.taken_down_at is not None:
+        return False
+    storage, name = current.screenshot.storage, current.screenshot.name
+    current.taken_down_at, current.screenshot = now or timezone.now(), ""
+    current.save(update_fields=["taken_down_at", "screenshot"])
+    audit.record("submission.takedown", actor=by, subject=current.project.user, target=current, details={"round": current.round, "screenshot": bool(name)})
+    if name:
+        transaction.on_commit(partial(storage.delete, name), robust=True)
+    return True
+
+
+@transaction.atomic
+def lift_takedown(submission, *, by):
+    """Put the round back on the public pages. The deleted screenshot is NOT restored (the page shows no picture). Returns whether it was down."""
+    current = Submission.objects.select_for_update().select_related("project").get(pk=submission.pk)
+    if current.taken_down_at is None:
+        return False
+    current.taken_down_at = None
+    current.save(update_fields=["taken_down_at"])
+    audit.record("submission.takedown_lifted", actor=by, subject=current.project.user, target=current, details={"round": current.round})
+    return True
+
+
+@transaction.atomic
+def take_down_project(project, *, by, **_):
+    """Take down every round of this project that is not down yet, all or nothing. Returns how many rounds changed. Also the receiver of
+    projects.signals.project_takedown (apps.py), which the admin's action sends so that `projects` never imports this app (`_` takes the signal and sender)."""
+    return sum(take_down(submission, by=by) for submission in project.submissions.filter(taken_down_at__isnull=True))
+
+
 AFTER_CLAIM = {rules.APPROVED: project_rules.APPROVED, rules.CHANGES_REQUESTED: project_rules.CHANGES_REQUESTED, rules.REJECTED: project_rules.REJECTED}
 
 

@@ -148,8 +148,9 @@ def ships(show_rejected):
     """The ships that may be shown: a shown person's, of a project staff have not abandoned (abandoning pulls a project off the
     pages), and when the setting hides rejections, of no project whose rejection the maker has already heard about (every round of it
     goes, or an earlier round with changes requested would be left standing for a project that is finished). A project that was never
-    handed in has no ship, so it is never shown."""
-    rows = Submission.objects.filter(project__user__is_active=True, project__user__profile__onboarded_at__isnull=False)
+    handed in has no ship, so it is never shown. A round staff took down (services.take_down) is never a ship, so no page, card, count or peek can show it; a project
+    whose rounds are all down has no ship and is a 404, one with an earlier round still up shows that one."""
+    rows = Submission.objects.filter(project__user__is_active=True, project__user__profile__onboarded_at__isnull=False, taken_down_at__isnull=True)
     rows = rows.exclude(project__status=project_rules.ABANDONED)
     heard_no = Submission.objects.filter(project=OuterRef("project"), status=submission_rules.REJECTED, claimed_at__isnull=False)
     return rows if show_rejected else rows.exclude(Exists(heard_no))
