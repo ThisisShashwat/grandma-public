@@ -76,13 +76,15 @@ def welcome(request):
     still get the last page, with its button to the dashboard)."""
     store = onboarding.ProfileStore()
     profile = request_profile(request)
-    if profile.onboarded_at and not store.load(request).position:
+    position = store.load(request).position
+    if profile.onboarded_at and not position:
         return redirect("dashboard")
     cfg = live()
-    return flow.run(request, onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
-                                         region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS)), own_names=onboarding.own_names_of(profile)),
-                    store=store, finish=partial(onboarding.finish, cfg),
-                    then=resolve_url("dashboard"), title="Welcome")
+    steps = onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
+                                region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS)), own_names=onboarding.own_names_of(profile))
+    if not profile.onboarded_at and position >= len(steps) - 1:      # staff sent them back (accounts.services.send_back_to_onboarding) but this session still stands at the last page: start again, not at "you're all set"
+        store.go_to(request, 0)
+    return flow.run(request, steps, store=store, finish=partial(onboarding.finish, cfg), then=resolve_url("dashboard"), title="Welcome")
 
 
 @onboarded

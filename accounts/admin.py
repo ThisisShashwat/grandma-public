@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from accounts import switches
 from accounts.models import Profile
-from accounts.services import set_beta_access, unlink_hackatime
+from accounts.services import send_back_to_onboarding, set_beta_access, unlink_hackatime
 from pages.live import live
 
 User = get_user_model()
@@ -34,13 +34,14 @@ class UserAdmin(BaseUserAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     """Who is let in while BETA_MODE is on. The only thing edited here is beta access, by hand or with the two actions, and every change is
     recorded in the audit log (accounts.services.set_beta_access). One more action clears a Hackatime link (the only way to undo
-    one), also recorded. Profiles are made by the site, never here, and not deleted here."""
+    one), also recorded, and one sends people back to the start of /welcome/ (answers kept), also recorded. Profiles are made by the site, never here,
+    and not deleted here."""
     list_display = ("user", "display_name", "slack_id", "beta_access", "staff")
     list_filter = ("beta_access", "user__is_staff")
     search_fields = ("user__username", "display_name", "slack_id")
     list_select_related = ("user",)
     ordering = ("user__username",)
-    actions = ["give_access", "take_access_away", "unlink_hackatime_account"]
+    actions = ["give_access", "take_access_away", "unlink_hackatime_account", "send_back_to_welcome"]
     # hackatime_token is editable=False and omitted here on purpose: it must never appear in the admin.
     fields = ("user", "display_name", "slack_id", "email", "region", "timezone", "expertise", "onboarded_at", "tutorial_done_at", "beta_access")        # the email is on the detail page only (staff need it to talk to Ari), never a list column or a search field
     readonly_fields = tuple(name for name in fields if name != "beta_access")
@@ -75,6 +76,11 @@ class ProfileAdmin(admin.ModelAdmin):
     def unlink_hackatime_account(self, request, queryset):
         changed = sum(unlink_hackatime(profile, by=request.user) for profile in queryset)
         self.message_user(request, f"Hackatime unlinked from {changed} {'person' if changed == 1 else 'people'}.")
+
+    @admin.action(description="Send back to onboarding", permissions=["change"])
+    def send_back_to_welcome(self, request, queryset):
+        changed = sum(send_back_to_onboarding(profile, by=request.user) for profile in queryset)
+        self.message_user(request, f"{changed} {'person' if changed == 1 else 'people'} sent back to onboarding.")
 
 
 admin.site.unregister(User)

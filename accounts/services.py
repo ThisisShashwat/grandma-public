@@ -32,6 +32,20 @@ def set_beta_access(profile, granted, *, by):
     return True
 
 
+def send_back_to_onboarding(profile, *, by):
+    """Staff put a person back at the start of /welcome/ (a step was added, or a connection was wiped): `onboarded_at` and `tutorial_done_at` are cleared and
+    everything they answered is kept, so the boxes come back filled in. It compares with what is stored now, so a repeat writes nothing. Recorded with no
+    details. Returns whether anything changed. `by` is the staff member."""
+    with transaction.atomic():
+        stored = Profile.objects.select_for_update().select_related("user").get(pk=profile.pk)
+        if stored.onboarded_at is None and stored.tutorial_done_at is None:
+            return False
+        stored.onboarded_at = stored.tutorial_done_at = profile.onboarded_at = profile.tutorial_done_at = None
+        stored.save(update_fields=["onboarded_at", "tutorial_done_at"])
+        audit.record("profile.onboarding_reset", actor=by, subject=stored.user, target=stored, details={})
+    return True
+
+
 @sensitive_variables()
 def unlink_hackatime(profile, *, by):
     """Staff clear a person's Hackatime link (the wrong account, or one that was banned): the id, the connected flag
