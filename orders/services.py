@@ -26,6 +26,7 @@ from shop.models import ShopItem
 from submissions.services import holds_ribbon_user
 
 GONE = "That isn't on my shelf any more, dear."
+RIBBON_ONLY = "That one is for Blue Ribbon holders, dear. Earn a Blue Ribbon first."
 NEEDS_PROOF = "Show me what you're buying, dear: the link and a screenshot of the cart."
 NEEDS_LINK = "Show me what you're buying, dear: the link to it."
 NEEDS_REF = "Paste the reference of the grant you issued before you mark it fulfilled."
@@ -36,9 +37,10 @@ OWN_ORDER = "You cannot decide on your own order. Ask another staff member."
 # reads the pages use
 
 def gettable(slug, ribbon=False):
-    """The base grant with this slug, active: an upgrade is never sold alone, so one gets None. Upgrades come along as `live_upgrades`.
-    A ribbon only grant (or upgrade) is found only when `ribbon` says the person holds a Blue Ribbon: for anybody else it is None, like an unknown slug."""
-    item = ShopItem.objects.visible(ribbon).filter(slug=slug, base_item__isnull=True).first()
+    """The base grant with this slug, active: an upgrade is never sold alone, so one gets None. Upgrades come along as `live_upgrades`: the ones the person
+    may buy, so a ribbon only upgrade is left out unless `ribbon` says they hold a Blue Ribbon. A ribbon only grant IS found for anybody (the order page
+    then says it is for holders: orders/sheet.py `blocked_for`); buying it is refused in `locked_items`."""
+    item = ShopItem.objects.filter(active=True, slug=slug, base_item__isnull=True).first()
     if item is not None:
         item.live_upgrades = list(item.upgrades.visible(ribbon))
     return item
@@ -68,12 +70,18 @@ def line_of(item, quantity, upgrade=False):
 
 def locked_items(item_id, ribbon, lock=True):
     """The base grant (active, never an upgrade) and its active upgrades, rows locked, by id (`lock` off: just read, for precheck, which is not
-    in a transaction). (None, {}) when the grant is gone, or is ribbon only and the person holds no Blue Ribbon (`ribbon`): it is gone for
-    them, whatever the browser said."""
+    in a transaction). (None, {}) when the grant is gone, or is ribbon only and the person holds no Blue Ribbon (`ribbon`): it cannot be bought
+    by them, whatever the browser said (`missing` gives the sentence)."""
     rows = ShopItem.objects.visible(ribbon).filter(Q(pk=item_id) | Q(base_item_id=item_id)).order_by("pk")
     rows = list(rows.select_for_update() if lock else rows)
     base = next((row for row in rows if row.pk == item_id and row.base_item_id is None), None)
     return base, {row.pk: row for row in rows if base and row.base_item_id == base.pk}
+
+
+def missing(item_id, ribbon):
+    """Why `locked_items` found no grant: it is ribbon only and the person holds no Blue Ribbon (RIBBON_ONLY), or it is gone (GONE). A read, only on a refusal."""
+    closed = not ribbon and ShopItem.objects.filter(pk=item_id, active=True, base_item__isnull=True, ribbon_only=True).exists()
+    return RIBBON_ONLY if closed else GONE
 
 
 def chosen_upgrades(base, upgrades, counts):
@@ -124,8 +132,9 @@ def precheck(user, item_id, *, quantity=1, upgrades=None):
     BEFORE the screenshot is decoded, which is the costly part (orders/forms.py). Only a fast refusal, never a promise: place_order checks
     everything again under locks. ValidationError with a sentence for the person."""
     check_daily_cap(user)
-    base, upgrade_items = locked_items(item_id, holds_ribbon_user(user), lock=False)
-    refuse(None if base else GONE)
+    ribbon = holds_ribbon_user(user)
+    base, upgrade_items = locked_items(item_id, ribbon, lock=False)
+    refuse(None if base else missing(item_id, ribbon))
     priced(user, base, chosen_upgrades(base, upgrade_items, upgrades or {}), quantity)
 
 
@@ -141,8 +150,9 @@ def place_order(user, item_id, *, nonce, quantity=1, upgrades=None, product_url=
     if placed:
         return placed
     check_daily_cap(user)
-    base, upgrade_items = locked_items(item_id, holds_ribbon_user(user))
-    refuse(None if base else GONE)
+    ribbon = holds_ribbon_user(user)
+    base, upgrade_items = locked_items(item_id, ribbon)
+    refuse(None if base else missing(item_id, ribbon))
     proves = base.kind == ShopItem.Kind.GRANT
     counts = chosen_upgrades(base, upgrade_items, upgrades or {})
     wants_picture = proves and live().ORDER_CART_SCREENSHOT      # read here, not from the form: with it off no picture is ever stored

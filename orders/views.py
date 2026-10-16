@@ -33,13 +33,14 @@ def form_for(request, item, record, cfg):
     return forms.OrderForm(request.POST, request.FILES, **arguments) if request.method == "POST" else forms.OrderForm(**arguments)
 
 
-def order_page(request, item):
+def order_page(request, item, ribbon):
     """One grant's page. Nothing is placed unless the form is valid and services.place_order accepts it (it checks everything again).
-    A page already posted once (same nonce) just goes on to My orders, so a double click places one order."""
+    A page already posted once (same nonce) just goes on to My orders, so a double click places one order. A ribbon only grant for somebody
+    without a Blue Ribbon (`ribbon`) is the "nothing to order" page: no form is built, so a post places nothing."""
     if request.method == "POST" and services.already_placed(request.user, request.POST.get("nonce")):
         return redirect("dashboard_orders")
     cfg = live()
-    record = sheet.build(request.user, item, cfg, ledger.balance(request.user))
+    record = sheet.build(request.user, item, cfg, ledger.balance(request.user), ribbon)
     form = None if record.blocked else form_for(request, item, record, cfg)       # nothing is decoded for someone who could not place it anyway
     if form is not None and request.method == "POST" and form.is_valid():
         try:
@@ -59,10 +60,11 @@ def order_page(request, item):
 @never_cache
 @require_http_methods(["GET", "HEAD", "POST"])
 def get_grant(request, slug):
-    item = services.gettable(slug, holds_ribbon_user(request.user))      # a ribbon only grant is a plain 404 for anybody without a Blue Ribbon
+    ribbon = holds_ribbon_user(request.user)
+    item = services.gettable(slug, ribbon)      # a ribbon only grant is found for anybody; without a Blue Ribbon its page is the "nothing to order" one
     if item is None:
         raise Http404
-    return order_page(request, item)
+    return order_page(request, item, ribbon)
 
 
 @onboarded

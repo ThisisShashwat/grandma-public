@@ -26,8 +26,8 @@ def standing(user):
 
 @require_safe
 def shop(request):
-    """The public Pantry. Someone who is signed in and let in also sees their jar, and a Blue Ribbon holder also sees the ribbon only items:
-    those responses are never cached; a visitor's page is unchanged (the ribbon only items are not on it at all)."""
+    """The public Pantry. Everybody sees every active item; the ribbon only ones show locked unless the viewer holds a Blue Ribbon. Someone who is signed in
+    and let in also sees their jar: those responses, and a holder's (their ribbon only cards are not locked), are never cached."""
     (jar, held), ribbon = standing(request.user), holds_ribbon_user(request.user)
     response = render(request, "pages/shop.html", {"shop": catalog.build(ribbon=ribbon), "jar": jar, "held": held})
     if jar is not None or ribbon:

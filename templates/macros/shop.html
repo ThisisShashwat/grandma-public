@@ -1,7 +1,9 @@
 {% import "macros/art.html" as art %}
 {% import "macros/ui.html" as ui %}
 {# One thing on a shelf. `p` is a shop.catalog.Product: public fields only (a grant's dollar value is public on purpose). `jar` is the signed-in,
-   onboarded person's cookie balance: with it the card offers the way to get the grant (orders/), without it (a visitor) the card is exactly as it was. #}
+   onboarded person's cookie balance: with it the card offers the way to get the grant (orders/), without it (a visitor) the card is exactly as it was.
+   A ribbon only item is on every viewer's shelf: `p.locked` (no Blue Ribbon) shows it muted with a lock badge and a way to earn one instead of the button, a holder sees
+   a plain "Blue Ribbon only" badge and the button. The server refuses a locked order whatever this page shows (orders/services.py). #}
 
 {% macro usd(v) -%}
 ${{ ("{:,.0f}" if v == v.to_integral_value() else "{:,.2f}").format(v) }}
@@ -12,17 +14,22 @@ about {{ low if low == high else low ~ " to " ~ high }} {{ "hour" if high == 1 e
 {%- endmacro %}
 
 {% macro badge(text, kind="") -%}
-<li class="badge{% if kind %} badge--{{ kind }}{% endif %}">{{ text }}</li>
+<li class="badge{% if kind %} badge--{{ kind }}{% endif %}">{% if kind == "locked" %}<svg class="lock" viewBox="0 0 12 14" aria-hidden="true" focusable="false"><path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="1" y="6" width="10" height="7" fill="currentColor"/></svg>{% endif %}{{ text }}</li>
 {%- endmacro %}
 
 {% macro card(p, jar=none) %}
-<article class="item">
+<article class="item{% if p.locked %} item--locked{% endif %}">
   {{ art.fig(p.art, "", "item-art") }}
   <h3>{{ p.name }}</h3>
   {% if p.tagline %}
   <p class="tagline">{{ p.tagline }}</p>
   {% endif %}
   <ul class="badges">
+    {% if p.locked %}
+    {{ badge("Blue Ribbon holders only", "locked") }}
+    {% elif p.ribbon_only %}
+    {{ badge("Blue Ribbon only", "ribbon") }}
+    {% endif %}
     {% if p.manual %}
     {{ badge(p.kind, "kind") }}
     {% endif %}
@@ -48,7 +55,7 @@ about {{ low if low == high else low ~ " to " ~ high }} {{ "hour" if high == 1 e
     <p class="up-head">{{ ui.mark("Upgrades", "underline") }} top up the same grant</p>
     <ul>
       {% for up in p.upgrades %}
-      <li>+ {{ usd(up.value_usd) }} for {{ "{:,}".format(up.cookies) }} cookies{% if up.max_per_user %}, up to {{ up.max_per_user }} times{% endif %}</li>
+      <li>+ {{ usd(up.value_usd) }} for {{ "{:,}".format(up.cookies) }} cookies{% if up.max_per_user %}, up to {{ up.max_per_user }} times{% endif %}{% if up.locked %} (Blue Ribbon holders only){% endif %}</li>
       {% endfor %}
     </ul>
   </div>
@@ -59,7 +66,9 @@ about {{ low if low == high else low ~ " to " ~ high }} {{ "hour" if high == 1 e
       {% if p.value_usd is not none %}<b>worth {{ usd(p.value_usd) }}</b>{% endif %}
       {{ hours(p.hours_low, p.hours_high) }}
     </p>
-    {% if jar is not none and p.available %}
+    {% if p.locked %}
+    <a class="locked-note" href="{{ url("guide", args=["blue-ribbon"]) }}">Earn a Blue Ribbon to unlock this one.</a>
+    {% elif jar is not none and p.available %}
     <a class="btn get-btn" href="{{ url("get_grant", args=[p.slug]) }}">{{ "Ask Grandma for it" if p.manual else "Get this grant" }}</a>
     {% endif %}
   </div>

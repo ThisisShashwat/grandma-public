@@ -1,6 +1,7 @@
 """A few Pantry items for the home page (admin setting HOME_PANTRY_PEEK, docs/shop.md "The home page peek").
 
-The home page is public, so this always reads the shop as a visitor sees it: never a ribbon only item, even when the viewer holds a Blue Ribbon.
+The home page is public, so this always reads the shop as a visitor sees it: never a ribbon only item (the Pantry shows them locked, a peek skips them),
+even when the viewer holds a Blue Ribbon.
 It hands out the same frozen Product records as the Pantry, never a model.
 
 The pick is kept in memory for PEEK_SECONDS per process, the same pattern as pages/live.py, so a crowd or a crawler on the home page does not read the shop
@@ -25,12 +26,12 @@ _cache = {}                # count -> (expires at, picks), one per process
 
 
 def read(count):
-    """The first `count` products of the Pantry in shop order (shelf by shelf), skipping the by hand ones and the sold out ones, which a peek does not need,
+    """The first `count` products of the Pantry in shop order (shelf by shelf), skipping the by hand ones, the sold out ones and the locked (ribbon only) ones, which a peek does not need,
     and keeping only the items ticked "Show on the home page" in the admin. The tick is not in the public Product record (that list is pinned): it is read as
     a set of slugs beside it, in the same cached read."""
     ticked = set(ShopItem.objects.filter(show_on_home=True).values_list("slug", flat=True))
     shelved = (product for shelf in catalog.build(ribbon=False).shelves for product in shelf.products)
-    return tuple(islice((p for p in shelved if p.available and not p.manual and p.slug in ticked), count))
+    return tuple(islice((p for p in shelved if p.available and not p.manual and not p.locked and p.slug in ticked), count))
 
 
 def pick(count):

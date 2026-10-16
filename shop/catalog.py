@@ -3,7 +3,8 @@
 This is the privacy boundary (docs/security.md). Templates only ever receive these objects, never a model instance, so
 anything not listed here (the rate class, the markup, a by-hand item's cost, the override, inactive items) cannot leak
 through a template by accident. A grant's dollar value IS public, on purpose (owner's decision, docs/decisions.md).
-Add a field only after asking whether a visitor may know it.
+Add a field only after asking whether a visitor may know it. `ribbon_only` and `locked` are public on purpose (owner, 2026-10-16): everybody sees
+every active item, and a ribbon only one shows locked for anybody who holds no Blue Ribbon.
 """
 from dataclasses import dataclass
 from decimal import Decimal
@@ -29,6 +30,7 @@ class Upgrade:
     value_usd: Decimal
     cookies: int
     max_per_user: int | None        # None = no limit
+    locked: bool                    # ribbon only and the viewer holds no Blue Ribbon
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,8 @@ class Product:
     hours_low: int                  # about how many hours of work the price is
     hours_high: int
     upgrades: tuple[Upgrade, ...]
+    ribbon_only: bool               # only Blue Ribbon holders may buy it (it is shown to everybody)
+    locked: bool                    # ribbon_only and the viewer holds no Blue Ribbon
 
 
 @dataclass(frozen=True)
@@ -65,11 +69,11 @@ class Catalog:
     shelves: tuple[Shelf, ...]
 
 
-def _upgrade(item):
-    return Upgrade(item.name, item.usd_value, item.effective_cookies, item.max_per_user)
+def _upgrade(item, ribbon):
+    return Upgrade(item.name, item.usd_value, item.effective_cookies, item.max_per_user, item.ribbon_only and not ribbon)
 
 
-def _product(item):
+def _product(item, ribbon):
     grant = item.kind == ShopItem.Kind.GRANT
     low, high = payout.hours_range(item.effective_cookies)
     return Product(
@@ -77,7 +81,7 @@ def _product(item):
         category=item.category, kind=item.get_kind_display(), manual=not grant, stackable=item.stackable,
         max_per_user=item.max_per_user if item.stackable else 1, stock_left=item.stock, available=item.stock != 0,
         cookies=item.effective_cookies, value_usd=item.usd_value if grant else None, hours_low=low, hours_high=high,
-        upgrades=tuple(_upgrade(up) for up in item.live_upgrades),
+        upgrades=tuple(_upgrade(up, ribbon) for up in item.live_upgrades), ribbon_only=item.ribbon_only, locked=item.ribbon_only and not ribbon,
     )
 
 
@@ -87,9 +91,10 @@ def _shelves(products):
 
 
 def build(*, ribbon=False):
-    """The shop as one viewer may see it. The only function the views call. `ribbon` says the viewer holds a Blue Ribbon: only then do the
-    ribbon only items (and ribbon only upgrades) appear. Nothing is cached, so one viewer's shelves never reach another."""
-    upgrades = Prefetch("upgrades", ShopItem.objects.visible(ribbon), to_attr="live_upgrades")
-    items = ShopItem.objects.visible(ribbon).filter(base_item__isnull=True).prefetch_related(upgrades)
-    products = [_product(item) for item in items]
+    """The shop as one viewer sees it. The only function the views call. Every active item and upgrade is listed; `ribbon` says the viewer holds a
+    Blue Ribbon, and without one the ribbon only items and upgrades come out `locked` (buying them is refused in orders/, not here). Nothing is
+    cached, so one viewer's shelves never reach another."""
+    upgrades = Prefetch("upgrades", ShopItem.objects.filter(active=True), to_attr="live_upgrades")
+    items = ShopItem.objects.filter(active=True, base_item__isnull=True).prefetch_related(upgrades)
+    products = [_product(item, ribbon) for item in items]
     return Catalog(shelves=_shelves(products))

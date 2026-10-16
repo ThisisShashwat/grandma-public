@@ -45,18 +45,20 @@ def most_of(item, held):
     return left if item.stock is None else min(left, item.stock)
 
 
-def blocked_for(item, held, balance):
-    """Why the page offers no form: sold out, held already, or not enough cookies even for one."""
+def blocked_for(item, held, balance, ribbon):
+    """Why the page offers no form: a ribbon only grant and no Blue Ribbon (`ribbon`), sold out, held already, or not enough cookies even for one."""
+    if item.ribbon_only and not ribbon:
+        return services.RIBBON_ONLY
     if problem := rules.stock_problem(item.stock, 1) or rules.limit_problem(item.stackable, item.max_per_user, held, 1):
         return problem
     return rules.afford_problem(balance, item.effective_cookies)
 
 
-def build(user, item, cfg, balance):
-    """The sheet for `item` (a base grant from services.gettable) and this person."""
+def build(user, item, cfg, balance, ribbon):
+    """The sheet for `item` (a base grant from services.gettable) and this person; `ribbon` says they hold a Blue Ribbon."""
     held = services.held(user, item.pk)
     return Sheet(
         slug=item.slug, name=item.name, tagline=item.tagline, art=item.art, description=item.description,
         manual=item.kind == item.Kind.MANUAL, stackable=item.stackable, cookies=item.effective_cookies, value=item.usd_value if item.kind == item.Kind.GRANT else None,
-        most=most_of(item, held), held=held, balance=balance, blocked=blocked_for(item, held, balance),
+        most=most_of(item, held), held=held, balance=balance, blocked=blocked_for(item, held, balance, ribbon),
         options=tuple(option(u) for u in item.live_upgrades))

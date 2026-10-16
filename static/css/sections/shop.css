@@ -47,6 +47,7 @@
 .badge--kind { background: var(--note-blue); }
 .badge--stock { background: var(--note-pink); }
 .badge--out { background: var(--red); color: var(--canvas); }
+.badge--ribbon { background: var(--ribbon); color: var(--canvas); }
 .item details { font-size: 1rem; }
 .item summary { font-family: var(--display); font-size: 1.25rem; }
 .item details p { margin: 0.4rem 0 0; white-space: pre-line; }
@@ -66,6 +67,11 @@
 .items > li:nth-child(3n+3) .price-tag { background: var(--note-blue); rotate: -1deg; }
 .worth { margin: 0; font-size: 0.95rem; line-height: 1.25; }
 .worth b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; }
+
+/* a ribbon only item for somebody without a Blue Ribbon: the same card, muted, with a dashed ink edge, a lock on its badge and a way to earn one instead of the button */
+.item--locked { border-style: dashed; opacity: 0.75; }
+.lock { width: 0.7em; height: 0.85em; margin-right: 0.35em; vertical-align: -0.05em; }
+.locked-note { margin-top: 0.3rem; font-size: 1rem; line-height: 1.25; color: inherit; text-decoration: underline dotted; }
 
 /* nothing on the shelves */
 .empty {
