@@ -10,6 +10,7 @@ from accounts.models import FILLED_IN
 from accounts.validators import canonical_timezone, polite_unless, validate_display_name
 from accounts.services import profile_of, request_profile
 from audit import services as audit
+from pages.live import live
 from program.content import regions, slack_channels
 from program.tutorial import offers_skip, parts
 from talk.dialogue import State
@@ -93,7 +94,7 @@ def invite_to_channels(cfg, request, profile):
 
 
 def finish(cfg, request, answers):
-    """Called once, when the last step before the end is answered: they are onboarded, and invited to the Slack channels when they said yes. Safe to run twice."""
+    """Called once, when the last step before the end is answered: they are onboarded. Safe to run twice."""
     profile = request_profile(request)
     first_time = not profile.onboarded_at
     profile.onboarded_at = profile.onboarded_at or timezone.now()
@@ -104,16 +105,24 @@ def finish(cfg, request, answers):
         profile.save()
         if first_time:
             audit.record("onboarding.finish", actor=request.user, subject=request.user, target=profile)
-        if answers.get("slack_channels") == "yes" and can_invite(cfg, profile):
-            invite_to_channels(cfg, request, profile)
 
 
 class ProfileStore(SessionStore):
     """The place in the dialogue lives in the session, like any dialogue. Each answer goes into the person's Profile the
-    moment it is given, so closing the tab loses nothing but the place (the answers come back as the boxes' starting values)."""
+    moment it is given, so closing the tab loses nothing but the place (the answers come back as the boxes' starting values). The Slack channels
+    are the one answer that is acted on at once: a yes invites them there and then, not at the end, so a tab closed after the yes still gets the invite."""
 
-    def __init__(self):
+    def __init__(self, cfg=None):
         super().__init__("welcome")
+        self.cfg = cfg
+
+    def invite_on_first_yes(self, request, state):
+        """The moment `slack_channels` becomes yes (it was not yes in the session before this save), invite them. Later saves still carry the yes and invite nobody again."""
+        if state.answers.get("slack_channels") != "yes" or super().load(request).answers.get("slack_channels") == "yes":
+            return
+        cfg, profile = self.cfg or live(), request_profile(request)
+        if can_invite(cfg, profile):
+            invite_to_channels(cfg, request, profile)
 
     def load(self, request):
         state = super().load(request)
@@ -122,6 +131,7 @@ class ProfileStore(SessionStore):
         return State(state.position, saved | state.answers)
 
     def save(self, request, state):
+        self.invite_on_first_yes(request, state)
         profile = request_profile(request)
         answers = {key: canonical_timezone(value) if key == "timezone" else value for key, value in state.answers.items()}
         changed = [key for key in FILLED_IN if key in answers and getattr(profile, key) != answers[key]]

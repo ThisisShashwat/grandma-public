@@ -26,3 +26,8 @@ class SessionStore:
         saved = request.session.get(self.key) or {"position": 0, "answers": {}}
         request.session[self.key] = {**saved, "position": position}
 
+    def forget(self, request, key):
+        """Drop one stored answer and nothing else (no database work, the place stays)."""
+        saved = request.session.get(self.key)
+        if saved:
+            request.session[self.key] = {**saved, "answers": {k: v for k, v in saved["answers"].items() if k != key}}
