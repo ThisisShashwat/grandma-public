@@ -54,8 +54,9 @@ class RateClass(models.Model):
 
 class ShopItemQuerySet(models.QuerySet):
     def visible(self, ribbon):
-        """What a person may see and buy: the active items, and the ribbon only ones only when they hold a Blue Ribbon (`ribbon`).
-        For anybody else a ribbon only item does not exist: this is the one place that says so."""
+        """What a person may BUY: the active items, and the ribbon only ones only when they hold a Blue Ribbon (`ribbon`). Everybody sees every active
+        item on the Pantry (a ribbon only one shows locked, shop/catalog.py), but for buying, a ribbon only item is gone for anybody else: this is the one
+        place that says so."""
         items = self.filter(active=True)
         return items if ribbon else items.filter(ribbon_only=False)
 
@@ -98,7 +99,7 @@ class ShopItem(models.Model):
         help_text="Set this to make the item an UPGRADE of that base grant: it tops up the same card and is never sold alone.",
     )
     active = models.BooleanField(default=True)
-    ribbon_only = models.BooleanField(default=False, help_text="Only people who hold a Blue Ribbon can see and buy this item. Everybody else does not know it exists.")
+    ribbon_only = models.BooleanField(default=False, help_text="Everybody sees this item in the Pantry, but only people who hold a Blue Ribbon can buy it. For everybody else it shows locked.")
     show_on_home = models.BooleanField(default=True, help_text="Show it in the Pantry peek on the home page, while the peek is switched on in the settings. "
                                        "The peek takes the first ticked items in shop order and skips by hand and sold out ones. Untick to keep an item on the shelves only.")
     sort_order = models.PositiveSmallIntegerField(default=0)
