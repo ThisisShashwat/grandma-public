@@ -1,12 +1,13 @@
 """Onboarding at /welcome/: the dialogue, who sees how much tutorial, and where the answers are kept."""
 from dataclasses import replace
+from datetime import timedelta
 from functools import partial
 
 from django.db import transaction
 from django.utils import timezone
 
 from accounts import hackatime, identity, script, slack
-from accounts.models import FILLED_IN
+from accounts.models import FILLED_IN, Profile
 from accounts.validators import canonical_timezone, polite_unless, validate_display_name
 from accounts.services import profile_of, request_profile
 from audit import services as audit
@@ -91,6 +92,23 @@ def invite_to_channels(cfg, request, profile):
     channels = slack_channels.ids(cfg.SLACK_CHANNEL_IDS)
     audit.record("slack.invite_requested", actor=request.user, subject=request.user, target=profile, details={"channels": len(channels)})
     transaction.on_commit(partial(slack.in_background, slack.invite, profile.slack_id, channels))
+
+
+INVITE_LIMIT, INVITE_WINDOW = 3, timedelta(hours=1)        # presses of the settings button per person per rolling hour (the onboarding yes counts: it writes the same audit action)
+
+
+def invite_from_settings(cfg, request):
+    """The settings page button: add the signed in person to the Slack channels, under their Profile's lock so two quick presses cannot both fit under the limit.
+    "" when nothing was asked (the feature is off for them: nobody is told why), "slow" when they pressed INVITE_LIMIT times in the last INVITE_WINDOW (counted from the
+    audit log, nothing written), else "done"."""
+    with transaction.atomic():
+        profile = Profile.objects.select_for_update().get(user=request.user)
+        if not can_invite(cfg, profile):
+            return ""
+        if audit.count_since("slack.invite_requested", request.user, timezone.now() - INVITE_WINDOW) >= INVITE_LIMIT:
+            return "slow"
+        invite_to_channels(cfg, request, profile)
+    return "done"
 
 
 def finish(cfg, request, answers):

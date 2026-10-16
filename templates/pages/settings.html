@@ -20,7 +20,11 @@
 
     <div class="submit-main">
       <div class="talk-bubble submit-bubble">
-        {% if saved == "changed" %}
+        {% if slack_said == "done" %}
+        <p>Done, dear. It can take a minute.</p>
+        {% elif slack_said == "slow" %}
+        <p>Not so fast, dear. Try again in a little while.</p>
+        {% elif saved == "changed" %}
         <p>There. I've crossed out the old and written in the new, dear.</p>
         {% elif saved == "same" %}
         <p>Nothing's different, dear, so I've left my book alone.</p>
@@ -75,6 +79,17 @@
           <a class="btn btn--plain" href="{{ url('dashboard') }}">Back to my dashboard</a>
         </p>
       </form>
+
+      {% if slack_offer %}
+      <form class="submit-note" method="post" action="{{ url('slack_channels') }}">
+        {{ csrf_input }}
+        <div class="nf">
+          <span class="nf-label">The Slack channels</span>
+          <p class="nf-status">Want to be in the Slack channels, dear? #grandma, #grandma-help and #grandma-bulletin. I'll add you.</p>
+        </div>
+        <p class="submit-actions"><button class="btn">Add me to the channels</button></p>
+      </form>
+      {% endif %}
     </div>
   </div>
 </section>

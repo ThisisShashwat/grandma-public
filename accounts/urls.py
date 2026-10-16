@@ -16,5 +16,6 @@ urlpatterns = [
     path("csrf/", views.csrf_token, name="csrf_token"),          # the Log out button of the always identical header fetches its token here
     path("welcome/", views.welcome, name="welcome"),
     path("settings/", views.settings_page, name="settings"),     # the display name, time zone and region, after onboarding
+    path("settings/slack/", views.slack_channels, name="slack_channels"),     # POST only: add me to the Slack channels (a button on the settings page, only when the feature is on)
     path("beta/", views.beta, name="beta"),
 ]

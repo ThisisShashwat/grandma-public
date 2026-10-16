@@ -17,3 +17,8 @@ def record(action, *, actor=None, subject=None, target=None, details=None):
         details=details,
         request_id=current.get(),
     )
+
+
+def count_since(action, subject, since):
+    """How many entries of this action are about this person since `since`: the count behind a rolling limit (no counter table). Read only."""
+    return AuditEntry.objects.filter(action=action, subject=subject, created_at__gte=since).count()

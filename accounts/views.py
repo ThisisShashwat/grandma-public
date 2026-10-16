@@ -108,12 +108,26 @@ def settings_page(request):
             request.session["settings_saved"] = "changed" if changed else "same"
             return redirect("settings")
     saved = request.session.pop("settings_saved", "") if request.method == "GET" else ""
+    slack_said = request.session.pop("settings_slack", "") if request.method == "GET" else ""
     file, alt = portrait("approved" if saved == "changed" else "sideeye" if form.errors else "clipboard")
     connect = hackatime.enabled(cfg) and not profile.hackatime_connected
     return render(request, "pages/settings.html", {
         "form": form, "saved": saved, "regions": rows, "zones": suggested_timezones(), "portrait": {"file": file, "alt": alt},
+        "slack_offer": onboarding.can_invite(cfg, profile), "slack_said": slack_said,
         "hack_club": bool(profile.hca_sub), "hackatime": profile.hackatime_connected,
         "hackatime_link": f"{reverse('connect_hackatime')}?{urlencode({'next': reverse('settings')})}" if connect else ""})
+
+
+@onboarded
+@never_cache
+@require_http_methods(["POST"])
+def slack_channels(request):
+    """Settings: add the signed in person to the Slack channels (for those never asked, or who said no). Nothing in the request is read: the person is the signed in one
+    and the Slack ID is the one on their Profile. Switched off for them, nothing happens and nothing says why. POST then redirect; the answer is shown once, from the session."""
+    outcome = onboarding.invite_from_settings(live(), request)
+    if outcome:
+        request.session["settings_slack"] = outcome
+    return redirect("settings")
 
 
 @login_required
