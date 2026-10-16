@@ -64,12 +64,16 @@ def shown(cookie_amount):
     return int(cookie_amount + 0.5)
 
 
+UPPER_HOURS_SHARE = 0.8        # the owner, 2026-10-17: the "most" end of a price's hours is cut by a fifth, because nobody builds the plainest project: people stack modifiers
+
+
 def hours_range(cookie_amount):
     """About how many hours of work a cookie price is: (fewest, most), as whole hours, at least 1.
-    The fewest comes from the best pay rate (base x cap, a full stack), the most from the worst (base, no demand)."""
+    The fewest comes from the best pay rate (base x cap, a full stack), the most from the worst (base, no demand) cut by UPPER_HOURS_SHARE."""
     worst = CONFIG["base"] * CONFIG["cookies_per_usd"]
     best = worst * CONFIG["cap"]
-    return max(1, shown(cookie_amount / best)), max(1, shown(cookie_amount / worst))
+    low = max(1, shown(cookie_amount / best))
+    return low, max(low, shown(cookie_amount / worst * UPPER_HOURS_SHARE))
 
 
 def face(tiers=(), hours=0, quality=False, ribbon=False, hours_max=None, ribbon_holder=False):
