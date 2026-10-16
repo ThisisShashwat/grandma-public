@@ -233,8 +233,8 @@ def review(submission, *, by, max_rounds, now=None):
     the person has been handed the result: the check is made under a lock on the row, so a form opened before the handover cannot
     change it. ValidationError (a sentence for the reviewer, rules.review_problem) for changes requested without a note, or newly asked
     for on the last round (`max_rounds` is the MAX_ROUNDS setting; a row that already has changes requested is not asked again);
-    nothing is saved then. When changes are newly asked for, the Slack notice is registered to go out only once the transaction has
-    committed (notices.tell_changes_requested: switched off by default, and it never raises). ValidationError (OWN_PROJECT) when `by` is the
+    nothing is saved then. When a decision is newly made (changes requested, approved or rejected), the Slack notice is registered to go out only once the transaction has
+    committed (notices.tell: switched off by default, and it never raises). ValidationError (OWN_PROJECT) when `by` is the
     person who made the project, whoever they are: nobody reviews their own work, and nothing is saved."""
     current = Submission.objects.select_for_update().select_related("project__user").get(pk=submission.pk)
     if current.claimed_at is not None:
@@ -259,8 +259,8 @@ def review(submission, *, by, max_rounds, now=None):
         target=submission,
         details=review_details(submission),
     )
-    if rules.newly_asked_for_changes(current.status, submission.status):
-        transaction.on_commit(partial(notices.tell_changes_requested, submission.pk))
+    if rules.newly_decided(current.status, submission.status):
+        transaction.on_commit(partial(notices.tell, submission.pk, submission.status))
     return submission
 
 
@@ -361,8 +361,8 @@ def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours
     current.reviewed_by, current.reviewed_at, current.cookies_awarded = None, now or timezone.now(), cookies_for(current)
     current.save(update_fields=ARI_FIELDS)
     audit.record("submission.review", subject=current.project.user, target=current, details=review_details(current) | ari_details(event, delivery))
-    if rules.newly_asked_for_changes(was, status):
-        transaction.on_commit(partial(notices.tell_changes_requested, current.pk))
+    if rules.newly_decided(was, status):
+        transaction.on_commit(partial(notices.tell, current.pk, status))
     return rules.APPLIED
 
 

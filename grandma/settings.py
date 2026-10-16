@@ -42,6 +42,7 @@ PREVIEW_PASSWORD = env("PREVIEW_PASSWORD", default="")           # a private pre
 if PREVIEW_PASSWORD and len(PREVIEW_PASSWORD) < 12:
     raise ImproperlyConfigured("PREVIEW_PASSWORD must be at least 12 characters long (or empty, which switches the preview gate off).")
 SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN", default="")             # the program's Slack bot (accounts/slack.py). A secret: environment only, never the admin or the database
+SLACK_SYNC = env.bool("SLACK_SYNC", default=False)               # False: a Slack call runs in a short lived background thread, never in the request. True: it runs at once, in the caller (the tests, pytest.ini)
 HCA_CLIENT_ID = env("HCA_CLIENT_ID", default="")                 # Sign in with Hack Club (accounts/hca.py). The id and the secret: environment only, never the admin or the database
 HCA_CLIENT_SECRET = env("HCA_CLIENT_SECRET", default="")
 HCA_ISSUER = env("HCA_ISSUER", default="https://auth.hackclub.com")

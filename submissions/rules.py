@@ -79,9 +79,10 @@ def ari_hours_problem(hours):
     return ""
 
 
-def newly_asked_for_changes(was, status):
-    """Whether saving `status` over `was` is the moment changes get asked for: not a row that already has them, not any other decision."""
-    return status == CHANGES_REQUESTED and was != CHANGES_REQUESTED
+def newly_decided(was, status):
+    """Whether saving `status` over `was` is the moment the person is told a decision (changes requested, approved or rejected): a decision the row did not already have.
+    Putting a row back to handed in is not one, and neither is saving the same decision again."""
+    return status in REVIEWED and was != status
 
 
 def award(status, tiers, hours, quality, ribbon, ribbon_holder=False):
