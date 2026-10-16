@@ -27,3 +27,6 @@ dev.env*
 *.env.txt
 *env.local
 secrets*.txt
+
+# a scratch SQLite database for looking at pages locally (tools/scratch_session.py), never committed
+.scratch/
