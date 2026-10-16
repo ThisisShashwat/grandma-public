@@ -34,10 +34,6 @@ Pick some demands, slide the hours, and watch her face. The face is a mood meter
 
 <div data-widget="payout-calculator"></div>
 
-::: note
-Example numbers only. Final cookie amounts are set at launch.
-:::
-
 ## When you get paid
 
 After a reviewer checks your project and your hours. Then Grandma hands the cookies over herself, the next time you visit. Projects are reviewed in the order they are handed in, and there is no fixed date.
