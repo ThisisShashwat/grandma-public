@@ -6,6 +6,7 @@ NEEDS = (      # (the admin switch, what it is, the settings names that must be 
     ("HCA_LOGIN", "Sign in with Hack Club", ("HCA_CLIENT_ID", "HCA_CLIENT_SECRET")),
     ("HACKATIME_ENABLED", "Hackatime", ("HACKATIME_CLIENT_ID", "HACKATIME_CLIENT_SECRET", "HACKATIME_TOKEN_KEYS")),
     ("SLACK_NOTIFICATIONS", "Slack notices", ("SLACK_BOT_TOKEN",)),
+    ("SLACK_CHANNEL_IDS", "Slack channel invites", ("SLACK_BOT_TOKEN",)),
     ("ARI_ENABLED", "Ari reviews", ("ARI_PROGRAM_ID", "ARI_INGEST_SECRET", "ARI_OUTBOUND_SECRET")),
 )
 

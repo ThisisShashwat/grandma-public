@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 
 from program import submission
-from program.content import regions
+from program.content import regions, slack_channels
 
 ISO_WITH_ZONE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})")
 _web_url = URLValidator(schemes=["http", "https"])
@@ -66,6 +66,19 @@ class HostsField(forms.CharField):
     def clean(self, value):
         try:
             return "\n".join(submission.parse_hosts(super().clean(value)))
+        except ValueError as error:
+            raise ValidationError(str(error)) from None
+
+
+class SlackChannelsField(forms.CharField):
+    """Slack channel IDs, comma separated (program/content/slack_channels.py). May be empty (no invites). Saved as IDs joined by ", "."""
+
+    def __init__(self, **kwargs):
+        super().__init__(required=False, max_length=200, **kwargs)
+
+    def clean(self, value):
+        try:
+            return ", ".join(slack_channels.parse(super().clean(value)))
         except ValueError as error:
             raise ValidationError(str(error)) from None
 

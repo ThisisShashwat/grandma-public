@@ -75,8 +75,11 @@ CONFIG = {
     "HOME_PEEK_COUNT": (4, "How many items each home page peek shows, 1 to 12 (the Pantry peek and the Blue Ribbon wall peek). The Pantry peek takes the first ticked ones in shop order "
                            "and skips by hand items and sold out items; the wall peek takes the newest.", "peek_count"),
 
-    "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when you ask for changes on a project. It needs the bot token in the environment "
-                                   "(SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
+    "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when a project is approved, rejected or needs changes (the message only says to come to the dashboard). "
+                                   "It needs the bot token in the environment (SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
+    "SLACK_CHANNEL_IDS": ("", "The Slack channels onboarding offers to add a new person to, as channel IDs (C followed by capital letters and digits, from the bottom of each channel's "
+                              "About tab in Slack), separated by commas, at most 5. The bot must already be a member of each channel (add the app to it by hand). Empty (the default) "
+                              "means the question is never asked and nobody is added. It needs the bot token in the environment (SLACK_BOT_TOKEN, never set here).", "slack_channels"),
 
     "HCA_LOGIN": (False, "When on, /login/ redirects everybody straight to Hack Club (there is no password form), "
                          "the first sign-in makes their account which stays outside the beta until staff give it access, "
@@ -117,7 +120,7 @@ FIELDSETS = (
     ("Suggestion board", ("SUGGEST_COST", "VOTE_COST")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Home page", ("HOME_PANTRY_PEEK", "HOME_RIBBON_PEEK", "HOME_PEEK_COUNT")),
-    ("Notifications", ("SLACK_NOTIFICATIONS",)),
+    ("Notifications", ("SLACK_NOTIFICATIONS", "SLACK_CHANNEL_IDS")),
     ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED", "ARI_ENABLED")),
     ("Onboarding questions", ("REGIONS",)),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
@@ -136,6 +139,7 @@ FIELDS = {
     "checks": ("pages.fields.ChecksField",),
     "hosts": ("pages.fields.HostsField",),
     "regions": ("pages.fields.RegionsField",),
+    "slack_channels": ("pages.fields.SlackChannelsField",),
     "megabytes": ("django.forms.IntegerField", {"min_value": 1, "max_value": 20}),
     "rounds": ("django.forms.IntegerField", {"min_value": 1, "max_value": 10}),         # the ceiling is submissions.rules.MAX_ROUND_LIMIT (a test pins them)
     "pixels": ("django.forms.IntegerField", {"min_value": 500, "max_value": 10000}),
