@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{# The Pantry peek: on by default (admin setting HOME_PANTRY_PEEK; each shop item has a "Show on the home page" tick). `peek` is the shop's first few ticked items
+{# The Pantry peek: on by default (admin setting HOME_PANTRY_PEEK; each shop item has a "Show on the home page" tick). `peek` is every ticked item of the shop
    (shop/peek.py, kept in memory for a minute), empty when the switch is off or the shop has nothing to show: then nothing below renders. #}
-{% set peek = pantry_peek(home_peek_count) %}
+{% set peek = pantry_peek() if home_pantry_peek else () %}
 {# The Blue Ribbon wall peek: the same kind of switch, HOME_RIBBON_PEEK (default off). `ribbon_peek` is the wall's newest projects (showcase/peek.py), empty when off or the wall is empty. #}
 {% set ribbon_peek = ribbon_wall_peek(home_ribbon_count) %}
 

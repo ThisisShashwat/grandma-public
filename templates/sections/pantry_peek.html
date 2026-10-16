@@ -2,8 +2,9 @@
 {% import "macros/art.html" as art %}
 {% import "macros/ui.html" as ui %}
 {# The home page's peek into the Pantry (on by default, admin setting HOME_PANTRY_PEEK; each item has a "Show on the home page" tick). `peek` is a tuple of shop.catalog.Product:
-   public fields only. A thin row of cards that scrolls sideways on a narrow screen. Each card is ONE link to the Pantry (there is no page per item, and never a buy button
-   here), with the picture, the name, the hours range the shop shows ("about 4 to 8 hours": macros/shop.html) and the cookie price, all of it under the scribble (text after a mark would be covered by its end). Styles: static/css/sections/shop.css. #}
+   public fields only, every ticked item with no limit. A single row of cards in a box that scrolls sideways at every width (focusable, so the keyboard reaches it). Each card is ONE link to the Pantry
+   (there is no page per item, and never a buy button here), with the picture, the name, a small badge when the item is locked (Blue Ribbon only), by hand or sold out (the Pantry's own badges),
+   the hours range the shop shows ("about 4 to 8 hours": macros/shop.html) and the cookie price, all of it under the scribble (text after a mark would be covered by its end). Styles: static/css/sections/shop.css. #}
 <section class="scene" id="pantry-peek">
   <div class="wrap">
     <div class="peek-head">
@@ -11,17 +12,26 @@
       <a class="peek-more" href="{{ url('shop') }}">See the whole Pantry</a>
     </div>
     <p class="shelf-blurb">A few things Grandma keeps on her shelves. Cookies pay for every one.</p>
-    <ul class="items peek-row">
-      {% for p in peek %}
-      <li>
-        <a class="item peek-card" href="{{ url('shop') }}">
-          {{ art.fig(p.art, "", "item-art") }}
-          <h3>{{ p.name }}</h3>
-          <p class="worth">{{ shopui.hours(p.hours_low, p.hours_high) }}</p>
-          <p class="peek-price">{{ ui.mark("{:,} cookies".format(p.cookies)) }}</p>
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
+    <div class="peek-scroll" role="region" aria-label="Pantry items, scroll sideways" tabindex="0">
+      <ul class="items peek-row">
+        {% for p in peek %}
+        <li>
+          <a class="item peek-card" href="{{ url('shop') }}">
+            {{ art.fig(p.art, "", "item-art") }}
+            <h3>{{ p.name }}</h3>
+            {% if p.locked or p.manual or not p.available %}
+            <ul class="badges">
+              {% if p.locked %}{{ shopui.badge("Blue Ribbon holders only", "locked") }}{% endif %}
+              {% if p.manual %}{{ shopui.badge(p.kind, "kind") }}{% endif %}
+              {% if not p.available %}{{ shopui.badge("sold out", "out") }}{% endif %}
+            </ul>
+            {% endif %}
+            <p class="worth">{{ shopui.hours(p.hours_low, p.hours_high) }}</p>
+            <p class="peek-price">{{ ui.mark("{:,} cookies".format(p.cookies)) }}</p>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 </section>
