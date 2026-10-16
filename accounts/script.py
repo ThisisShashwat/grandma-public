@@ -70,7 +70,7 @@ def hackatime_connected_step(enabled=False, connected=False):
 def slack_channels_steps(enabled=False):
     """The question about the three Slack channels and her word after the answer (yes adds them when onboarding finishes: accounts/onboarding.py). No steps at all unless
     `enabled` (the token, the channel IDs and a Hack Club Slack ID are all there), so the dialogue is exactly as before. The answer lives only in the dialogue, never on the Profile.
-    Draft copy by Claude, 2026-10-16, for the owner to read."""
+    Draft copy, 2026-10-16, for the owner to read."""
     if not enabled:
         return []
     return [
