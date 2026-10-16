@@ -315,10 +315,10 @@ _hackatime, _hca = urlsplit(HACKATIME_BASE_URL), urlsplit(HCA_ISSUER)
 CSP_POLICY = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, *CSP_SCRIPTS],
-    "style-src": [CSP.SELF, CSP.NONCE, ROUGH_NOTATION_STYLE, "https://fonts.googleapis.com"],
+    "style-src": [CSP.SELF, CSP.NONCE, ROUGH_NOTATION_STYLE],
     "style-src-attr": [CSP.UNSAFE_INLINE],
     "img-src": [CSP.SELF, "data:", *([f"https://{_r2_public.netloc}"] if R2_ENABLED else [])],
-    "font-src": [CSP.SELF, "https://fonts.gstatic.com"],
+    "font-src": [CSP.SELF],
     "connect-src": [CSP.SELF],
     "object-src": [CSP.NONE],
     "base-uri": [CSP.SELF],

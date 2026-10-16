@@ -86,7 +86,7 @@
 .callout--note { background: var(--note-blue); rotate: -0.3deg; }
 .callout-title { margin: 0 0 0.2rem; font-family: var(--display); font-size: 1.6rem; line-height: 1; }
 
-/* ::: faq questions: an expandable <details> each, the home page's FAQ look (4px ink border, a small tilt, the question in Gochi Hand,
+/* ::: faq questions: an expandable <details> each, the home page's FAQ look (4px ink border, a small tilt, the question in the display font,
    + and -). Not exclusive like the home page's: any number may be open. */
 .faq-item { margin: 1rem 0; background: var(--canvas); border: var(--line) solid var(--ink); }
 .faq-item:nth-of-type(odd) { rotate: -0.3deg; }
