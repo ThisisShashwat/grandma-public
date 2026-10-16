@@ -1,15 +1,16 @@
 """Onboarding at /welcome/: the dialogue, who sees how much tutorial, and where the answers are kept."""
 from dataclasses import replace
+from functools import partial
 
 from django.db import transaction
 from django.utils import timezone
 
-from accounts import hackatime, identity, script
+from accounts import hackatime, identity, script, slack
 from accounts.models import FILLED_IN
 from accounts.validators import canonical_timezone, polite_unless, validate_display_name
 from accounts.services import profile_of, request_profile
 from audit import services as audit
-from program.content import regions
+from program.content import regions, slack_channels
 from program.tutorial import offers_skip, parts
 from talk.dialogue import State
 from talk.store import SessionStore
@@ -59,9 +60,14 @@ def own_names_of(profile):
     return identity.own_names(profile.identity) | given
 
 
-def dialogue(cfg, hackatime_connected=False, slack_known=False, region_guess="", own_names=frozenset()):
-    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime and whether their Slack ID is already known.
-    The name is always asked: a Hack Club first name is already among the answers (ProfileStore.load), so it is the box's starting value."""
+def can_invite(cfg, profile):
+    """Whether this person is offered the Slack channels: the feature is on (slack.invites_on) and the Slack ID is the one Hack Club gave (a typed one is never trusted)."""
+    return bool(profile.hca_sub and profile.slack_id and slack.invites_on(cfg))
+
+
+def dialogue(cfg, hackatime_connected=False, slack_known=False, region_guess="", own_names=frozenset(), slack_invite=False):
+    """The whole of onboarding as a list of steps, for the admin settings in `cfg` (pages.live.live()), whether this person has connected Hackatime, whether their Slack ID is already known
+    and whether they are offered the Slack channels (`can_invite`). The name is always asked: a Hack Club first name is already among the answers (ProfileStore.load), so it is the box's starting value."""
     questions = [question(step, cfg, slack_known, region_guess, own_names) for step in script.QUESTIONS]
     on = hackatime.enabled(cfg)
     return [
@@ -73,12 +79,21 @@ def dialogue(cfg, hackatime_connected=False, slack_known=False, region_guess="",
         *(replace(step, when=plays(0, cfg)) for step in script.PART_BASICS),
         *(replace(step, when=plays(1, cfg)) for step in script.TUTORIAL_CLOSE),
         script.hackatime_step(on, hackatime_connected), script.hackatime_connected_step(on, hackatime_connected),
+        *script.slack_channels_steps(slack_invite),
         script.TALK_FIRST, script.ENDING,
     ]
 
 
+def invite_to_channels(cfg, request, profile):
+    """They said yes to the Slack channels: record that we asked (their id, the number of channels, nothing else) and, once the surrounding transaction has committed, ask Slack
+    in the background. The Slack ID is the one on their Profile, never one from the browser. `already_in_channel` counts as success, so a repeat is harmless."""
+    channels = slack_channels.ids(cfg.SLACK_CHANNEL_IDS)
+    audit.record("slack.invite_requested", actor=request.user, subject=request.user, target=profile, details={"channels": len(channels)})
+    transaction.on_commit(partial(slack.in_background, slack.invite, profile.slack_id, channels))
+
+
 def finish(cfg, request, answers):
-    """Called once, when the last step before the end is answered: they are onboarded. Safe to run twice."""
+    """Called once, when the last step before the end is answered: they are onboarded, and invited to the Slack channels when they said yes. Safe to run twice."""
     profile = request_profile(request)
     first_time = not profile.onboarded_at
     profile.onboarded_at = profile.onboarded_at or timezone.now()
@@ -89,6 +104,8 @@ def finish(cfg, request, answers):
         profile.save()
         if first_time:
             audit.record("onboarding.finish", actor=request.user, subject=request.user, target=profile)
+        if answers.get("slack_channels") == "yes" and can_invite(cfg, profile):
+            invite_to_channels(cfg, request, profile)
 
 
 class ProfileStore(SessionStore):

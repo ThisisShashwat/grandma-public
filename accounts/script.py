@@ -1,4 +1,4 @@
-"""What Grandma says during onboarding. Text and steps only: the opening, the software-only rule, the questions, the tutorial parts and, last, the Hackatime step.
+"""What Grandma says during onboarding. Text and steps only: the opening, the software-only rule, the questions, the tutorial parts, the Hackatime step and, when it is on, the Slack channels.
 Who sees which part is decided in accounts/onboarding.py; how a step is built is talk/dialogue.py."""
 from django.urls import reverse
 
@@ -65,6 +65,23 @@ def hackatime_connected_step(enabled=False, connected=False):
     return Say(face="approved", when=lambda answers: enabled and connected, lines=(
         "There, dear. Hackatime is hooked up.",
         "Now mind you keep it counting while you build. No hours, no cookies."))
+
+
+def slack_channels_steps(enabled=False):
+    """The question about the three Slack channels and her word after the answer (yes adds them when onboarding finishes: accounts/onboarding.py). No steps at all unless
+    `enabled` (the token, the channel IDs and a Hack Club Slack ID are all there), so the dialogue is exactly as before. The answer lives only in the dialogue, never on the Profile.
+    Draft copy by Claude, 2026-10-16, for the owner to read."""
+    if not enabled:
+        return []
+    return [
+        AskChoice(key="slack_channels", face="phone", choices=(("yes", "Yes please, add me"), ("no", "No thanks")), lines=(
+            "One more thing, dear. We have three little Slack channels for this place. #grandma to chat, #grandma-help for when you're stuck, #grandma-bulletin for the news.",
+            "Shall I add you to them?")),
+        Say(face="approved", when=lambda answers: answers.get("slack_channels") == "yes", lines=(
+            "Done, dear. Keep an eye on your Slack.", "It may take a minute.")),
+        Say(face="smug", when=lambda answers: answers.get("slack_channels") == "no", lines=(
+            "As you like. The channels are in the guides if you change your mind.",)),
+    ]
 
 
 SKIP_OFFER = AskChoice(

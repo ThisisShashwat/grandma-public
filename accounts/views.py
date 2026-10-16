@@ -81,7 +81,8 @@ def welcome(request):
         return redirect("dashboard")
     cfg = live()
     steps = onboarding.dialogue(cfg, profile.hackatime_connected, slack_known=bool(profile.hca_sub and profile.slack_id),
-                                region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS)), own_names=onboarding.own_names_of(profile))
+                                region_guess=regions.guess(profile.timezone, regions.regions(cfg.REGIONS)), own_names=onboarding.own_names_of(profile),
+                                slack_invite=onboarding.can_invite(cfg, profile))
     if not profile.onboarded_at and position >= len(steps) - 1:      # staff sent them back (accounts.services.send_back_to_onboarding) but this session still stands at the last page: start again, not at "you're all set"
         store.go_to(request, 0)
     return flow.run(request, steps, store=store, finish=partial(onboarding.finish, cfg), then=resolve_url("dashboard"), title="Welcome")
