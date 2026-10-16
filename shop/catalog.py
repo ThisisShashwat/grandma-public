@@ -16,11 +16,11 @@ from program import payout
 from .models import ShopItem
 
 BLURBS = {        # Grandma's line under each shelf, keyed by ShopItem.Category. The shelves follow the order of that list.
-    "hardware": "Real parts for real things. Grandma likes a receipt.",
-    "software": "The grown-up programs, paid for.",
-    "credits": "Pay-as-you-go things for your project. Receipts, please.",
-    "fun": "Things you want, not things you need. Grandma allows some.",
-    "joke": "Grandma does these by hand. Do not ask how, and do not ask why.",
+    "ribbon": "For the people Grandma is proud of.",
+    "favs": "Things Grandma would pick herself.",
+    "grants": "Money to spend on tech and tools, topped up on the same card.",
+    "stuff": "Odds and ends from the back of Grandma's cupboard.",
+    "jokes": "Grandma is not responsible for any of it.",
 }
 
 

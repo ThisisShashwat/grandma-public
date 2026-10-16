@@ -66,12 +66,12 @@ class ShopItem(models.Model):
         GRANT = "grant", "Card grant"
         MANUAL = "manual", "By hand"
 
-    class Category(models.TextChoices):         # the shelves of the page, in this order; the owner edits the list later
-        HARDWARE = "hardware", "Hardware"
-        SOFTWARE = "software", "Software"
-        CREDITS = "credits", "Credits"
-        FUN = "fun", "Fun"
-        JOKE = "joke", "Jokes"
+    class Category(models.TextChoices):         # the shelves of the page, in this order; staff pick the shelf by hand (it is not tied to `ribbon_only`)
+        RIBBON = "ribbon", "Blue Ribbon"
+        FAVS = "favs", "Grandma's favs"
+        GRANTS = "grants", "Grants"
+        STUFF = "stuff", "Stuff"
+        JOKES = "jokes", "Jokes"
 
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=80)
