@@ -1,7 +1,7 @@
 """The plain rule of each demand and the project categories it fits (docs/program.md has the same table).
 
-Kept apart from demands.py on purpose: the home page reads POOL, and this is only for the guides.
-Keyed by the demand's name; tests/test_guides_widgets.py checks the keys match POOL exactly.
+Starting data only, like demands.py: migration 0003 seeded the Demand table from these, and the site reads the database now (projects/pool.py). This is also the
+fallback when the database cannot be read. Keyed by the demand's name; tests/test_guides_widgets.py checks the keys match POOL exactly.
 """
 from typing import NamedTuple
 

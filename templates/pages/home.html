@@ -4,6 +4,11 @@
 {% set peek = pantry_peek() if home_pantry_peek else () %}
 {# The Blue Ribbon wall peek: the same kind of switch, HOME_RIBBON_PEEK (default off). `ribbon_peek` is the wall's newest projects (showcase/peek.py), empty when off or the wall is empty. #}
 {% set ribbon_peek = ribbon_wall_peek(home_ribbon_count) %}
+{# The demands: the active rows of the Demand table (projects/pool.py, kept in memory for a minute), for the pitch, the fridge's count and the fridge itself. The fridge's script
+   reads them from the site data as [name, line, tier], so they are added to it here and not on every page. #}
+{% set pool = demand_pool() %}
+
+{% block site_data %}{{ dict(site_data, pool=pool|map(attribute="note")|list)|tojson }}{% endblock %}
 
 {% block styles %}
 {% for name in ["hero", "pitch", "how", "fridge", "faq", "cta", "hackclub"] %}

@@ -1,15 +1,15 @@
 {# All the demands with their plain rules, grouped by grumpiness level. Rendered by guides/widgets.py (demands_list) into a guide page.
-   `groups` is [(level, Grandma's label, [(Demand, Rule)])]. Pure HTML: no JavaScript. #}
+   `groups` is [(level, Grandma's label, [PoolDemand])] (projects/pool.py, from the database). Pure HTML: no JavaScript. #}
 {% for level, label, items in groups %}
 <section class="demand-tier">
   <h3>{{ level|capitalize }} <span>"{{ label }}"</span></h3>
   <ul class="demand-list">
-    {% for demand, rule in items %}
+    {% for demand in items %}
     <li class="demand" data-tier="{{ demand.tier }}">
       <b>{{ demand.name }}</b>
       <i>"{{ demand.line }}"</i>
-      <p>{{ rule.plain }}</p>
-      <small>{{ "Any project" if rule.anything else rule.fits|join(", ") }}</small>
+      <p>{{ demand.plain }}</p>
+      <small>{{ "Any project" if demand.anything else demand.categories|join(", ") }}</small>
     </li>
     {% endfor %}
   </ul>

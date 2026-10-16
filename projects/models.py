@@ -49,7 +49,7 @@ class Subcategory(models.Model):
 
 class Demand(models.Model):
     """One of Grandma's notes. The 18 starting ones were seeded from program/content (docs/projects.md); staff edit them here.
-    The home page's fridge still reads the Python list, not this table."""
+    The dealing, the guides' demands page and the home page's fridge all read this table (projects/pool.py for the last two)."""
 
     name = models.CharField(max_length=40, unique=True)
     grandma_line = models.CharField(max_length=200, help_text="What Grandma says, in her voice.")

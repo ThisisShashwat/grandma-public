@@ -31,7 +31,7 @@
           integrity="sha384-IW2mAEaBUcGJfuKi7uhlzpZGhnDDnjI9NLtADxl9xKV6VJPzuuIqhIKyLwiAuRmu" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.js"
           integrity="sha384-bopE5cbMjKUprmGnIRk2UdvCnHImrRLCtNW2uR6oDYqO+o3XWJeuIrWWxDzeDgNW" crossorigin="anonymous"></script>
-  <script id="site-data" type="application/json">{{ site_data|tojson }}</script>
+  <script id="site-data" type="application/json">{% block site_data %}{{ site_data|tojson }}{% endblock %}</script>
   <script type="module" src="{{ static('js/core/site.js') }}"></script>
   {% block scripts %}{% endblock %}
 </head>

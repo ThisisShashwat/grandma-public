@@ -11,9 +11,9 @@ from django.template.loader import render_to_string
 from django.utils.html import format_html
 
 from program import payout
-from program.content.demand_rules import RULES
-from program.content.demands import LEVELS, POOL, TIERS
+from program.content.demands import LEVELS, TIERS
 from program.content.faces import FACES
+from projects import pool
 
 PLACEHOLDER = re.compile(r'<div data-widget="([\w-]+)"[^>]*></div>')
 CHANNEL = re.compile(r'<span data-slack="(grandma|help|bulletin)"></span>')
@@ -27,8 +27,9 @@ def payout_calculator():
 
 
 def demands_list():
-    """All the demands with their plain rules, grouped by grumpiness level. Pure HTML, no JavaScript."""
-    groups = [(LEVELS[tier], TIERS[tier], [(demand, RULES[demand.name]) for demand in POOL if demand.tier == tier]) for tier in LEVELS]
+    """All the active demands with their plain rules, grouped by grumpiness level, as the admin has them (projects/pool.py). Pure HTML, no JavaScript."""
+    demands = pool.pick()
+    groups = [(LEVELS[tier], TIERS[tier], [demand for demand in demands if demand.tier == tier]) for tier in LEVELS]
     return render_to_string("components/demands_list.html", {"groups": groups})
 
 

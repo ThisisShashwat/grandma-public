@@ -1,4 +1,5 @@
-"""Grandma's demands: the pool the fridge deals from. Rules and categories live in docs/program.md."""
+"""Grandma's demands as they started: the data migration 0003 seeded the Demand table from this list. The site reads the database now (projects/pool.py), edited in the
+admin, so a demand added there is not added here; this list is only the starting data and the fallback when the database cannot be read. Rules and categories live in docs/program.md."""
 from typing import NamedTuple
 
 

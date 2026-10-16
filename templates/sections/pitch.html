@@ -1,7 +1,7 @@
 {% import "macros/art.html" as art %}
 {% import "macros/ui.html" as ui %}
-{# The pitch right under the hero, in Grandma's voice. The three sticky notes are real demands from the pool (program/content/demands.py), drawn with the fridge's own
-   .note (static/css/sections/fridge.css), so a name changed there changes here. The last words link to the #grandma channel (admin setting LINK_SLACK_GRANDMA): plain text while it is empty. #}
+{# The pitch right under the hero, in Grandma's voice. The three sticky notes are real demands from the pool (the Demand table, projects/pool.py), drawn with the fridge's own
+   .note (static/css/sections/fridge.css), so a name changed in the admin changes here. The last words link to the #grandma channel (admin setting LINK_SLACK_GRANDMA): plain text while it is empty. #}
 {% set samples = ["Two Colors", "Offline", "No Jargon"] %}
 <section class="scene pitch" id="pitch">
   <div class="wrap">
