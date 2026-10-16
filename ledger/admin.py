@@ -36,7 +36,8 @@ class CookieEntryAdmin(admin.ModelAdmin):
     form = AdjustmentForm
     list_display = ("created_at", "user", "amount", "kind", "reason", "created_by")
     list_filter = ("kind",)
-    search_fields = ("user__username", "reason", "key")
+    search_fields = ("user__username", "user__profile__display_name", "user__profile__slack_id", "reason", "key")
+    list_select_related = ("user__profile",)
     date_hierarchy = "created_at"
     autocomplete_fields = ("user",)
 

@@ -11,6 +11,17 @@ from pages.live import live
 User = get_user_model()
 
 
+def who(user):
+    """How a person is named across the admin (the user dropdowns, the lists, the messages): the display name and the Slack ID, which tell people apart. The username of a
+    Hack Club account is a random hash. Only the admin shows this; a person with neither falls back to the username."""
+    profile = getattr(user, "profile", None)
+    name, slack = (profile.display_name, profile.slack_id) if profile else ("", "")
+    return f"{name} ({slack})" if name and slack else name or slack or user.get_username()
+
+
+User.__str__ = who
+
+
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
@@ -25,6 +36,16 @@ class UserAdmin(BaseUserAdmin):
     staff are given the `is_staff` tick by hand in the admin (docs/owner.md 2026-10-05), a development account can still
     be made in the admin, and the person fills in the rest at /welcome/."""
     inlines = [ProfileInline]
+    list_display = ("person", "username", "is_staff", "is_active")
+    search_fields = ("username", "profile__display_name", "profile__slack_id")        # also what the user dropdowns elsewhere in the admin search; never the email
+    list_select_related = ("profile",)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("profile")        # the dropdowns and the list name people by their profile
+
+    @admin.display(description="Person", ordering="profile__display_name")
+    def person(self, obj):
+        return who(obj)
 
     def get_inline_instances(self, request, obj=None):
         return super().get_inline_instances(request, obj) if obj else []        # nothing to show on the add page
