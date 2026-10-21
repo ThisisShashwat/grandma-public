@@ -100,10 +100,6 @@ CONFIG = {
                                   "It needs HACKATIME_ENABLED on (and does nothing without it). "
                                   "Off (the default) lets people hand in with or without a check; a check that was made is still kept and shown to reviewers."),
 
-    "ARI_ENABLED": (False, "Send every hand-in to Ari (HQ's review tool) and apply the decisions it sends back to /ari/result/. It needs ARI_PROGRAM_ID, ARI_INGEST_SECRET and "
-                           "ARI_OUTBOUND_SECRET in the environment (never set here). Off (the default) sends nothing and the address answers 404. "
-                           "Hand-ins made while it was off are not sent later: review those in the Review form."),
-
     "REGIONS": (regions.default_text(), "Where a person can say they live, asked once in onboarding: one per line as CODE: Label, shown in this order. "
                                         "A code is two capital letters or digits (people keep their code if you rename its label). At least two lines, and the XX line "
                                         "(the catch-all, XX: Somewhere else) must stay.", "regions"),
@@ -126,7 +122,7 @@ FIELDSETS = (
     ("Home page", ("HOME_PANTRY_PEEK", "HOME_RIBBON_PEEK", "HOME_PEEK_COUNT")),
     ("Metrics", ("COUNT_VISITS",)),
     ("Notifications", ("SLACK_NOTIFICATIONS", "SLACK_CHANNEL_IDS")),
-    ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED", "ARI_ENABLED")),
+    ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED")),
     ("Onboarding questions", ("REGIONS",)),
     ("Onboarding tutorial", ("TUTORIAL_ENABLED", "TUTORIAL_FOR_NEW", "TUTORIAL_FOR_SOME", "TUTORIAL_FOR_VETERAN")),
 )

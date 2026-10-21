@@ -49,9 +49,6 @@ HCA_ISSUER = env("HCA_ISSUER", default="https://auth.hackclub.com")
 HACKATIME_CLIENT_ID = env("HACKATIME_CLIENT_ID", default="")             # Connecting a Hackatime account (accounts/hackatime.py). The id and the secret: environment only, never the admin or the database
 HACKATIME_CLIENT_SECRET = env("HACKATIME_CLIENT_SECRET", default="")
 HACKATIME_BASE_URL = env("HACKATIME_BASE_URL", default="https://hackatime.hackclub.com")
-ARI_PROGRAM_ID = env("ARI_PROGRAM_ID", default="")                 # Ari, HQ's review tool (submissions/ari.py). The program id and the two signing secrets: environment only, never the admin, the database or a log
-ARI_INGEST_SECRET = env("ARI_INGEST_SECRET", default="")           # signs what we send to Ari (whsec_..., Ari Settings, Webhooks)
-ARI_OUTBOUND_SECRET = env("ARI_OUTBOUND_SECRET", default="")       # verifies what Ari sends back to /ari/result/ (a different secret from the one above)
 
 
 def validate_hackatime_token_keys(keys):

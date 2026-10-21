@@ -20,8 +20,6 @@ private_media/
 *.log
 *.bak
 *.dump
-ari-projects.json
-tools/ari_projects.json
 # any environment dump or secrets scratch file (the prod variables for production, with secrets) never gets committed
 prod.env*
 dev.env*
