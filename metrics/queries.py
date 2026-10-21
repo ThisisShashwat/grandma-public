@@ -21,7 +21,7 @@ RANGES = (7, 30, 60, 90, 180)
 DEFAULT_RANGE = 30
 ACTIVE_NOW_MINUTES = 10
 CHART_WIDTH, CHART_HEIGHT, BAR_SHARE = 600, 140, 0.8
-NOT_COUNTED = "Not counted. Switch COUNT_VISITS on to count it (Admin, Constance, group Metrics)."
+NOT_COUNTED = "Nothing counted yet. Views are counted while COUNT_VISITS is on (Admin, Constance, group Metrics), from the day it went live."
 STAGES = (("signed_up", "Signed up"), ("onboarded", "Finished onboarding"), ("hackatime", "Connected Hackatime"),
           ("started", "Started a project"), ("handed_in", "Handed a project in"), ("approved", "Got an approval"))
 
@@ -206,7 +206,7 @@ def approved_hours_in(span):
 
 
 def views_per_page(span):
-    """{page: {day: views}} for the range; empty when nothing was counted (the COUNT_VISITS setting is off or the range is older)."""
+    """{page: {day: views}} for the range; empty when nothing was counted (the COUNT_VISITS setting was off or counting started after the range)."""
     pages = {}
     for page, day, views in DayViews.objects.filter(day__range=(span.first, span.last)).values_list("page", "day", "views"):
         pages.setdefault(page, {})[day] = views
