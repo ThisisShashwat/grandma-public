@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
 from accounts.services import profile_of, request_profile
+from metrics.activity import touch
 from pages.live import live
 
 
@@ -21,6 +22,7 @@ def invited(view):
     def gated(request, *args, **kwargs):
         if not has_access(request.user, live(), request):
             return redirect("beta")
+        touch(request.user)
         return view(request, *args, **kwargs)
     return gated
 
