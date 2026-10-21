@@ -261,15 +261,20 @@ def view_stage(key, label, pages, counted):
 
 
 def funnel_stages(counts, pages, counted):
-    """The two view stages (views, not people), then the cohort stages, each a percent of the one before it. Widths are against the largest count."""
-    rows = [view_stage("home", "Home page views", pages, counted), view_stage("signin", "Pressed Sign in", pages, counted)]
-    home = rows[0][2]
-    before = None
+    """The two view stages (views, not people), then the cohort stages, each a percent of the one before it. Views and people are different units, so each
+    group has its own bar scale: against the largest count of its own group (thousands of views would squash the people to a sliver)."""
+    views = [view_stage("home", "Home page views", pages, counted), view_stage("signin", "Pressed Sign in", pages, counted)]
+    home = views[0][2]
+    people, before = [], None
     for key, label in STAGES:
         count = counts[key]
         note = f"{count * 100 / home:.1f} signed up per 100 home views" if before is None and home else ""
-        rows.append((key, label, count, None if before is None else percent_of(count, before), note))
+        people.append((key, label, count, None if before is None else percent_of(count, before), note))
         before = count
+    return with_bars(views) + with_bars(people)
+
+
+def with_bars(rows):
     biggest = max((count for _, _, count, _, _ in rows if count is not None), default=0)
     return tuple(Stage(key, label, count, "not counted" if count is None else str(count), percent, note, bar_width(count, biggest))
                  for key, label, count, percent, note in rows)

@@ -8,7 +8,8 @@
 .metrics-ranges a:hover { background: var(--darkened-bg); }
 .metrics-ranges a.current { background: var(--link-fg); border-color: var(--link-fg); color: var(--body-bg); font-weight: 600; }
 
-.metrics-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.metrics-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 640px) { .metrics-cards { grid-template-columns: repeat(2, 1fr); } }
 .metrics-card { display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--darkened-bg); min-width: 0; }
 .metrics-card .label { font-size: 0.8125rem; color: var(--body-medium-color); }
 .metrics-card strong { font-size: 1.75rem; line-height: 1.2; color: var(--body-loud-color); }
