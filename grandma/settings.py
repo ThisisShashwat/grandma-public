@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "shop",
     "orders",
     "guides",
+    "metrics",
 ]
 
 MIDDLEWARE = [
