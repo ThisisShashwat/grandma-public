@@ -1,0 +1,54 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/admin/metrics.css' %}">{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Home</a> &rsaquo; {{ opts.app_config.verbose_name }} &rsaquo; {{ title }}</div>
+{% endblock %}
+
+{% block content %}
+<div class="metrics">
+  <nav class="metrics-ranges" aria-label="Range">
+    {% for days in ranges %}<a href="?days={{ days }}"{% if days == report.days %} class="current" aria-current="page"{% endif %}>{{ days }} days</a>{% endfor %}
+  </nav>
+  <p class="metrics-note">{{ report.first|date:"M j" }} to {{ report.last|date:"M j, Y" }}, days in {{ report.zone }}. Staff are left out of every number.
+    {% if report.since %}Activity is counted from {{ report.since|date:"M j, Y" }}; before that only hours and sign ups have history.{% else %}No activity has been counted yet.{% endif %}</p>
+
+  <h2>People</h2>
+  <div class="metrics-cards">
+    {% for card in report.people %}<div class="metrics-card" id="card-{{ card.key }}"><span class="label">{{ card.label }}</span><strong>{{ card.text }}</strong><span class="hint">{{ card.hint }}</span></div>{% endfor %}
+  </div>
+
+  <h2>Hours</h2>
+  <div class="metrics-cards">
+    {% for card in report.hours %}<div class="metrics-card" id="card-{{ card.key }}"><span class="label">{{ card.label }}</span><strong>{{ card.text }}</strong><span class="hint">{{ card.hint }}</span></div>{% endfor %}
+  </div>
+
+  <h2>Daily</h2>
+  <div class="metrics-charts">
+    {% for chart in report.charts %}
+    <figure class="metrics-chart" id="chart-{{ chart.key }}">
+      <figcaption>{{ chart.title }}</figcaption>
+      <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" preserveAspectRatio="none" role="img" aria-label="{{ chart.title }}">
+        {% for bar in chart.bars %}<g><title>{{ bar.tip }}</title><rect class="hit" x="{{ bar.hit_x }}" y="0" width="{{ chart.slot }}" height="{{ chart.height }}"/><rect class="bar" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}"/></g>{% endfor %}
+      </svg>
+      <div class="axis"><span>{{ chart.first }}</span><span>{{ chart.top }}</span><span>{{ chart.last }}</span></div>
+    </figure>
+    {% endfor %}
+  </div>
+
+  <h2>Funnel</h2>
+  <p class="metrics-note">People who signed up in this range, and how far they got. Each percent is of the stage before it.</p>
+  <ol class="metrics-funnel">
+    {% for stage in report.funnel %}
+    <li id="stage-{{ stage.key }}">
+      <div class="line"><span class="label">{{ stage.label }}</span><strong>{{ stage.text }}</strong>{% if stage.percent is not None %}<span class="percent">{{ stage.percent }}%</span>{% endif %}</div>
+      <div class="track"><span style="width: {{ stage.width }}%"></span></div>
+      {% if stage.note %}<div class="hint">{{ stage.note }}</div>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="metrics-note">Approved hours of these people so far: <strong>{{ report.funnel_hours }}</strong></p>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+.metrics { max-width: 1100px; }
+.metrics h2 { margin: 28px 0 10px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--body-quiet-color); }
+.metrics-note { color: var(--body-quiet-color); font-size: 0.8125rem; line-height: 1.5; margin: 6px 0; }
+.metrics .hint { color: var(--body-quiet-color); font-size: 0.75rem; }
+
+.metrics-ranges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.metrics-ranges a { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--body-fg); background: var(--body-bg); }
+.metrics-ranges a:hover { background: var(--darkened-bg); }
+.metrics-ranges a.current { background: var(--link-fg); border-color: var(--link-fg); color: var(--body-bg); font-weight: 600; }
+
+.metrics-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.metrics-card { display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--darkened-bg); min-width: 0; }
+.metrics-card .label { font-size: 0.8125rem; color: var(--body-medium-color); }
+.metrics-card strong { font-size: 1.75rem; line-height: 1.2; color: var(--body-loud-color); }
+
+.metrics-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.metrics-chart { margin: 0; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; min-width: 0; }
+.metrics-chart figcaption { font-weight: 600; margin-bottom: 8px; }
+.metrics-chart svg { display: block; width: 100%; height: 140px; border-bottom: 1px solid var(--border-color); }
+.metrics-chart .bar { fill: var(--link-fg); }
+.metrics-chart .hit { fill: transparent; }
+.metrics-chart .hit:hover { fill: var(--selected-bg); }
+.metrics-chart .axis { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 0.75rem; color: var(--body-quiet-color); }
+
+.metrics-funnel { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.metrics-funnel li { margin: 0; padding: 0; }
+.metrics-funnel .line { display: flex; align-items: baseline; gap: 10px; }
+.metrics-funnel .label { flex: 1; }
+.metrics-funnel .percent { min-width: 3.5em; text-align: right; color: var(--body-quiet-color); }
+.metrics-funnel .track { height: 10px; margin: 4px 0; background: var(--darkened-bg); border: 1px solid var(--border-color); border-radius: 5px; overflow: hidden; }
+.metrics-funnel .track span { display: block; height: 100%; background: var(--link-fg); }
