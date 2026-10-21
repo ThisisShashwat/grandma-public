@@ -105,6 +105,7 @@ MIDDLEWARE = [
     "pages.probes.probes",                             # /healthz and /readyz answer whatever Host header the host's probe sends (Django would refuse a pod address with a 400)
     "pages.body_cap.body_cap",                         # a body that says it is too big is refused before anything reads it (FORM_BODY_MAX_KB, UPLOAD_BODY_MAX_MB)
     "pages.rate_limit.rate_limit",                     # after WhiteNoise, so static files are never counted (RATE_LIMITS_ENABLED and the RATE_LIMIT_* numbers)
+    "metrics.visits.count_visits",                     # counts views of four public pages per day, after the response is built, only with COUNT_VISITS on (touches no session, no cookie, no query)
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "audit.middleware.RequestId",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -277,6 +278,7 @@ CSRF_FAILURE_VIEW = "pages.views.csrf_failure"      # Grandma's "stale slip" pag
 FORM_BODY_MAX_KB = env.int("FORM_BODY_MAX_KB", default=128)
 UPLOAD_BODY_MAX_MB = env.int("UPLOAD_BODY_MAX_MB", default=22)         # above the biggest admin allowed screenshot (20 MB) plus the form around it
 RATE_LIMITS_ENABLED = env.bool("RATE_LIMITS_ENABLED", default=True)
+METRICS_ENABLED = env.bool("METRICS_ENABLED", default=True)           # the activity and visit counters of the admin Metrics page; the test suite switches it off like RATE_LIMITS_ENABLED
 RATE_LIMIT_GET = env.int("RATE_LIMIT_GET", default=1200)                # a GET per address, counted in each worker's memory (a school or a carrier shares one address)
 RATE_LIMIT_POST_IP = env.int("RATE_LIMIT_POST_IP", default=600)        # a POST per address (a school or a carrier may share one)
 RATE_LIMIT_POST_SESSION = env.int("RATE_LIMIT_POST_SESSION", default=60)

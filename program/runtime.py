@@ -76,6 +76,9 @@ CONFIG = {
     "HOME_PEEK_COUNT": (4, "How many projects the Blue Ribbon wall peek on the home page shows, 1 to 12 (the newest ones). It applies to the Blue Ribbon wall peek only: "
                            "the Pantry peek has no limit and shows every item ticked Show on the home page.", "peek_count"),
 
+    "COUNT_VISITS": (False, "Count how many times the home page, the guides, the Pantry and the Sign in button are opened each day, so the Metrics page can show how many visits became sign ups. "
+                            "It stores only a number per day and page: never who opened it, no address and no browser. Off (the default) counts nothing."),
+
     "SLACK_NOTIFICATIONS": (False, "Send a Slack direct message from the program's bot when a project is approved, rejected or needs changes (the message only says to come to the dashboard). "
                                    "It needs the bot token in the environment (SLACK_BOT_TOKEN, never set here) and the person's Slack ID. Off (the default) sends nothing."),
     "SLACK_CHANNEL_IDS": ("", "The Slack channels onboarding offers to add a new person to, as channel IDs (C followed by capital letters and digits, from the bottom of each channel's "
@@ -121,6 +124,7 @@ FIELDSETS = (
     ("Suggestion board", ("SUGGEST_COST", "VOTE_COST")),
     ("Public pages", ("SHOW_REJECTED_PUBLICLY", "LEADERBOARD_SIZE", "PUBLIC_PAGES_INDEXABLE")),
     ("Home page", ("HOME_PANTRY_PEEK", "HOME_RIBBON_PEEK", "HOME_PEEK_COUNT")),
+    ("Metrics", ("COUNT_VISITS",)),
     ("Notifications", ("SLACK_NOTIFICATIONS", "SLACK_CHANNEL_IDS")),
     ("Accounts", ("HCA_LOGIN", "HCA_REQUIRE_ELIGIBLE", "HACKATIME_ENABLED", "HACKATIME_REQUIRED", "ARI_ENABLED")),
     ("Onboarding questions", ("REGIONS",)),
