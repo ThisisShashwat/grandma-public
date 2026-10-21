@@ -3,14 +3,11 @@ again) and /grandma/collect/ (she hands the result back). All are for one signed
 project: the only id in an address is the project to fix, and it is only found among the person's own projects with changes requested."""
 from functools import partial
 
-from constance import config
-from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from accounts import hackatime
@@ -19,7 +16,7 @@ from pages.live import live
 from projects import rules as project_rules
 from projects import services as project_services
 from projects.models import Project
-from submissions import ari_inbound, handover, hours, script, services
+from submissions import handover, hours, script, services
 from submissions.forms import SubmitForm
 from talk import flow
 from talk.dialogue import End
@@ -118,27 +115,3 @@ def collect(request):
     return flow.run(request, steps, store=handover.Store(submission, steps), finish=lambda request, answers: None, then=handover.then(submission),
                     title="Grandma has something for you")
 
-
-@csrf_exempt
-def ari_result(request):
-    """What an Ari reviewer decided, POSTed by Ari (submissions/ari_inbound.py, docs/security.md "The Ari webhook"). A 404 for everybody and every method but POST, and for a
-    POST while the outbound secret is not set. While the ARI_ENABLED switch is off a POST with a bad or missing signature is the same 404 (nothing leaks to people without
-    the secret), but one whose signature verifies is a bare 503 with Retry-After: Ari retries a 5xx for hours and takes a 404 as final, so a decision sent while the
-    switch was off is not lost; nothing is read further or written. The switch is read STRICTLY (constance directly, not live()): a database that cannot be read is a 500,
-    which Ari retries, never a 404, which it takes as final. Not a page of a person: no session, no CSRF (Ari has no cookie), the HMAC signature of the exact bytes is the
-    only door. With the switch on, a bad signature, timestamp or delivery id is a bare 401 and nothing is read further or written."""
-    if request.method != "POST" or not settings.ARI_OUTBOUND_SECRET:
-        raise Http404
-    enabled, raw, headers = config.ARI_ENABLED, request.body, request.headers
-    signed = ari_inbound.trusted(raw, signature=headers.get("X-Ari-Signature", ""), timestamp=headers.get("X-Ari-Timestamp", ""),
-                                 delivery_id=headers.get("X-Ari-Delivery-Id", ""), secret=settings.ARI_OUTBOUND_SECRET)
-    if not enabled:
-        if signed:
-            return HttpResponse(status=503, headers={"Retry-After": "3600"})
-        raise Http404
-    if not signed:
-        return HttpResponse(status=401)
-    payload = ari_inbound.parse(raw)
-    if payload is None:
-        return HttpResponse(status=400)
-    return JsonResponse({"outcome": ari_inbound.receive(payload, headers["X-Ari-Delivery-Id"])})

@@ -15,7 +15,7 @@ from pages.live import live
 from projects import rules as project_rules
 from projects import services as project_services
 from projects.models import Project
-from submissions import ari, notices, rules
+from submissions import notices, rules
 from submissions.models import Submission
 
 NOTHING_TO_SHIP = "You have nothing to hand in right now, dear. Only a project you are building."
@@ -152,8 +152,6 @@ def submit(user, *, project_id=None, hackatime_required=False, hours_check=None,
             "redeals_used": project.redeals_used,
         },
     )
-    if ari.enabled(live()):
-        ari.queue_and_try(submission)
     return submission
 
 
