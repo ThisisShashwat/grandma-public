@@ -10,7 +10,7 @@
 {% block content %}
 <div class="metrics">
   <nav class="metrics-ranges" aria-label="Range">
-    {% for days in ranges %}<a href="?days={{ days }}"{% if days == report.days %} class="current" aria-current="page"{% endif %}>{{ days }} days</a>{% endfor %}
+    {% for days in ranges %}<a href="?days={{ days }}"{% if days == report.days %} class="current" aria-current="page"{% endif %}>{{ days }}d</a>{% endfor %}
   </nav>
   <p class="metrics-note">{{ report.first|date:"M j" }} to {{ report.last|date:"M j, Y" }}, days in {{ report.zone }}. Staff are left out of every number.
     {% if report.since %}Activity is counted from {{ report.since|date:"M j, Y" }}; before that only hours and sign ups have history.{% else %}No activity has been counted yet.{% endif %}</p>
