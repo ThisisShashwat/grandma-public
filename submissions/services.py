@@ -9,7 +9,6 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit import services as audit
-from ledger import rules as ledger_rules
 from ledger import services as ledger
 from pages.live import live
 from projects import rules as project_rules
@@ -23,9 +22,6 @@ CHECK_YOUR_HOURS = "Check your hours first, dear. I won't take it until Hackatim
 UNFIT_NOTES = "One of the notes you kept doesn't suit this kind of project, dear. Swap it with Change my demands on your project page. Stuck? Ask the staff in the Slack."
 OWN_PROJECT = "You cannot review your own project. Ask another reviewer."
 REVIEW_FIELDS = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note", "reviewed_by", "reviewed_at", "cookies_awarded")
-ARI_FIELDS = REVIEW_FIELDS + ("reviewer_label", "demand_checks", "ari_justification", "needs_staff")
-CLEARED = {"status": rules.SUBMITTED, "approved_hours": None, "quality": False, "ribbon": False, "public_note": "", "internal_note": "", "reviewed_by": None,
-           "reviewed_at": None, "cookies_awarded": None, "claimed_at": None, "reviewer_label": "", "demand_checks": [], "ari_justification": {}}      # a decision taken back
 
 
 class AlreadyCollected(Exception):
@@ -262,13 +258,6 @@ def review(submission, *, by, max_rounds, now=None):
     return submission
 
 
-def payout_key(user, submission):
-    """The ledger key of this submission's payout: `submission:{id}`, and `submission:{id}:v{n}` after Ari took the first payout back n times (each time a debit
-    under `submission:{id}:revert:...` was written), so one approval pays once overall and a re-approval after a revert can pay again."""
-    reverts = ledger.count_keys(user, f"submission:{submission.pk}:revert:")
-    return f"submission:{submission.pk}" + (f":v{reverts}" if reverts else "")
-
-
 @transaction.atomic
 def claim(user, submission_id, *, now=None):
     """Grandma hands over the result of a review, once. Approved: the cookies go on the ledger under the key `submission:{id}`
@@ -283,7 +272,7 @@ def claim(user, submission_id, *, now=None):
         return submission
     project = Project.objects.select_for_update().get(pk=submission.project_id)
     if submission.cookies_awarded:
-        ledger.credit(user, submission.cookies_awarded, key=payout_key(user, submission), reason=f"Grandma paid for {project.name}")
+        ledger.credit(user, submission.cookies_awarded, key=f"submission:{submission.pk}", reason=f"Grandma paid for {project.name}")
     submission.claimed_at = now or timezone.now()
     submission.save(update_fields=["claimed_at"])
     if project.status == project_rules.IN_REVIEW:
@@ -300,117 +289,6 @@ def claim(user, submission_id, *, now=None):
         },
     )
     return submission
-
-
-# Ari's decisions (docs/submissions.md "Ari"): the actor is the system, so no `reviewer`; the audit details say only via, event and delivery, never an email or a name
-
-def locked_for_ari(submission_id):
-    """The submission row, locked, after its person's Profile row (the lock order of everything in this file)."""
-    project_services.lock_person(Submission.objects.select_related("project__user").get(pk=submission_id).project.user)
-    return Submission.objects.select_for_update().select_related("project__user").get(pk=submission_id)
-
-
-def ari_details(event, delivery, **more):
-    return {"via": "ari", "event": event, "delivery": delivery, **more}
-
-
-def flag_staff(submission, event, delivery, why):
-    """Something from Ari this site must not apply by itself: nothing changes but the flag the admin lists (`why` is one fixed word)."""
-    submission.needs_staff = True
-    submission.save(update_fields=["needs_staff"])
-    audit.record("submission.ari_needs_staff", subject=submission.project.user, target=submission, details=ari_details(event, delivery, why=why))
-
-
-@transaction.atomic
-def apply_ari_decision(submission_id, *, event, delivery, status, approved_hours=None, quality=False, ribbon=False, public_note="", internal_note="", reviewer_label="",
-                       demand_checks=(), justification=None, max_rounds=rules.NO_ROUND_CAP, now=None):
-    """Save the decision an Ari reviewer made (already a confirmed one: second pass is on there), as `review` would, without a reviewer user. Returns what happened:
-    NOOP (the same decision is already stored), APPLIED, IGNORED (the project is no longer in review: abandoned, or finished by staff), or REFUSED / NEEDS_STAFF with
-    `needs_staff` set and nothing else changed: a different decision once the person collected, a different one after staff decided in the admin, an approval with no,
-    zero or too many hours, changes without a note. While `needs_staff` is set on the submission nothing is applied at all (NEEDS_STAFF, held): Ari may take a decision
-    back before an older delivery of it arrives, and that late delivery must not pay; staff clear the flag (`clear_needs_staff`) once they have looked. The round cap is
-    not applied (the owner, 2026-10-06) unless the caller passes `max_rounds` (the system rejection turned into changes requested does: ari_inbound.decide). A decision
-    different from the stored one replaces it while it is not collected. `justification` is what the reviewer wrote to back the hours (already cleaned, ari_inbound.justification_of):
-    PRIVATE, stored with the decision for HQ's audit and replaced by the next one. The cookies are worked out as always and paid only when the person collects (`claim`)."""
-    current = locked_for_ari(submission_id)
-    new = {"status": status, "approved_hours": approved_hours, "quality": quality, "ribbon": ribbon, "public_note": public_note[:1000], "internal_note": internal_note[:2000],
-           "reviewer_label": reviewer_label[:254], "demand_checks": list(demand_checks), "ari_justification": dict(justification or {})}
-    if current.reviewed_at is not None and all(getattr(current, field) == value for field, value in new.items()):
-        return rules.NOOP
-    if current.claimed_at:
-        flag_staff(current, event, delivery, "collected")
-        return rules.NEEDS_STAFF
-    if current.project.status != project_rules.IN_REVIEW:
-        return rules.IGNORED
-    if current.reviewed_by_id:
-        flag_staff(current, event, delivery, "staff decided")
-        return rules.NEEDS_STAFF
-    if current.needs_staff:
-        flag_staff(current, event, delivery, "held")
-        return rules.NEEDS_STAFF
-    problem = rules.review_problem(status, new["public_note"], current.round, max_rounds, was=current.status)
-    problem = problem or (rules.ari_hours_problem(approved_hours) if status == rules.APPROVED else "")
-    if problem:
-        flag_staff(current, event, delivery, "refused")
-        return rules.REFUSED
-    was = current.status
-    for field, value in new.items():
-        setattr(current, field, value)
-    current.reviewed_by, current.reviewed_at, current.cookies_awarded = None, now or timezone.now(), cookies_for(current)
-    current.save(update_fields=ARI_FIELDS)
-    audit.record("submission.review", subject=current.project.user, target=current, details=review_details(current) | ari_details(event, delivery))
-    if rules.newly_decided(was, status):
-        transaction.on_commit(partial(notices.tell, current.pk, status))
-    return rules.APPLIED
-
-
-@transaction.atomic
-def revert_ari_decision(submission_id, *, event, delivery):
-    """Ari took a decision back (reverted or requeued): block and revert here too. The submission goes back to handed in with the decision cleared. Already collected: the
-    cookies are taken back with one debit (`submission:{id}:revert:{delivery}`, so a repeat writes once) and the project goes back to in review, but ONLY while the person's
-    balance covers it and this is the project's latest round; otherwise nothing changes except the staff flag (we never go below zero, and a half undone state could pay
-    twice). Every revert leaves `needs_staff` set (a latch, no migration): a reverted ship may never come back to Ari's queue, and an OLDER delivery of the decision may
-    still arrive after this one, which apply_ari_decision then holds until staff clear the flag. A decision staff made in the admin is never undone (NOOP), and a
-    submission with no decision stored is flagged too (NEEDS_STAFF the first time). Returns NOOP, REVERTED or NEEDS_STAFF."""
-    current = locked_for_ari(submission_id)
-    if current.reviewed_by_id:              # staff decided it in the admin: Ari taking back its own decision is not about that one
-        return rules.NOOP
-    if current.status == rules.SUBMITTED:   # nothing here to undo, but the revert must be remembered (the latch): a delayed older approval would otherwise pay
-        if not current.needs_staff:
-            flag_staff(current, event, delivery, "reverted")
-            return rules.NEEDS_STAFF
-        return rules.NOOP
-    user, project, owed = current.project.user, current.project, 0
-    if current.claimed_at:
-        owed = current.cookies_awarded or 0
-        why = "old round" if latest_round(project).pk != current.pk else "spent" if owed > ledger.balance(user) else ""
-        if why:
-            flag_staff(current, event, delivery, why)
-            return rules.NEEDS_STAFF
-        if owed:
-            ledger.debit(user, owed, reason=f"Grandma took back the cookies for {project.name}", key=f"submission:{current.pk}:revert:{delivery}", kind=ledger_rules.ADJUSTMENT)
-        locked = Project.objects.select_for_update().get(pk=project.pk)
-        if locked.status in AFTER_CLAIM.values():
-            locked.status = project_rules.IN_REVIEW
-            locked.save(update_fields=["status"])
-    for field, value in CLEARED.items():
-        setattr(current, field, value)
-    current.needs_staff = True
-    current.save(update_fields=ARI_FIELDS + ("claimed_at",))
-    audit.record("submission.ari_revert", subject=user, target=current, details=ari_details(event, delivery, cookies_taken=owed))
-    return rules.REVERTED
-
-
-@transaction.atomic
-def clear_needs_staff(submission_id, *, by):
-    """Staff dealt with what Ari sent: take the flag off. Returns whether it was on."""
-    submission = Submission.objects.select_for_update().select_related("project").get(pk=submission_id)
-    if not submission.needs_staff:
-        return False
-    submission.needs_staff = False
-    submission.save(update_fields=["needs_staff"])
-    audit.record("submission.needs_staff_cleared", actor=by, subject=submission.project.user, target=submission)
-    return True
 
 
 # the staff takedown (docs/submissions.md "Takedown"): a round off every public page and its screenshot file deleted, as one audited action. The review, the cookies and the person's own pages are untouched.

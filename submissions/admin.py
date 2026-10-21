@@ -18,7 +18,6 @@ PARTICIPANT = ("project", "round", "owner", "submitted_at", "hackatime_project",
                "recording_link", "ticked", "ai_declaration_text", "kept_notes")
 REVIEW = ("status", "approved_hours", "quality", "ribbon", "public_note", "internal_note")
 RESULT = ("cookies_preview", "reviewed_by", "reviewed_at", "cookies_awarded", "claimed_at")
-ARI = ("ari_ship_id", "reviewer_label", "demand_checks", "needs_staff")        # what Ari (HQ's review tool) said, all read only (submissions/ari_inbound.py)
 
 
 class TakenDownFilter(admin.SimpleListFilter):
@@ -58,9 +57,9 @@ class ReviewForm(forms.ModelForm):
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
     form = ReviewForm
-    list_display = ("project", "round", "owner", "status", "submitted_at", "cookies_awarded", "collected", "needs_staff", "taken_down")
-    list_filter = ("status", "needs_staff", TakenDownFilter, "project__category")
-    actions = ["clear_needs_staff", "take_down", "lift_takedown"]
+    list_display = ("project", "round", "owner", "status", "submitted_at", "cookies_awarded", "collected", "taken_down")
+    list_filter = ("status", TakenDownFilter, "project__category")
+    actions = ["take_down", "lift_takedown"]
     list_select_related = ("project", "project__user", "reviewed_by")
     search_fields = ("project__name", "project__user__username")
     fieldsets = (
@@ -72,13 +71,8 @@ class SubmissionAdmin(admin.ModelAdmin):
                                                      "Personal details (a name, an address, a face) or spam in a hand-in are a takedown, not Ask for changes and not Reject: use the list action Take down, which hides the round from every public page and deletes its screenshot."}),
         ("Result", {"fields": RESULT}),
         ("Takedown", {"fields": ("taken_down_at",), "description": "Set by the list actions Take down and Lift takedown, never typed here. While it is set the round is on no public page. Lifting it does not bring the screenshot back: that file is deleted."}),
-        ("Ari", {"fields": ARI, "description": "Filled by Ari's decisions (never typed here). Needs staff means Ari sent something this site did not apply by itself (a revert, a decision "
-                                               "after the person collected, bad hours, a failed fraud check): look at it, decide it in the Review form if it must be decided, then "
-                                               "clear the flag with the list action. While it is set, nothing more from Ari is applied to this submission."}),
-        ("What Ari's reviewer wrote to back the hours (private)", {"fields": ("justification",), "classes": ("collapse",),
-                                                                  "description": "Kept for HQ's audit. Staff only: never shown to the person, never on a public page."}),
     )
-    readonly_fields = PARTICIPANT + RESULT + ARI + ("justification", "taken_down_at")
+    readonly_fields = PARTICIPANT + RESULT + ("taken_down_at",)
 
     def has_change_permission(self, request, obj=None):
         """Once the person has collected, the whole result is frozen: it opens view only, and a form opened earlier is a 403 when posted (no success message)."""
@@ -104,12 +98,6 @@ class SubmissionAdmin(admin.ModelAdmin):
         except (services.AlreadyCollected, ValidationError):
             raise PermissionDenied from None        # only a race gets here (the form checks the same rules): nothing is saved, and the admin writes no success message or log entry
         self.message_user(request, saved_message(obj))
-
-    @admin.action(description="Clear the needs staff flag", permissions=["change"])
-    def clear_needs_staff(self, request, queryset):
-        """Staff looked at what Ari sent: take the flag off the chosen submissions (services.clear_needs_staff writes the audit entry, once each)."""
-        cleared = sum(services.clear_needs_staff(pk, by=request.user) for pk in queryset.filter(needs_staff=True).values_list("pk", flat=True))
-        self.message_user(request, f"Cleared the flag on {cleared} submission{'' if cleared == 1 else 's'}.")
 
     @admin.action(description="Take down (hide from public pages and delete the screenshot)", permissions=["change"])
     def take_down(self, request, queryset):
@@ -147,11 +135,6 @@ class SubmissionAdmin(admin.ModelAdmin):
         if obj.tracked_seconds is None:
             return "no Hackatime check"
         return f"{obj.tracked_seconds / 3600:.2f} hours (checked at {timezone.localtime(obj.tracked_at):%Y-%m-%d %H:%M %Z})"
-
-    @admin.display(description="justification")
-    def justification(self, obj):
-        """Ari's `review.justification` as stored (submissions/ari_inbound.py justification_of), one line per part; format_html escapes every value."""
-        return format_html("<dl>{}</dl>", format_html_join("", "<dt><b>{}</b></dt><dd>{}</dd>", obj.ari_justification.items())) if obj.ari_justification else "none"
 
     @admin.display(description="repository")
     def repo_link(self, obj):
