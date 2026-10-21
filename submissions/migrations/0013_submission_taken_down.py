@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('submissions', '0012_ari_justification'),
+        ('submissions', '0010_hours_cap_300'),
     ]
 
     operations = [
