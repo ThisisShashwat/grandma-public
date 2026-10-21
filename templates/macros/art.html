@@ -1,5 +1,5 @@
 {# Art helpers. Every picture lives in static/assets.
-   `pos` is the style text of a placed figure, the same "--x: 6; --y: 4; --w: 72" that dev mode (?dev) prints. #}
+   `pos` is the style text of a placed figure, like "--x: 6; --y: 4; --w: 72" (x and y are percents of the stage, w the width). #}
 
 {% macro img(file, alt, size=none, lazy=true) -%}
 <img src="{{ art_src(file) }}" alt="{{ alt }}"{% if size %} width="{{ size[0] }}" height="{{ size[1] }}"{% endif %}{% if lazy %} loading="lazy"{% endif %}>

@@ -11,7 +11,7 @@
   <meta name="theme-color" content="{{ site.theme_color }}">
   <link rel="icon" href="{{ static('assets/favicon.png') }}">
 
-  {% for name in ["fonts", "tokens", "base", "art", "buttons", "layout", "notes", "countdown", "header", "footer", "dev"] %}
+  {% for name in ["fonts", "tokens", "base", "art", "buttons", "layout", "notes", "countdown", "header", "footer"] %}
   <link rel="stylesheet" href="{{ static('css/core/' ~ name ~ '.css') }}">
   {% endfor %}
   {% block styles %}{% endblock %}

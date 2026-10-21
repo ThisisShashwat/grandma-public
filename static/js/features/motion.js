@@ -1,7 +1,7 @@
-import { reduce, dev, hasGsap } from "../core/env.js";
+import { reduce, hasGsap } from "../core/env.js";
 
-/* The chunky MS Paint motion (steps() easing). Skipped for reduced motion and in dev mode. */
-const animated = hasGsap && !reduce && !dev;
+/* The chunky MS Paint motion (steps() easing). Skipped for reduced motion. */
+const animated = hasGsap && !reduce;
 
 /* hero: everything pops in, then the spoon wiggles */
 export function heroMotion() {
