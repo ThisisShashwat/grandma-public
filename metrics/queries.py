@@ -260,7 +260,22 @@ def view_stage(key, label, pages, counted):
     return key, label, count, None, "" if counted else NOT_COUNTED
 
 
-def funnel_stages(counts, pages, counted):
+def first_counted(pages):
+    """The first day any page was counted in the range, or None."""
+    return min((day for days in pages.values() for day in days), default=None)
+
+
+def ratio_note(signed_up, home, span, pages):
+    """Sign ups per 100 home views, only when views were counted over the whole range: the sign ups of 90 days against the views of one day mean nothing."""
+    if not home:
+        return ""
+    began = first_counted(pages)
+    if began > span.first:
+        return f"Views are counted only since {day_text(began)}, so there is no ratio for this range yet."
+    return f"{signed_up * 100 / home:.1f} signed up per 100 home views"
+
+
+def funnel_stages(span, counts, pages, counted):
     """The two view stages (views, not people), then the cohort stages, each a percent of the one before it. Views and people are different units, so each
     group has its own bar scale: against the largest count of its own group (thousands of views would squash the people to a sliver)."""
     views = [view_stage("home", "Home page views", pages, counted), view_stage("signin", "Pressed Sign in", pages, counted)]
@@ -268,7 +283,7 @@ def funnel_stages(counts, pages, counted):
     people, before = [], None
     for key, label in STAGES:
         count = counts[key]
-        note = f"{count * 100 / home:.1f} signed up per 100 home views" if before is None and home else ""
+        note = ratio_note(count, home, span, pages) if before is None else ""
         people.append((key, label, count, None if before is None else percent_of(count, before), note))
         before = count
     return with_bars(views) + with_bars(people)
@@ -317,5 +332,5 @@ def build(days, now=None):
     return Report(days, span.first, span.last, counted_since(), settings.TIME_ZONE,
                   people_cards(span, active, active_per_day, total_users(), counts["signed_up"]),
                   hour_cards(span, seconds, makers_in(span), seconds_in_review(), approved_hours_in(span)),
-                  funnel_stages(counts, pages, bool(pages)), hours_text(cohort_approved_hours(span)),
+                  funnel_stages(span, counts, pages, bool(pages)), hours_text(cohort_approved_hours(span)),
                   charts_for(span, active_per_day, signs, seconds, pages))
