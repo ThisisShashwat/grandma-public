@@ -64,7 +64,7 @@ class ProfileAdmin(admin.ModelAdmin):
     ordering = ("user__username",)
     actions = ["give_access", "take_access_away", "unlink_hackatime_account", "send_back_to_welcome"]
     # hackatime_token is editable=False and omitted here on purpose: it must never appear in the admin.
-    fields = ("user", "display_name", "slack_id", "email", "region", "timezone", "expertise", "onboarded_at", "tutorial_done_at", "beta_access")        # the email is on the detail page only (staff need it to talk to Ari), never a list column or a search field
+    fields = ("user", "display_name", "slack_id", "email", "region", "timezone", "expertise", "onboarded_at", "tutorial_done_at", "beta_access")        # the email is on the detail page only, never a list column or a search field
     readonly_fields = tuple(name for name in fields if name != "beta_access")
 
 

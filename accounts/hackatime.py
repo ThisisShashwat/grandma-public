@@ -97,7 +97,7 @@ def authorize_redirect(request):
 def read_identity(token):
     """(the person's Hackatime user id as a string, their Slack ID or None, their GitHub username or ""), from GET api/v1/authenticated/me, and nothing
     else: the answer has emails too, and they are not kept (the Slack ID is only compared with the one on the Profile, never stored; the GitHub username
-    is kept private on the Profile since 2026-10-07, for Ari's repo owner check). ASSUMED (research 3.3, from the docs and swagger, not run live): the body
+    is kept private on the Profile since 2026-10-07). ASSUMED (research 3.3, from the docs and swagger, not run live): the body
     is a JSON object whose `id` is an integer and whose `slack_id` is text, null or missing, and whose `github_username` may be missing. A missing, empty,
     boolean or over-long id, or a Slack ID that is not text, raises; a GitHub name that is not a valid GitHub username is dropped, not an error."""
     response = client().get("api/v1/authenticated/me", token=token)

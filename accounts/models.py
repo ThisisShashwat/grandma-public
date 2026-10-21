@@ -32,7 +32,7 @@ class Profile(models.Model):
                                          help_text="The id of the Hackatime account they connected, so one Hackatime account backs only one account here. Only the connect callback "
                                                    "sets it. Nothing else about them is kept from Hackatime except the encrypted token below.")
     github_username = models.CharField(max_length=39, blank=True, default="", editable=False,
-                                       help_text="The GitHub username Hackatime reports for the account they connected (2026-10-07). PUBLIC on their profile page by the owner's decision, and used for Ari's repo owner check. Only the Hackatime connect callback sets it (accounts/hackatime.py); a reconnect refreshes it.")
+                                       help_text="The GitHub username Hackatime reports for the account they connected (2026-10-07). PUBLIC on their profile page by the owner's decision. Only the Hackatime connect callback sets it (accounts/hackatime.py); a reconnect refreshes it.")
     identity = models.TextField(blank=True, default="", editable=False,
                                 help_text="Name, birthday and address from Hack Club for HQ's unified record, ENCRYPTED with PII_KEYS (accounts/identity.py). Empty unless HCA_IDENTITY is on and Hack Club sent it. "
                                           "PRIVATE: never on a public page, in the admin, a log or the audit log. Only the Hack Club sign-in sets it.")
@@ -43,7 +43,7 @@ class Profile(models.Model):
                                          "(accounts/hca.py). Nothing else about them is kept from Hack Club.")
     hca_checked_at = models.DateTimeField(null=True, blank=True, editable=False, help_text="The last time they signed in with Hack Club.")
     email = models.EmailField(max_length=254, blank=True, editable=False,
-                              help_text="The address on their Hack Club account, kept because Ari (HQ's review tool) requires it on every ship. PRIVATE: staff and Ari only, "
+                              help_text="The address on their Hack Club account. PRIVATE: staff only, "
                                         "never on a public page, in a log or in the audit log. The Hack Club sign-in sets it and refreshes it (accounts/hca.py); empty if Hack Club did not send one.")
     beta_access = models.BooleanField(default=False, help_text="May use the participant pages while the BETA_MODE setting is on. Staff never need it. "
                                                                "New profiles start without it; the migration gave it to everyone who was here before.")

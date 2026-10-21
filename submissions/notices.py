@@ -40,7 +40,7 @@ def slack_id_of(user):
 
 def tell(submission_id, status):
     """Tell the person the decision `status` was saved, if it is switched on and they have a Slack ID. True when the message was handed over (Slack answers later, in the
-    background). Never raises: it runs after the review is committed (services.review, apply_ari_decision) and a failure here must not touch the review."""
+    background). Never raises: it runs after the review is committed (services.review) and a failure here must not touch the review."""
     try:
         if status not in MESSAGES or not switched_on():
             return False

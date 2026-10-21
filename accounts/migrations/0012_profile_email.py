@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='profile',
             name='email',
-            field=models.EmailField(blank=True, editable=False, help_text="The address on their Hack Club account, kept because Ari (HQ's review tool) requires it on every ship. PRIVATE: staff and Ari only, never on a public page, in a log or in the audit log. The Hack Club sign-in sets it and refreshes it (accounts/hca.py); empty if Hack Club did not send one.", max_length=254),
+            field=models.EmailField(blank=True, editable=False, help_text="The address on their Hack Club account. PRIVATE: staff only, never on a public page, in a log or in the audit log. The Hack Club sign-in sets it and refreshes it (accounts/hca.py); empty if Hack Club did not send one.", max_length=254),
         ),
     ]

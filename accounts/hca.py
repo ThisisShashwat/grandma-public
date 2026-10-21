@@ -8,7 +8,7 @@ A first Hack Club sign-in CREATES an account with an unusable password (never st
 The gate (ysws_eligible is True) is checked at first login only: returning participants are never polled or re-checked, so aging out mid-program
 does not lock them out. It does not apply to a Slack ID listed in STAFF_SLACK_IDS (adult staff are not ysws_eligible and must still become admins). A returning sign-in finds the account by `hca_sub` and signs in. Staff and superusers may sign in this way; the admin itself
 is gated separately (accounts/admin_gate.py). Hack Club is asked for five scopes (openid, profile, slack_id, verification_status, email) and we keep five fields (owner, 2026-10-07: the display name comes from Hack Club, FIRST NAME ONLY: `given_name` or else `nickname`, never the family name or the full name, and only if it passes the display name rules; the question in /welcome/ is skipped then): the stable `sub` id, the Slack ID and the
-email (both private, never shown on a public page; the email because Ari, HQ's review tool, requires it on every ship) and the time of the last sign-in. The email is kept current on every
+email (both private, never shown on a public page) and the time of the last sign-in. The email is kept current on every
 sign-in; a missing or malformed one never blocks anything and is never invented. The tokens and the id token are read in memory and dropped: never stored, never logged, never put in the session.
 """
 import hashlib
